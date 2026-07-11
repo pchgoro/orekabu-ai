@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.streamlit/secrets.toml
+.env
+logs/*.log
+data/*.db
+data/*.db-journal
+data/*.db-shm
+data/*.db-wal
+.DS_Store
+Thumbs.db
