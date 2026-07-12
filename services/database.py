@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
@@ -21,7 +22,8 @@ logger = logging.getLogger(__name__)
 @contextmanager
 def connect(db_path: Path | str = DB_PATH) -> Iterator[sqlite3.Connection]:
     """Open a SQLite connection with row dictionaries enabled."""
-    path = Path(db_path)
+    env_path = os.getenv("OREKABU_DB_PATH")
+    path = Path(env_path) if env_path and Path(db_path) == DB_PATH else Path(db_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row

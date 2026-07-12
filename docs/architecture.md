@@ -13,6 +13,10 @@ flowchart TD
     C --> G["Scoring"]
     C --> H["logs/app.log"]
     C --> I["Earnings / Relations"]
+    I --> J["Provider Layer"]
+    J --> K["yfinance / Candidate CSV"]
+    I --> L["Reconciliation"]
+    L --> M["Candidate Review Transaction"]
 ```
 
 ## 画面層
@@ -44,6 +48,18 @@ flowchart TD
 ・`services/earnings.py`: 決算CRUD、日付判定、決算CSV
 ・`services/relations.py`: 有向関連銘柄CRUD、影響候補、関連CSV
 ・`services/earnings_view_models.py`: 決算日、曜日、状態、欠損値の表示整形
+・`services/earnings_providers/base.py`: プロバイダー共通契約と取得結果
+・`services/earnings_providers/yfinance_provider.py`: yfinance返却形式の隔離と正規化
+・`services/earnings_providers/csv_provider.py`: 候補CSV行の正規化
+・`services/earnings_reconciliation.py`: 既存決算との比較と差分表示
+・`services/earnings_candidates.py`: 候補、履歴、取得制限、承認トランザクション
+・`components/earnings_auto_fetch.py`: 取得・候補・履歴・設定UI
+
+## 候補承認フロー
+
+`Provider -> EarningsFetchResult -> Reconciliation -> earnings_candidates -> 人間確認 -> Transaction -> earnings_events`
+
+プロバイダー取得時点では正式イベントを更新しない。承認時だけ候補状態と正式イベントを同一トランザクションで更新する。
 
 ## キャッシュ
 

@@ -50,3 +50,23 @@ def test_settings_reset_to_default(tmp_path: Path) -> None:
     save_settings(settings, db)
     save_settings(default_settings(), db)
     assert load_settings(db)["ranking_limit"] == 10
+
+
+def test_auto_fetch_settings_are_clamped(tmp_path: Path) -> None:
+    db = tmp_path / "test.db"
+    init_db(db)
+    settings = load_settings(db)
+    settings["earnings_auto_fetch"].update({"max_tickers_per_run": 999, "request_interval_seconds": 0, "cache_hours": 0})
+    save_settings(settings, db)
+    auto = load_settings(db)["earnings_auto_fetch"]
+    assert auto["max_tickers_per_run"] == 100
+    assert auto["request_interval_seconds"] == 1.0
+    assert auto["cache_hours"] == 1
+
+
+def test_environment_db_override_uses_isolated_database(tmp_path: Path, monkeypatch) -> None:
+    isolated = tmp_path / "isolated.db"
+    monkeypatch.setenv("OREKABU_DB_PATH", str(isolated))
+    init_db()
+    assert isolated.exists()
+    assert len(get_stocks()) == 3

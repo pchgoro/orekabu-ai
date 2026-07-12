@@ -36,6 +36,19 @@ def validate_settings(settings: dict[str, Any]) -> dict[str, Any]:
     settings["related_earnings_limit"] = max(1, min(int(settings.get("related_earnings_limit", 5)), 100))
     settings["past_earnings_days"] = max(0, min(int(settings.get("past_earnings_days", 30)), 3650))
     settings["show_unconfirmed_earnings"] = bool(settings.get("show_unconfirmed_earnings", True))
+    auto = settings.get("earnings_auto_fetch", {})
+    defaults = DEFAULT_SETTINGS["earnings_auto_fetch"]
+    auto["enabled"] = bool(auto.get("enabled", defaults["enabled"]))
+    auto["provider"] = "yfinance" if auto.get("provider") != "csv" else "csv"
+    auto["max_tickers_per_run"] = max(1, min(int(auto.get("max_tickers_per_run", defaults["max_tickers_per_run"])), 100))
+    auto["request_interval_seconds"] = max(1.0, min(float(auto.get("request_interval_seconds", defaults["request_interval_seconds"])), 60.0))
+    auto["cache_hours"] = max(1, min(int(auto.get("cache_hours", defaults["cache_hours"])), 168))
+    auto["candidate_retention_days"] = max(1, min(int(auto.get("candidate_retention_days", defaults["candidate_retention_days"])), 3650))
+    auto["show_past_candidates"] = bool(auto.get("show_past_candidates", defaults["show_past_candidates"]))
+    auto["save_same_candidates"] = bool(auto.get("save_same_candidates", defaults["save_same_candidates"]))
+    auto["date_change_min_days"] = max(1, min(int(auto.get("date_change_min_days", defaults["date_change_min_days"])), 365))
+    auto["include_confirmed_events"] = bool(auto.get("include_confirmed_events", defaults["include_confirmed_events"]))
+    settings["earnings_auto_fetch"] = auto
     score = settings.get("score", {})
     for key, default in DEFAULT_SETTINGS["score"].items():
         try:

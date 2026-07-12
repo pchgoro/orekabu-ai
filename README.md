@@ -18,6 +18,8 @@
 - 決算日の手動登録、決算までの日数、月別決算カレンダー
 - 方向を明示した関連銘柄管理と関連企業の決算予定表示
 - 決算・関連銘柄CSV入出力
+- yfinanceからの決算予定日候補取得と変更検知（Phase 2B開発版）
+- 候補の承認、保留、却下と取得履歴
 
 ## できないこと
 
@@ -25,7 +27,7 @@
 - AI APIによる自動分析
 - リアルタイム株価保証
 - 投資成果の保証
-- 決算日の自動取得、ニュース、通知、AI APIによる自動分析
+- 決算日の無確認自動更新、ニュース、通知、AI APIによる自動分析
 
 ## 決算管理
 
@@ -47,11 +49,25 @@ source_ticker,related_ticker,relation_type,impact_level,memo
 
 どちらもUTF-8 BOM付きで出力します。インポート前にプレビューし、不正な行は行番号と理由を表示して他の行を継続します。
 
+## 決算日候補取得（Phase 2B開発版）
+
+決算管理ページの「決算日自動取得」タブから、個別銘柄または条件に合う銘柄の候補を取得します。外部から取得した日付は `earnings_candidates` に保存され、正式な決算イベントへ自動反映されません。
+
+候補詳細で現在値と候補値を比較し、ユーザーが承認した場合だけ、新規登録または既存予定の更新を行います。手動登録データが優先され、確定データの更新には追加確認が必要です。保留・却下では正式データを変更しません。
+
+yfinanceは候補日を返さない場合、過去日や複数日を返す場合、予定変更が反映されない場合があります。取得失敗は銘柄ごとに記録され、他銘柄の処理は継続します。表示内容は必ず企業の公式発表で確認してください。
+
+候補CSVの列は以下です。このCSVも正式イベントへ直接登録されません。
+
+```text
+ticker,earnings_date,announcement_time,fiscal_year,fiscal_quarter,source_name,source_reference,confidence,memo
+```
+
 ## 必要環境
 
 - Windows PC
 - Python 3.11以上
-- インターネット接続（株価取得時のみ）
+- インターネット接続（株価・決算候補取得時のみ）
 
 ## 初回起動方法
 
@@ -105,7 +121,7 @@ Copy-Item data\orekabu.db data\orekabu_backup_YYYYMMDD.db
 Copy-Item data\orekabu.db data\orekabu_backup_20260710.db
 ```
 
-Phase 2Aでは起動時にDBマイグレーションが実行されます。初回起動前にアプリを終了し、必ず上記バックアップを作成してください。既存DBの削除は不要です。
+DB更新時は起動時にマイグレーションが実行されます。初回起動前にアプリを終了し、必ず上記バックアップを作成してください。既存DBの削除は不要です。
 
 ## コード更新後に確認すること
 
@@ -119,7 +135,9 @@ Phase 2Aでは起動時にDBマイグレーションが実行されます。初�
 
 ## テスト方法
 
-通常のテスト：
+すべての通常テストは環境変数でテストごとの一時SQLite DBへ切り替わり、`data\orekabu.db`を使用しません。yfinance実通信テストも通常テストから除外されます。
+
+通常テスト：
 
 ```powershell
 pytest -q
@@ -130,6 +148,28 @@ pytest -q
 ```powershell
 python -m compileall .
 ```
+
+UIテスト：
+
+```powershell
+pytest -q tests/ui
+```
+
+StreamlitプロセスE2Eテスト：
+
+```powershell
+pytest -q tests/e2e
+```
+
+yfinance実通信テスト：
+
+```powershell
+pytest -q -m integration
+```
+
+Windowsでは`run_tests.bat`、`run_ui_tests.bat`、`run_e2e_tests.bat`をダブルクリックして実行できます。
+
+Playwrightは導入していません。将来スクリーンショットを生成する場合の保存先は`artifacts\screenshots\`で、Git管理対象外です。現在残る手動確認は、日本語版Excelの実アプリ表示とDesktop・Tablet・Mobile幅での視覚的な崩れ確認です。
 
 ## Gitを使う場合の基本更新方法
 

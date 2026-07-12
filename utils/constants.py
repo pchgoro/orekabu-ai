@@ -16,6 +16,9 @@ EARNINGS_QUARTERS = ["Q1", "Q2", "Q3", "通期", "未設定"]
 EARNINGS_DATE_STATUSES = ["確定", "予定", "未確認"]
 RELATION_TYPES = ["同業", "顧客", "仕入先", "競合", "親会社", "子会社", "テーマ関連", "海外関連", "指数関連", "その他"]
 IMPACT_LEVELS = ["高", "中", "低"]
+EARNINGS_COMPARISON_STATUSES = ["new", "same", "date_changed", "time_changed", "quarter_changed", "conflict", "past_date", "invalid", "unknown"]
+EARNINGS_REVIEW_STATUSES = ["pending", "approved", "rejected", "held"]
+EARNINGS_CONFIDENCE_LEVELS = ["high", "medium", "low", "unknown"]
 SAMPLE_STOCKS = [
     {"ticker": "5801.T", "company_name": "古河電気工業", "category": "監視銘柄"},
     {"ticker": "6976.T", "company_name": "太陽誘電", "category": "監視銘柄"},
@@ -31,6 +34,18 @@ DEFAULT_SETTINGS = {
     "related_earnings_limit": 5,
     "past_earnings_days": 30,
     "show_unconfirmed_earnings": True,
+    "earnings_auto_fetch": {
+        "enabled": True,
+        "provider": "yfinance",
+        "max_tickers_per_run": 20,
+        "request_interval_seconds": 1.0,
+        "cache_hours": 6,
+        "candidate_retention_days": 90,
+        "show_past_candidates": True,
+        "save_same_candidates": False,
+        "date_change_min_days": 1,
+        "include_confirmed_events": True,
+    },
     "score": {
         "base_score": 50,
         "rsi_30_or_less": 20,

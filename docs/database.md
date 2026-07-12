@@ -52,7 +52,19 @@
 
 ## schema_versionテーブル
 
-現在のDBスキーマ番号を1行で保持します。Phase 2Aのスキーマはversion 2です。
+現在のDBスキーマ番号を1行で保持します。Phase 2B候補取得対応のスキーマはversion 3です。
+
+## earnings_candidatesテーブル
+
+外部取得・CSV取込の候補を保存します。銘柄、取得元、参照情報、候補日、時刻、年度、四半期、信頼度、比較状態、確認状態、対応する正式イベント、取得・確認日時、確認メモ、取得要約を保持します。fingerprintのUNIQUE制約で同一候補の無制限な重複を防ぎます。
+
+## earnings_fetch_runsテーブル
+
+一回の取得開始・終了、対象件数、成功、候補作成、変更なし、失敗、実行状態、エラー要約を保持します。
+
+## earnings_fetch_resultsテーブル
+
+取得実行ごとの銘柄別結果、候補ID、エラーコード、エラー文、取得日時を保持します。
 
 ## 初期化方法
 
@@ -82,7 +94,7 @@ Copy-Item data\orekabu_backup.db data\orekabu.db
 
 ## マイグレーション方針
 
-`services/migrations.py` がversionを確認し、未適用の変更だけを実行します。Phase 2Aは既存テーブルをDROPせず、新規テーブルとインデックスを追加します。同じ処理を複数回実行しても重複作成されません。
+`services/migrations.py` がversionを確認し、未適用の変更だけを実行します。version 3は既存テーブルをDROPせず、候補・取得履歴テーブルとインデックスを追加します。同じ処理を複数回実行しても重複作成されません。
 
 ## 破損時の注意
 

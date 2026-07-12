@@ -10,6 +10,7 @@ from datetime import date, timedelta
 import streamlit as st
 
 from components.cards import earnings_metrics
+from components.earnings_auto_fetch import render_earnings_auto_fetch
 from components.tables import earnings_dataframe, impact_dataframe
 from services.database import get_stocks, init_db, load_settings
 from services.earnings import (
@@ -38,7 +39,7 @@ events = list_earnings()
 prepared = prepare_earnings_rows(events, near_days=int(settings["earnings_near_days"]))
 earnings_metrics(earnings_summary(prepared))
 
-calendar_tab, list_tab, form_tab, relations_tab, impacts_tab = st.tabs(["決算カレンダー", "決算一覧", "決算登録", "関連銘柄", "影響予定"])
+calendar_tab, list_tab, form_tab, relations_tab, impacts_tab, auto_fetch_tab = st.tabs(["決算カレンダー", "決算一覧", "決算登録", "関連銘柄", "影響予定", "決算日自動取得"])
 
 with calendar_tab:
     today = japan_today()
@@ -258,3 +259,6 @@ with impacts_tab:
         st.dataframe(impact_dataframe(impact_rows), use_container_width=True, hide_index=True, height=560)
     else:
         st.info("関連銘柄または関連銘柄の決算予定が登録されていません。")
+
+with auto_fetch_tab:
+    render_earnings_auto_fetch()

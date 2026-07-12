@@ -8,6 +8,7 @@ from components.cards import summary_metrics
 from components.tables import dashboard_dataframe, earnings_dataframe, impact_dataframe
 from services.database import get_stocks, init_db, load_settings
 from services.earnings import list_earnings
+from services.earnings_candidates import candidate_dashboard_summary
 from services.earnings_view_models import enrich_stock_rows, prepare_earnings_rows
 from services.relations import impact_candidates
 from services.stock_data import build_analysis_rows, make_prompt
@@ -26,6 +27,17 @@ stocks = get_stocks()
 rows = enrich_stock_rows(build_analysis_rows(stocks, settings), near_days=int(settings["earnings_near_days"]))
 
 summary_metrics(stocks, rows)
+
+candidate_summary = candidate_dashboard_summary()
+if candidate_summary["pending"] or candidate_summary["last_fetched_at"]:
+    with st.expander("決算日取得候補", expanded=candidate_summary["conflicts"] > 0):
+        cols = st.columns(5)
+        cols[0].metric("未確認候補", candidate_summary["pending"])
+        cols[1].metric("日付変更", candidate_summary["date_changed"])
+        cols[2].metric("競合", candidate_summary["conflicts"])
+        cols[3].metric("最終取得", candidate_summary["last_fetched_at"] or "未実行")
+        cols[4].metric("直近失敗", candidate_summary["last_failed"])
+        st.caption("候補の確認はサイドバーの「決算」→「決算日自動取得」から行えます。")
 
 st.subheader("今日の注目銘柄ランキング")
 limit = int(settings.get("ranking_limit", 10))

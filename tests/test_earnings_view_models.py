@@ -28,3 +28,11 @@ def test_earnings_dataframe_never_exposes_none_or_nan() -> None:
     text = frame.to_string()
     assert "None" not in text and "NaN" not in text
     assert "日付未確認" in text
+
+
+def test_candidate_dataframe_never_exposes_none_or_nan() -> None:
+    from components.earnings_auto_fetch import _candidate_frame
+
+    text = _candidate_frame([{"ticker":"5801.T","company_name":"古河電気工業","candidate_date":None,"existing_date":None,"comparison_status":"unknown","confidence":"unknown","review_status":"pending"}]).to_string()
+    assert "None" not in text and "NaN" not in text
+    assert "日付なし" in text and "不明" in text

@@ -23,7 +23,25 @@ def test_existing_phase1_db_migrates_idempotently(tmp_path: Path) -> None:
     init_db(db); init_db(db)
     conn = sqlite3.connect(db)
     assert conn.execute("SELECT ticker FROM stocks").fetchone()[0] == "7203.T"
-    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 2
+    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 3
     tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    assert {"earnings_events", "stock_relations"}.issubset(tables)
+    assert {"earnings_events", "stock_relations", "earnings_candidates", "earnings_fetch_runs", "earnings_fetch_results"}.issubset(tables)
+    conn.close()
+
+
+def test_schema_version_2_migrates_to_3_without_data_loss(tmp_path: Path) -> None:
+    db = tmp_path / "v2.db"
+    init_db(db)
+    conn = sqlite3.connect(db)
+    conn.execute("UPDATE schema_version SET version=2")
+    conn.execute("DROP TABLE earnings_fetch_results")
+    conn.execute("DROP TABLE earnings_fetch_runs")
+    conn.execute("DROP TABLE earnings_candidates")
+    before = conn.execute("SELECT COUNT(*) FROM stocks").fetchone()[0]
+    conn.commit(); conn.close()
+    init_db(db); init_db(db)
+    conn = sqlite3.connect(db)
+    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 3
+    assert conn.execute("SELECT COUNT(*) FROM stocks").fetchone()[0] == before
+    assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     conn.close()
