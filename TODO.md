@@ -2,11 +2,10 @@
 
 ## High
 
-- [ ] Phase 2Bの実画面確認後にv0.3.0を判定
+現時点でv0.3.0正式版に必要な未完了作業はありません。
 
 ## Medium
 
-- [ ] スマートフォン実機での表示確認
 - [ ] yfinanceが失敗した場合のユーザー文言をさらに調整する
 
 ## Low
@@ -51,3 +50,7 @@
 - [x] Phase 1、Phase 2A、Phase 2B画面のAppTestを追加
 - [x] StreamlitプロセスとHTTP応答のE2Eを追加
 - [x] GitHub ActionsとWindows用テストbatを追加
+- [x] Phase 2Bの通常、UI、E2E、実通信テストを確認
+- [x] 確定データ保護、候補確認、CSV、再起動後保持を実画面で確認
+- [x] スマートフォン実機表示と日本語版Excel表示を確認
+- [x] v0.3.0リリース判定と正式版文書更新

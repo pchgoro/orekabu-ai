@@ -1,10 +1,10 @@
 # Technical Debt
 
-確認日: 2026-07-11
+確認日: 2026-07-12
 
 ## High
 
-現時点でv0.2.0正式版を妨げる重大な技術的負債は確認されていません。
+現時点でv0.3.0正式版を妨げる重大な技術的負債は確認されていません。
 
 確認した範囲:
 
@@ -14,6 +14,8 @@
 - tests配下
 - README、ROADMAP、CHANGELOG、DEVELOPMENT_RULES、PROJECT_PRINCIPLES
 - Phase 2Aの実画面操作、CSV、日本語版Excel表示、再起動後のデータ保持
+- Phase 2Bの候補取得、差分、承認、確定保護、履歴、候補CSV、再起動後保持
+- 通常テスト、AppTest、E2E、yfinance実通信、スマートフォン実機表示
 
 ## Medium
 
@@ -48,5 +50,5 @@
 - 日本時間は標準ライブラリの `Asia/Tokyo` を使用するが、SQLiteの日付比較もサービスから日本日付を渡す前提。
 - yfinance候補との日付変更検知は実装済みだが、公式情報による変更検知は未実装。
 - AppTestではフォーム、再描画、CSVアップロードを確認したが、ブラウザ固有の描画差やJavaScriptコンソールは検証できない。
-- Playwrightは未導入のため、Desktop 1440x900、Tablet 768x1024、Mobile 390x844のスクリーンショット比較は手動確認として残る。
-- 日本語版Excelでの表示はCSVのUTF-8 BOMと日本語バイト列まで自動検証し、Excelアプリ上の見た目は手動確認が必要。
+- Playwrightは未導入。スマートフォン実機表示は確認済みだが、Desktop・Tablet・Mobileのスクリーンショット差分検知は自動化されていない。
+- 日本語版Excel表示は実画面確認済みだが、Excelアプリの将来バージョンに対する自動互換性検証はできない。
