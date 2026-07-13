@@ -3,9 +3,9 @@
 ## High
 
 - [x] Phase 3AのRSS実通信と日本語フィード表示を人間が確認する
-- [ ] Phase 3AのCSVを日本語版Excelで確認する
+- [x] Phase 3AのCSVを日本語版Excelで確認する
 - [x] Phase 3AのDesktop・スマートフォン幅表示を確認する
-- [ ] v0.4.0正式版のリリース判定を行う
+- [x] v0.4.0正式版のリリース判定を行う
 - [x] v0.4.1 CandidateのDesktop・390x844幅実画面確認
 - [ ] v0.4.1 Candidateをスマートフォン実機で最終確認する
 - [ ] ブリーフィングの実データ優先順位を人間が確認する
@@ -21,6 +21,8 @@
 - [ ] 表の列幅や表示順の微調整
 
 ## Completed
+
+- [x] Phase 3Aニュース基盤とDaily UXをv0.4.0として正式化
 
 - [x] schema version 4の冪等マイグレーションと既存データ保持テスト
 - [x] RSS/Atom、手動、CSVニュース基盤
