@@ -30,3 +30,32 @@ def test_mobile_priority_target_pages_use_cards_without_exceptions(ui_db, monkey
     for file in files:
         at=AppTest.from_file(str(file),default_timeout=60).run(timeout=60)
         assert not at.exception, file
+
+
+def test_dashboard_standard_compact_and_zero_visibility_settings(ui_db, monkeypatch) -> None:
+    """Dashboard presentation settings must be applied from the temporary DB."""
+    import pandas as pd
+
+    index = pd.date_range("2026-01-01", periods=100, freq="B")
+    values = pd.Series(range(100), index=index, dtype=float) + 1000
+    frame = pd.DataFrame(
+        {"Open": values, "High": values + 10, "Low": values - 10, "Close": values, "Volume": 1000},
+        index=index,
+    )
+    monkeypatch.setattr("services.stock_data.fetch_stock_history", lambda *args, **kwargs: frame)
+
+    settings = load_settings()
+    settings.update({"dashboard_display_mode": "標準", "hide_zero_sections": False})
+    save_settings(settings)
+    standard = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run(timeout=60)
+    assert any(item.value == "ポートフォリオ概要" for item in standard.subheader)
+    assert any(item.label == "本日決算" and item.value == "0" for item in standard.metric)
+    assert not standard.exception
+
+    settings = load_settings()
+    settings.update({"dashboard_display_mode": "コンパクト", "hide_zero_sections": True})
+    save_settings(settings)
+    compact = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run(timeout=60)
+    assert not any(item.value == "ポートフォリオ概要" for item in compact.subheader)
+    assert not any(item.label == "本日決算" for item in compact.metric)
+    assert not compact.exception
