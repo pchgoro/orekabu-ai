@@ -6,7 +6,7 @@ import logging
 import sqlite3
 
 logger = logging.getLogger(__name__)
-LATEST_SCHEMA_VERSION = 3
+LATEST_SCHEMA_VERSION = 4
 
 
 def migrate(conn: sqlite3.Connection) -> None:
@@ -32,9 +32,15 @@ def migrate(conn: sqlite3.Connection) -> None:
             conn.execute("UPDATE schema_version SET version = 3")
             version = 3
 
+        if version < 4:
+            _migrate_to_v4(conn)
+            conn.execute("UPDATE schema_version SET version = 4")
+            version = 4
+
         # CREATE IF NOT EXISTS also repairs a partially created v2 migration.
         _migrate_to_v2(conn)
         _migrate_to_v3(conn)
+        _migrate_to_v4(conn)
         if version != LATEST_SCHEMA_VERSION:
             raise RuntimeError(f"未対応のDBバージョンです: {version}")
     except Exception:
@@ -153,3 +159,104 @@ def _migrate_to_v3(conn: sqlite3.Connection) -> None:
     conn.execute("CREATE INDEX IF NOT EXISTS idx_candidates_review ON earnings_candidates(review_status, comparison_status)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_candidates_stock ON earnings_candidates(stock_id, candidate_date)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_fetch_results_run ON earnings_fetch_results(fetch_run_id)")
+
+
+def _migrate_to_v4(conn: sqlite3.Connection) -> None:
+    """Add local news ingestion, matching, organization, and fetch audit tables."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS news_sources (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            source_type TEXT NOT NULL,
+            url TEXT NOT NULL DEFAULT '',
+            is_enabled INTEGER NOT NULL DEFAULT 1,
+            memo TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS news_articles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_id INTEGER,
+            external_id TEXT NOT NULL DEFAULT '',
+            title TEXT NOT NULL,
+            url TEXT NOT NULL DEFAULT '',
+            canonical_url TEXT NOT NULL DEFAULT '',
+            published_at TEXT,
+            author TEXT NOT NULL DEFAULT '',
+            summary TEXT NOT NULL DEFAULT '',
+            retrieved_at TEXT NOT NULL,
+            deduplication_key TEXT NOT NULL UNIQUE,
+            is_read INTEGER NOT NULL DEFAULT 0,
+            is_favorite INTEGER NOT NULL DEFAULT 0,
+            importance TEXT NOT NULL DEFAULT '通常',
+            category TEXT NOT NULL DEFAULT 'その他',
+            memo TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(source_id) REFERENCES news_sources(id) ON DELETE SET NULL
+        );
+        CREATE TABLE IF NOT EXISTS news_article_stocks (
+            article_id INTEGER NOT NULL,
+            stock_id INTEGER NOT NULL,
+            match_reason TEXT NOT NULL DEFAULT '',
+            confirmed INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY(article_id, stock_id),
+            FOREIGN KEY(article_id) REFERENCES news_articles(id) ON DELETE CASCADE,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS stock_news_keywords (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_id INTEGER NOT NULL,
+            keyword TEXT NOT NULL,
+            is_enabled INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE(stock_id, keyword),
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS news_tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS news_article_tags (
+            article_id INTEGER NOT NULL,
+            tag_id INTEGER NOT NULL,
+            PRIMARY KEY(article_id, tag_id),
+            FOREIGN KEY(article_id) REFERENCES news_articles(id) ON DELETE CASCADE,
+            FOREIGN KEY(tag_id) REFERENCES news_tags(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS news_fetch_runs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            started_at TEXT NOT NULL,
+            finished_at TEXT,
+            source_count INTEGER NOT NULL DEFAULT 0,
+            article_count INTEGER NOT NULL DEFAULT 0,
+            duplicate_count INTEGER NOT NULL DEFAULT 0,
+            failed_count INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL,
+            error_summary TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS news_fetch_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fetch_run_id INTEGER NOT NULL,
+            source_id INTEGER,
+            status TEXT NOT NULL,
+            article_count INTEGER NOT NULL DEFAULT 0,
+            duplicate_count INTEGER NOT NULL DEFAULT 0,
+            error_message TEXT NOT NULL DEFAULT '',
+            retrieved_at TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(fetch_run_id) REFERENCES news_fetch_runs(id) ON DELETE CASCADE,
+            FOREIGN KEY(source_id) REFERENCES news_sources(id) ON DELETE SET NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_news_articles_published ON news_articles(published_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_news_articles_state ON news_articles(is_read, is_favorite, importance);
+        CREATE INDEX IF NOT EXISTS idx_news_article_stocks_stock ON news_article_stocks(stock_id, confirmed);
+        CREATE INDEX IF NOT EXISTS idx_news_fetch_results_run ON news_fetch_results(fetch_run_id);
+        """
+    )

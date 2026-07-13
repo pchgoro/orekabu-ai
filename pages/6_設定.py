@@ -26,6 +26,16 @@ create_stock_section()
 
 st.subheader("表示・取得設定")
 with st.form("settings_form"):
+    st.subheader("毎日の表示設定")
+    cols = st.columns(2)
+    dashboard_display_mode = cols[0].selectbox("ダッシュボード表示", ["標準", "コンパクト"], index=["標準", "コンパクト"].index(settings["dashboard_display_mode"]))
+    news_display_mode = cols[1].selectbox("ニュース表示", ["カード", "表"], index=["カード", "表"].index(settings["news_display_mode"]))
+    cols = st.columns(2)
+    briefing_limit = cols[0].number_input("ブリーフィング表示件数", 1, 20, int(settings["briefing_limit"]))
+    daily_tasks_limit = cols[1].number_input("今日やること表示件数", 1, 10, int(settings["daily_tasks_limit"]))
+    mobile_priority_display = st.checkbox("モバイル優先表示", value=bool(settings["mobile_priority_display"]))
+    hide_zero_sections = st.checkbox("0件のセクションを隠す", value=bool(settings["hide_zero_sections"]))
+
     cols = st.columns(3)
     ranking_limit = cols[0].number_input("ランキング表示件数", min_value=1, max_value=100, step=1, value=int(settings["ranking_limit"]))
     stock_cache_minutes = cols[1].number_input("株価キャッシュ時間（分）", min_value=1, max_value=1440, step=1, value=int(settings["stock_cache_minutes"]))
@@ -82,6 +92,13 @@ with st.form("settings_form"):
         try:
             save_settings(
                 {
+                    **settings,
+                    "dashboard_display_mode": dashboard_display_mode,
+                    "news_display_mode": news_display_mode,
+                    "mobile_priority_display": mobile_priority_display,
+                    "briefing_limit": briefing_limit,
+                    "daily_tasks_limit": daily_tasks_limit,
+                    "hide_zero_sections": hide_zero_sections,
                     "ranking_limit": ranking_limit,
                     "stock_cache_minutes": stock_cache_minutes,
                     "buy_watch_near_percent": buy_watch_near_percent,

@@ -17,6 +17,9 @@ flowchart TD
     J --> K["yfinance / Candidate CSV"]
     I --> L["Reconciliation"]
     L --> M["Candidate Review Transaction"]
+    C --> N["News Service"]
+    N --> O["RSS / Atom / Manual / CSV Providers"]
+    N --> P["Deduplication / Stock Matching"]
 ```
 
 ## 画面層
@@ -28,6 +31,7 @@ flowchart TD
 ・`pages/4_チャート.py`: Plotlyチャート  
 ・`pages/5_決算.py`: 決算カレンダー、決算CRUD、関連銘柄、影響予定、CSV
 ・`pages/6_設定.py`: 設定、CSV、銘柄登録
+・`pages/7_ニュース.py`: ニュース一覧、ソース、キーワード、手動登録、CSV、取得履歴
 
 ## Components
 
@@ -54,6 +58,15 @@ flowchart TD
 ・`services/earnings_reconciliation.py`: 既存決算との比較と差分表示
 ・`services/earnings_candidates.py`: 候補、履歴、取得制限、承認トランザクション
 ・`components/earnings_auto_fetch.py`: 取得・候補・履歴・設定UI
+・`services/daily_briefing.py`: ブリーフィング集計と今日やることの純粋View Model
+・`components/daily.py`: ブリーフィング、優先タスク、株・決算カード
+・`components/news_cards.py`: ニュースの直接操作カード
+・`components/layout.py`: 対象画面の共通レスポンシブ調整
+・`services/news.py`: 記事・ソース・キーワード・タグ・取得履歴、重複排除、銘柄照合、CSV、プロンプト
+・`services/news_providers/base.py`: ニュースプロバイダー共通契約
+・`services/news_providers/rss_provider.py`: 標準ライブラリによるRSS/Atom取得と正規化
+・`services/news_providers/manual_provider.py`: 手動入力の正規化
+・`services/news_providers/csv_provider.py`: 記事CSV行の正規化
 
 ## 候補承認フロー
 

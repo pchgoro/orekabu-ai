@@ -5,19 +5,25 @@ from __future__ import annotations
 import streamlit as st
 
 from components.cards import summary_metrics
-from components.tables import dashboard_dataframe, earnings_dataframe, impact_dataframe
+from components.daily import render_briefing, render_daily_tasks, render_earnings_cards, render_stock_cards
+from components.layout import apply_responsive_styles
+from components.tables import dashboard_dataframe, earnings_dataframe, impact_dataframe, news_dataframe
 from services.database import get_stocks, init_db, load_settings
 from services.earnings import list_earnings
-from services.earnings_candidates import candidate_dashboard_summary
+from services.earnings_candidates import candidate_dashboard_summary, list_candidates
 from services.earnings_view_models import enrich_stock_rows, prepare_earnings_rows
 from services.relations import impact_candidates
+from services.news import list_articles, list_fetch_runs as list_news_fetch_runs, news_dashboard_summary
+from services.daily_briefing import build_briefing, build_daily_tasks
 from services.stock_data import build_analysis_rows, make_prompt
+from services.view_models import build_buy_watch_rows
 from utils.constants import APP_NAME
 from utils.logging_config import setup_logging
 
 st.set_page_config(page_title=APP_NAME, layout="wide", initial_sidebar_state="expanded")
 setup_logging()
 init_db()
+apply_responsive_styles()
 
 st.title(APP_NAME)
 st.caption("注目スコアは売買推奨ではなく、確認優先度を示すものです。")
@@ -25,8 +31,30 @@ st.caption("注目スコアは売買推奨ではなく、確認優先度を示�
 settings = load_settings()
 stocks = get_stocks()
 rows = enrich_stock_rows(build_analysis_rows(stocks, settings), near_days=int(settings["earnings_near_days"]))
+earnings_rows = [r for r in prepare_earnings_rows(list_earnings(), near_days=int(settings["earnings_near_days"])) if r.get("days_until") is not None and r["days_until"] >= 0]
+candidates = list_candidates()
+news_rows = list_articles()
+news_summary = news_dashboard_summary()
+news_runs = list_news_fetch_runs()
+rss_failed = int(news_runs[0].get("failed_count") or 0) if news_runs else 0
+buy_watch_rows = build_buy_watch_rows(rows, float(settings["buy_watch_near_percent"]))
+briefing = build_briefing(rows, earnings_rows, candidates, news_rows, buy_watch_rows, news_summary, rss_failed)
+tasks = build_daily_tasks(rows, earnings_rows, candidates, news_rows, buy_watch_rows, rss_failed, int(settings["daily_tasks_limit"]))
+compact = settings["dashboard_display_mode"] == "コンパクト"
 
-summary_metrics(stocks, rows)
+render_briefing(briefing, int(settings["briefing_limit"]), bool(settings["hide_zero_sections"]), compact)
+st.caption(f"RSS最終取得: {news_summary.get('last_fetch') or '未実行'} / 直近失敗: {rss_failed}件")
+render_daily_tasks(tasks)
+if not compact:
+    st.subheader("ポートフォリオ概要")
+    summary_metrics(stocks, rows, mobile=bool(settings["mobile_priority_display"]))
+
+with st.expander("最新ニュース", expanded=False):
+    latest_news = news_rows[:5]
+    if latest_news:
+        st.dataframe(news_dataframe(latest_news), use_container_width=True, hide_index=True)
+    else:
+        st.info("ニュースはまだ登録されていません。")
 
 candidate_summary = candidate_dashboard_summary()
 if candidate_summary["pending"] or candidate_summary["last_fetched_at"]:
@@ -42,11 +70,16 @@ if candidate_summary["pending"] or candidate_summary["last_fetched_at"]:
 st.subheader("今日の注目銘柄ランキング")
 limit = int(settings.get("ranking_limit", 10))
 ranking = sorted(rows, key=lambda row: row.get("score", 0), reverse=True)[:limit]
-st.dataframe(dashboard_dataframe(ranking), use_container_width=True, hide_index=True, height=520)
+if settings["mobile_priority_display"]:
+    render_stock_cards(ranking, holding=False)
+else:
+    st.dataframe(dashboard_dataframe(ranking), use_container_width=True, hide_index=True, height=520)
 
 st.subheader("直近の決算予定")
-earnings_rows = [r for r in prepare_earnings_rows(list_earnings(), near_days=int(settings["earnings_near_days"])) if r.get("days_until") is not None and r["days_until"] >= 0]
-st.dataframe(earnings_dataframe(earnings_rows[: int(settings["earnings_dashboard_limit"])]), use_container_width=True, hide_index=True)
+if settings["mobile_priority_display"]:
+    render_earnings_cards(earnings_rows[: int(settings["earnings_dashboard_limit"])])
+else:
+    st.dataframe(earnings_dataframe(earnings_rows[: int(settings["earnings_dashboard_limit"])]), use_container_width=True, hide_index=True)
 
 with st.expander("関連銘柄の注目決算", expanded=False):
     impacts = [r for r in impact_candidates() if r.get("days_until") is not None and r["days_until"] >= 0]

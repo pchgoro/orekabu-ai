@@ -23,13 +23,13 @@ def test_existing_phase1_db_migrates_idempotently(tmp_path: Path) -> None:
     init_db(db); init_db(db)
     conn = sqlite3.connect(db)
     assert conn.execute("SELECT ticker FROM stocks").fetchone()[0] == "7203.T"
-    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 3
+    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 4
     tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    assert {"earnings_events", "stock_relations", "earnings_candidates", "earnings_fetch_runs", "earnings_fetch_results"}.issubset(tables)
+    assert {"earnings_events", "stock_relations", "earnings_candidates", "earnings_fetch_runs", "earnings_fetch_results", "news_sources", "news_articles", "news_article_stocks", "stock_news_keywords", "news_tags", "news_article_tags", "news_fetch_runs", "news_fetch_results"}.issubset(tables)
     conn.close()
 
 
-def test_schema_version_2_migrates_to_3_without_data_loss(tmp_path: Path) -> None:
+def test_schema_version_2_migrates_to_latest_without_data_loss(tmp_path: Path) -> None:
     db = tmp_path / "v2.db"
     init_db(db)
     conn = sqlite3.connect(db)
@@ -41,7 +41,26 @@ def test_schema_version_2_migrates_to_3_without_data_loss(tmp_path: Path) -> Non
     conn.commit(); conn.close()
     init_db(db); init_db(db)
     conn = sqlite3.connect(db)
-    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 3
+    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 4
     assert conn.execute("SELECT COUNT(*) FROM stocks").fetchone()[0] == before
+    assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+    conn.close()
+
+
+def test_schema_version_3_migrates_to_4_idempotently(tmp_path: Path) -> None:
+    db = tmp_path / "v3.db"
+    init_db(db)
+    conn = sqlite3.connect(db)
+    news_tables = ["news_fetch_results", "news_fetch_runs", "news_article_tags", "news_tags", "stock_news_keywords", "news_article_stocks", "news_articles", "news_sources"]
+    conn.execute("PRAGMA foreign_keys=OFF")
+    for table in news_tables:
+        conn.execute(f"DROP TABLE {table}")
+    conn.execute("UPDATE schema_version SET version=3")
+    before = conn.execute("SELECT ticker,company_name FROM stocks ORDER BY id").fetchall()
+    conn.commit(); conn.close()
+    init_db(db); init_db(db)
+    conn = sqlite3.connect(db)
+    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 4
+    assert conn.execute("SELECT ticker,company_name FROM stocks ORDER BY id").fetchall() == before
     assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     conn.close()
