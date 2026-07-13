@@ -148,3 +148,19 @@ def impact_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
         "状態": r.get("earnings_status") or "日付未確認", "四半期": r.get("fiscal_quarter") or "未設定",
         "メモ": r.get("memo") or "",
     } for r in rows])
+
+
+def news_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    """Create a missing-value-safe news table."""
+    return pd.DataFrame([{
+        "公開日時": r.get("published_at") or "日時不明",
+        "タイトル": r.get("title") or "データなし",
+        "ソース": r.get("source_name") or "データなし",
+        "関連銘柄候補": r.get("stock_labels") or "なし",
+        "状態": "既読" if r.get("is_read") else "未読",
+        "お気に入り": "あり" if r.get("is_favorite") else "なし",
+        "重要度": r.get("importance") or "通常",
+        "カテゴリ": r.get("category") or "その他",
+        "URL": r.get("url") or "なし",
+        "メモ": r.get("memo") or "",
+    } for r in rows])

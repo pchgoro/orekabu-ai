@@ -6,6 +6,8 @@ import streamlit as st
 
 from components.forms import create_stock_section, edit_delete_section
 from components.tables import watchlist_dataframe
+from components.daily import render_stock_cards
+from components.layout import apply_responsive_styles
 from services.database import get_stocks, init_db, load_settings
 from services.stock_data import build_analysis_rows, make_prompt
 from services.earnings_view_models import enrich_stock_rows
@@ -16,6 +18,7 @@ from utils.logging_config import setup_logging
 st.set_page_config(page_title="監視銘柄 - オレ株AI", layout="wide")
 setup_logging()
 init_db()
+apply_responsive_styles()
 st.title("監視銘柄")
 st.caption("注目スコアは売買推奨ではなく、確認優先度を示すものです。")
 
@@ -32,7 +35,10 @@ sort_label = cols[1].selectbox("並び替え", ["スコア順", "RSI昇順", "RS
 filtered = [row for row in rows if row.get("category") in category_filter]
 filtered = sort_watchlist(filtered, sort_label)
 
-st.dataframe(watchlist_dataframe(filtered), use_container_width=True, hide_index=True, height=560)
+if settings["mobile_priority_display"]:
+    render_stock_cards(filtered, holding=False)
+else:
+    st.dataframe(watchlist_dataframe(filtered), use_container_width=True, hide_index=True, height=560)
 
 with st.expander("ChatGPT分析用プロンプトを表示", expanded=False):
     if filtered:

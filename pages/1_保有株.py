@@ -7,6 +7,8 @@ import streamlit as st
 from components.cards import holding_metrics
 from components.forms import create_stock_section, edit_delete_section
 from components.tables import holdings_dataframe
+from components.daily import render_stock_cards
+from components.layout import apply_responsive_styles
 from services.database import get_stocks, init_db, load_settings
 from services.stock_data import build_analysis_rows, make_prompt
 from services.earnings_view_models import enrich_stock_rows
@@ -16,6 +18,7 @@ from utils.logging_config import setup_logging
 st.set_page_config(page_title="保有株 - オレ株AI", layout="wide")
 setup_logging()
 init_db()
+apply_responsive_styles()
 st.title("保有株")
 st.caption("注目スコアは売買推奨ではなく、確認優先度を示すものです。")
 
@@ -26,7 +29,10 @@ holding_metrics(rows)
 create_stock_section()
 edit_delete_section(rows, "holding")
 
-st.dataframe(holdings_dataframe(rows), use_container_width=True, hide_index=True, height=520)
+if settings["mobile_priority_display"]:
+    render_stock_cards(rows, holding=True)
+else:
+    st.dataframe(holdings_dataframe(rows), use_container_width=True, hide_index=True, height=520)
 
 with st.expander("ChatGPT分析用プロンプトを表示", expanded=False):
     if rows:

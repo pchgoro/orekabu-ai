@@ -52,7 +52,7 @@
 
 ## schema_versionテーブル
 
-現在のDBスキーマ番号を1行で保持します。Phase 2B候補取得対応のスキーマはversion 3です。
+現在のDBスキーマ番号を1行で保持します。Phase 3Aニュース基盤対応のスキーマはversion 4です。
 
 ## earnings_candidatesテーブル
 
@@ -65,6 +65,19 @@
 ## earnings_fetch_resultsテーブル
 
 取得実行ごとの銘柄別結果、候補ID、エラーコード、エラー文、取得日時を保持します。
+
+## ニュース関連テーブル
+
+- `news_sources`: ソース名、RSS/Atom等の種別、URL、有効状態、メモ
+- `news_articles`: タイトル、URL、公開日時、著者、RSS要約、取得日時、重複キー、記事管理状態。本文全文は保存しない
+- `news_article_stocks`: 記事と銘柄の候補関係、一致理由、手動承認状態
+- `stock_news_keywords`: 銘柄別の追加照合キーワード
+- `news_tags`: タグのマスター
+- `news_article_tags`: 記事とタグの多対多関係
+- `news_fetch_runs`: 一回の取得実行と集計・状態
+- `news_fetch_results`: ソース別の取得結果とエラー
+
+`news_articles.deduplication_key`、`news_sources.name`、`stock_news_keywords(stock_id, keyword)` は一意です。記事削除時は銘柄候補とタグ関係をCASCADE削除し、ソース削除時は記事を残して`source_id`のみNULLにします。
 
 ## 初期化方法
 
@@ -94,7 +107,7 @@ Copy-Item data\orekabu_backup.db data\orekabu.db
 
 ## マイグレーション方針
 
-`services/migrations.py` がversionを確認し、未適用の変更だけを実行します。version 3は既存テーブルをDROPせず、候補・取得履歴テーブルとインデックスを追加します。同じ処理を複数回実行しても重複作成されません。
+`services/migrations.py` がversionを確認し、未適用の変更だけを実行します。version 4は既存テーブルをDROPせず、ニュース関連8テーブルとインデックスを追加します。同じ処理を複数回実行しても重複作成されません。
 
 ## 破損時の注意
 

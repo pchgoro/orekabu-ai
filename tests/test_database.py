@@ -64,6 +64,19 @@ def test_auto_fetch_settings_are_clamped(tmp_path: Path) -> None:
     assert auto["cache_hours"] == 1
 
 
+def test_daily_ux_settings_merge_and_preserve_existing_settings(tmp_path: Path) -> None:
+    db = tmp_path / "daily.db"; init_db(db)
+    settings = load_settings(db)
+    settings["earnings_auto_fetch"]["max_tickers_per_run"] = 7
+    settings.update({"dashboard_display_mode":"コンパクト","news_display_mode":"表","mobile_priority_display":True,"briefing_limit":99,"daily_tasks_limit":99,"hide_zero_sections":False})
+    save_settings(settings, db)
+    loaded = load_settings(db)
+    assert loaded["dashboard_display_mode"] == "コンパクト"
+    assert loaded["news_display_mode"] == "表"
+    assert loaded["briefing_limit"] == 20 and loaded["daily_tasks_limit"] == 10
+    assert loaded["earnings_auto_fetch"]["max_tickers_per_run"] == 7
+
+
 def test_environment_db_override_uses_isolated_database(tmp_path: Path, monkeypatch) -> None:
     isolated = tmp_path / "isolated.db"
     monkeypatch.setenv("OREKABU_DB_PATH", str(isolated))

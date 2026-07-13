@@ -19,6 +19,9 @@ IMPACT_LEVELS = ["高", "中", "低"]
 EARNINGS_COMPARISON_STATUSES = ["new", "same", "date_changed", "time_changed", "quarter_changed", "conflict", "past_date", "invalid", "unknown"]
 EARNINGS_REVIEW_STATUSES = ["pending", "approved", "rejected", "held"]
 EARNINGS_CONFIDENCE_LEVELS = ["high", "medium", "low", "unknown"]
+NEWS_SOURCE_TYPES = ["RSS", "Atom", "手動", "CSV"]
+NEWS_IMPORTANCE_LEVELS = ["高", "通常", "低"]
+NEWS_CATEGORIES = ["決算", "業績", "適時開示", "製品・サービス", "業界", "市況", "その他"]
 SAMPLE_STOCKS = [
     {"ticker": "5801.T", "company_name": "古河電気工業", "category": "監視銘柄"},
     {"ticker": "6976.T", "company_name": "太陽誘電", "category": "監視銘柄"},
@@ -26,6 +29,12 @@ SAMPLE_STOCKS = [
 ]
 
 DEFAULT_SETTINGS = {
+    "dashboard_display_mode": "標準",
+    "news_display_mode": "カード",
+    "mobile_priority_display": False,
+    "briefing_limit": 10,
+    "daily_tasks_limit": 10,
+    "hide_zero_sections": True,
     "ranking_limit": 10,
     "stock_cache_minutes": 15,
     "buy_watch_near_percent": 3.0,

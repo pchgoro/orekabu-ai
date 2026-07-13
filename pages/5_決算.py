@@ -10,6 +10,8 @@ from datetime import date, timedelta
 import streamlit as st
 
 from components.cards import earnings_metrics
+from components.daily import render_earnings_cards
+from components.layout import apply_responsive_styles
 from components.earnings_auto_fetch import render_earnings_auto_fetch
 from components.tables import earnings_dataframe, impact_dataframe
 from services.database import get_stocks, init_db, load_settings
@@ -29,6 +31,7 @@ logger = logging.getLogger(__name__)
 st.set_page_config(page_title="決算管理 - オレ株AI", layout="wide")
 setup_logging()
 init_db()
+apply_responsive_styles()
 st.title("決算管理")
 st.caption("決算接近は売買推奨ではなく、確認時期を整理するための情報です。決算日は手動登録です。")
 
@@ -101,7 +104,11 @@ with list_tab:
         visible = [r for r in visible if r.get("days_until") is None or r["days_until"] >= -int(settings["past_earnings_days"])]
     else:
         visible = [r for r in visible if r.get("days_until") is None or r["days_until"] >= 0]
-    st.dataframe(earnings_dataframe(sort_earnings_rows(visible, sort_label)), use_container_width=True, hide_index=True, height=560)
+    sorted_visible = sort_earnings_rows(visible, sort_label)
+    if settings["mobile_priority_display"]:
+        render_earnings_cards(sorted_visible)
+    else:
+        st.dataframe(earnings_dataframe(sorted_visible), use_container_width=True, hide_index=True, height=560)
 
 with form_tab:
     if not stocks:

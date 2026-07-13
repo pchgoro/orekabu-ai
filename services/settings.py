@@ -28,6 +28,12 @@ def merge_settings(saved: dict[str, Any] | None) -> dict[str, Any]:
 
 def validate_settings(settings: dict[str, Any]) -> dict[str, Any]:
     """Clamp settings to values that keep the app operational."""
+    settings["dashboard_display_mode"] = settings.get("dashboard_display_mode") if settings.get("dashboard_display_mode") in {"標準", "コンパクト"} else "標準"
+    settings["news_display_mode"] = settings.get("news_display_mode") if settings.get("news_display_mode") in {"カード", "表"} else "カード"
+    settings["mobile_priority_display"] = bool(settings.get("mobile_priority_display", False))
+    settings["briefing_limit"] = max(1, min(int(settings.get("briefing_limit", 10)), 20))
+    settings["daily_tasks_limit"] = max(1, min(int(settings.get("daily_tasks_limit", 10)), 10))
+    settings["hide_zero_sections"] = bool(settings.get("hide_zero_sections", True))
     settings["ranking_limit"] = max(1, min(int(settings.get("ranking_limit", 10)), 100))
     settings["stock_cache_minutes"] = max(1, min(int(settings.get("stock_cache_minutes", 15)), 1440))
     settings["buy_watch_near_percent"] = max(0.0, min(float(settings.get("buy_watch_near_percent", 3.0)), 100.0))
