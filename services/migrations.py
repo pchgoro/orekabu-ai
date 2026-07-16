@@ -6,7 +6,7 @@ import logging
 import sqlite3
 
 logger = logging.getLogger(__name__)
-LATEST_SCHEMA_VERSION = 6
+LATEST_SCHEMA_VERSION = 7
 
 
 def migrate(conn: sqlite3.Connection) -> None:
@@ -50,12 +50,18 @@ def migrate(conn: sqlite3.Connection) -> None:
             conn.execute("UPDATE schema_version SET version = 6")
             version = 6
 
+        if version < 7:
+            _migrate_to_v7(conn)
+            conn.execute("UPDATE schema_version SET version = 7")
+            version = 7
+
         # CREATE IF NOT EXISTS also repairs a partially created v2 migration.
         _migrate_to_v2(conn)
         _migrate_to_v3(conn)
         _migrate_to_v4(conn)
         _migrate_to_v5(conn)
         _migrate_to_v6(conn)
+        _migrate_to_v7(conn)
     except Exception:
         logger.exception("DBマイグレーション失敗 target_version=%s", LATEST_SCHEMA_VERSION)
         raise
@@ -364,3 +370,113 @@ def _migrate_to_v6(conn: sqlite3.Connection) -> None:
     for name in ("company_alias", "market", "industry"):
         if name not in columns:
             conn.execute(f"ALTER TABLE stocks ADD COLUMN {name} TEXT NOT NULL DEFAULT ''")
+
+
+def _migrate_to_v7(conn: sqlite3.Connection) -> None:
+    """Add free automation candidates and execution audit tables."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS edinet_documents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            doc_id TEXT NOT NULL UNIQUE,
+            stock_id INTEGER NOT NULL,
+            edinet_code TEXT NOT NULL DEFAULT '',
+            sec_code TEXT NOT NULL DEFAULT '',
+            filer_name TEXT NOT NULL DEFAULT '',
+            document_type TEXT NOT NULL,
+            submitted_at TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            reference_url TEXT NOT NULL DEFAULT '',
+            retrieved_at TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS edinet_fetch_runs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            started_at TEXT NOT NULL,
+            finished_at TEXT,
+            target_date TEXT NOT NULL,
+            target_count INTEGER NOT NULL DEFAULT 0,
+            document_count INTEGER NOT NULL DEFAULT 0,
+            inserted_count INTEGER NOT NULL DEFAULT 0,
+            duplicate_count INTEGER NOT NULL DEFAULT 0,
+            failed_count INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL,
+            error_summary TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS edinet_fetch_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fetch_run_id INTEGER NOT NULL,
+            stock_id INTEGER,
+            ticker TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL,
+            document_count INTEGER NOT NULL DEFAULT 0,
+            inserted_count INTEGER NOT NULL DEFAULT 0,
+            duplicate_count INTEGER NOT NULL DEFAULT 0,
+            error_message TEXT NOT NULL DEFAULT '',
+            retrieved_at TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(fetch_run_id) REFERENCES edinet_fetch_runs(id) ON DELETE CASCADE,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE SET NULL
+        );
+        CREATE TABLE IF NOT EXISTS stock_profile_candidates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_id INTEGER NOT NULL,
+            provider_name TEXT NOT NULL,
+            company_name TEXT NOT NULL DEFAULT '',
+            company_alias TEXT NOT NULL DEFAULT '',
+            market TEXT NOT NULL DEFAULT '',
+            industry TEXT NOT NULL DEFAULT '',
+            current_company_name TEXT NOT NULL DEFAULT '',
+            current_company_alias TEXT NOT NULL DEFAULT '',
+            current_market TEXT NOT NULL DEFAULT '',
+            current_industry TEXT NOT NULL DEFAULT '',
+            review_status TEXT NOT NULL DEFAULT 'pending',
+            retrieved_at TEXT NOT NULL,
+            fingerprint TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS automation_runs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            command TEXT NOT NULL,
+            started_at TEXT NOT NULL,
+            finished_at TEXT,
+            dry_run INTEGER NOT NULL DEFAULT 0,
+            target_count INTEGER NOT NULL DEFAULT 0,
+            success_count INTEGER NOT NULL DEFAULT 0,
+            failed_count INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL,
+            error_summary TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS automation_run_steps (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            automation_run_id INTEGER NOT NULL,
+            step_name TEXT NOT NULL,
+            sequence_no INTEGER NOT NULL,
+            started_at TEXT NOT NULL,
+            finished_at TEXT,
+            status TEXT NOT NULL,
+            processed_count INTEGER NOT NULL DEFAULT 0,
+            inserted_count INTEGER NOT NULL DEFAULT 0,
+            duplicate_count INTEGER NOT NULL DEFAULT 0,
+            failed_count INTEGER NOT NULL DEFAULT 0,
+            message TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(automation_run_id) REFERENCES automation_runs(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_edinet_documents_stock_date
+            ON edinet_documents(stock_id, submitted_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_edinet_fetch_results_run
+            ON edinet_fetch_results(fetch_run_id);
+        CREATE INDEX IF NOT EXISTS idx_profile_candidates_review
+            ON stock_profile_candidates(review_status, stock_id);
+        CREATE INDEX IF NOT EXISTS idx_automation_runs_started
+            ON automation_runs(started_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_automation_steps_run
+            ON automation_run_steps(automation_run_id, sequence_no);
+        """
+    )

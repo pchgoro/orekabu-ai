@@ -25,6 +25,9 @@ flowchart TD
     Q --> S["News Link Candidates / Prompt"]
     C --> T["Company Profile Aggregator"]
     T --> U["Stock / Earnings / News / Disclosure / Relations"]
+    C --> V["Automation Orchestrator"]
+    V --> W["RSS / yfinance / EDINET API v2"]
+    V --> X["Review Candidates / Audit History"]
 ```
 
 ## 画面層
@@ -76,6 +79,11 @@ flowchart TD
 ・`services/news_providers/csv_provider.py`: 記事CSV行の正規化
 ・`services/disclosures.py`: 開示CRUD、入力・URL・PDF検証、SHA-256重複排除、タグ、ニュース関連、CSV、集計、プロンプト
 ・`services/company_profile.py`: 株価、決算、ニュース、適時開示、関連銘柄を企業単位で集約する唯一の横断サービス
+・`services/automation.py`: CLI・日次処理の順序、部分失敗継続、実行履歴
+・`services/automation_jobs.py`: 既存RSS・決算候補処理を自動化ジョブへ変換
+・`services/edinet.py`: EDINET API v2、登録銘柄照合、書類メタデータ保存
+・`services/stock_profiles.py`: yfinance企業情報の候補化。stocksは更新しない
+・`scripts/*.py`: 個別取得と日次一括更新のCLI
 
 ## 候補承認フロー
 
@@ -94,3 +102,5 @@ flowchart TD
 ## テスト
 
 `tests/` は外部ネットワークに依存しない。指標、スコア、入力検証、SQLite処理をpytestで確認する。
+
+自動化テストはEDINET、RSS、yfinanceをモックし、一時DBだけを使用する。`--dry-run`のDB不変、処理順、部分失敗、重複防止、候補による確定データ非更新を検証する。

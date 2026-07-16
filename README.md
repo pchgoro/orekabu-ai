@@ -8,6 +8,8 @@ Phase 3B適時開示基盤はv0.5.0候補として開発中です。正式版に
 
 Phase 4A企業カルテはv0.6.0候補として開発中です。正式版には確定していません。
 
+無料取得自動化基盤は開発中です。正式版には確定していません。
+
 オレ株AIは、個人利用専用の日本株分析ツールです。売買判断を自動化するものではなく、保有株と監視銘柄について「今日どれを確認するべきか」を短時間で把握するために使います。
 
 ## できること
@@ -31,11 +33,13 @@ Phase 4A企業カルテはv0.6.0候補として開発中です。正式版には
 - 決算・関連銘柄CSV入出力
 - yfinanceからの決算予定日候補取得と変更検知
 - 候補の承認、保留、却下と取得履歴
+- RSS、決算候補、EDINET書類メタデータ、企業情報候補のローカル一括取得
+- Windowsタスクスケジューラから実行できる無料取得CLI
 
 ## できないこと
 
 - ニュース本文全文の保存、AI自動要約、重要度の自動判定
-- TDnet、EDINET、PR TIMESとの自動連携
+- TDnetの自動巡回、EDINET本文・XBRL解析、AI要約
 
 ## ニュース管理
 
@@ -117,11 +121,112 @@ yfinanceは候補日を返さない場合、過去日や複数日を返す場合
 ticker,earnings_date,announcement_time,fiscal_year,fiscal_quarter,source_name,source_reference,confidence,memo
 ```
 
+## 無料取得自動化
+
+`scripts`配下のCLIは、現在導入済みの無料OSSと公式の無料取得手段だけを使用します。
+
+```powershell
+python scripts\fetch_news.py --limit 10
+python scripts\fetch_earnings.py --ticker 5801 --limit 1
+python scripts\fetch_edinet.py --limit 20
+python scripts\fetch_edinet.py --ticker 5801.T --lookback-days 90 --dry-run --limit 20 --verbose
+python scripts\fetch_edinet.py --preset monthly --dry-run --verbose
+python scripts\run_edinet_backfill.py --dry-run --verbose
+python scripts\refresh_stock_profiles.py --limit 20
+python scripts\run_daily_update.py --limit 20
+```
+
+すべてのCLIで`--dry-run`、`--ticker`、`--limit`、`--force`、`--verbose`を利用できます。`--dry-run`は取得内容だけを確認し、DBと実行履歴を変更しません。終了コードは、成功が`0`、一部失敗または実行失敗が`1`、引数・設定不備が`2`です。
+
+EDINET CLIは`--date YYYY-MM-DD`による1日指定に加え、`--lookback-days N`で日本時間の今日を含む直近1〜365日を新しい日から順に確認できます。両方は同時指定できません。期間取得は日付間に待機を入れ、1日の失敗後も残りの日付を継続します。
+
+日数を省略した場合は設定値を使用します。
+
+- 日次取得: 3日
+- 月次確認: 30日
+- 初回バックフィル: 90日
+- 1日あたりの最大保存候補: 20件
+
+これらは設定ページの「EDINET取得設定」で変更できます。`--lookback-days`、`--days`、`--limit`を明示した場合はCLI値が優先されます。
+
+日次一括処理は、RSS、決算候補、EDINET、企業情報候補、確認済みの古い決算候補整理の順に実行します。1処理が失敗しても後続処理を続け、設定画面とDBへステップ別の結果を保存します。外部から得た決算日と企業情報は候補テーブルへ保存し、確定済みデータを自動上書きしません。
+
+設定画面の「企業情報候補の確認」では、yfinanceから取得した会社名、略称、市場、業種を現在値と比較できます。選択項目だけの承認、全項目承認、保留、却下に対応し、承認した場合だけ`stocks`をトランザクション内で更新します。候補取得だけで既存値が変わることはありません。
+
+### EDINET APIキー
+
+EDINETは金融庁の公式EDINET API v2だけを使用します。APIキーはEDINETの利用登録で取得し、プロジェクト直下の`.env`へ保存します。`.env`はGit管理対象外です。
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
+
+`.env`の例:
+
+```text
+EDINET_API_KEY=取得したAPIキー
+```
+
+保存対象は登録銘柄に一致する有価証券報告書、半期報告書、臨時報告書、大量保有報告書、訂正書類のメタデータです。本文、PDF、XBRLは取得・解析しません。`docID`で重複保存を防止します。
+
+設定画面にはAPIキーが「設定済み」か「未設定」かだけを表示します。キー本体は画面、ログ、実行結果へ表示しません。未設定時はEDINET処理だけが失敗し、日次処理の後続ステップは継続します。
+
+### Windowsタスクスケジューラ
+
+タスクはアプリから自動登録しません。利用者がWindowsの「タスク スケジューラ」で次のように登録します。
+
+1. 「基本タスクの作成」を選び、任意の名前を付けます。
+2. トリガーを「毎日」にし、PCとネットワークが利用できる時間を指定します。
+3. 操作を「プログラムの開始」にします。
+4. プログラムに`C:\Users\goroo\Desktop\orekabu-ai\run_daily_update.bat`を指定します。
+5. 開始フォルダーに`C:\Users\goroo\Desktop\orekabu-ai`を指定します。
+6. 初回はbatを手動実行し、終了コードと`logs\app.log`を確認します。
+
+EDINET APIキー未設定時はEDINETだけ失敗として記録し、RSS、決算候補、企業情報候補は継続します。高頻度実行は避け、まず1日1回から利用してください。
+
+EDINETだけを運用する場合の推奨構成:
+
+- 毎日: `run_edinet_daily.bat`。初期設定では直近3日
+- 月1回: `python scripts\fetch_edinet.py --preset monthly`。初期設定では直近30日
+- 初回のみ: `run_edinet_backfill.bat`。初期設定では直近90日
+
+BATは設定画面の値を参照します。タスク自体はアプリから登録しません。
+
+外部通信を含む任意テストは通常テストから分離しています。EDINET APIキーが設定済みの場合だけ、次で最大5件のdry-runを確認できます。
+
+```powershell
+pytest -q -m integration
+```
+
+## マーケットスピード保有銘柄CSV
+
+設定ページの「マーケットスピード保有銘柄CSV」から、楽天証券マーケットスピードの保有銘柄CSVを専用形式として取り込めます。既存のオレ株AI形式CSVインポートはそのまま利用できます。
+
+対応文字コード:
+
+- UTF-8 BOM
+- UTF-8
+- CP932
+
+取込対象:
+
+- コード、銘柄名
+- 口座区分
+- 保有数量
+- 平均取得価額
+
+同一銘柄が特定口座とNISAなどに分かれている場合は、株数を合計し、平均取得価額を数量加重平均で計算します。口座内訳はメモへ追加されますが、既存の自由記述メモは維持されます。
+
+更新時に変更するのは会社名、保有区分、株数、平均取得価額だけです。買い検討価格、ニュースキーワード、決算、関連銘柄、企業カルテの市場・業種・略称は変更しません。CSVに存在しない保有株も自動で非保有にはせず、確認候補として表示します。
+
+評価損益、利回り、PER、PBR、時価、前日比、決算日は正式データへ保存しません。現在値と評価損益はオレ株AI側で再取得・再計算します。
+
 ## 必要環境
 
 - Windows PC
 - Python 3.11以上
-- インターネット接続（株価・決算候補取得時のみ）
+- インターネット接続（株価、RSS、決算候補、EDINET、企業情報候補取得時のみ）
 
 ## 初回起動方法
 
@@ -253,6 +358,7 @@ ticker,company_name,category,is_holding,shares,average_price,buy_watch_price,mem
 
 - DB: `data\orekabu.db`
 - ログ: `logs\app.log`
+- 自動取得履歴: `data\orekabu.db`内の`automation_runs`、`automation_run_steps`
 
 ## DBバックアップ
 

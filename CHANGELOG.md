@@ -6,6 +6,25 @@
 
 ### Added
 
+- schema version 7のEDINETメタデータ、企業情報候補、自動化実行履歴テーブル
+- RSS、決算候補、EDINET、企業情報候補を個別実行する無料CLI
+- 各処理を順番に継続実行する`run_daily_update.py`とWindows用bat
+- EDINET公式API v2の登録銘柄向け書類メタデータ取得とdocID重複防止
+- yfinance企業情報を確定値へ反映せず候補保存する処理
+- 設定画面の最終更新、処理結果、候補件数、手動一括更新、実行履歴
+- 企業情報候補の項目別承認、全項目承認、保留、却下
+- EDINET APIキーの設定状態だけを表示する安全な案内
+- APIキー設定時だけ実行できるEDINET実通信integrationテスト
+- EDINET CLIの直近1〜365日を確認する`--lookback-days`
+- 日付別API件数、ticker一致件数、対象書類件数のverbose表示
+- UTF-8 BOM、UTF-8、CP932対応のマーケットスピード保有銘柄CSV専用インポート
+- 複数口座の株数合計、数量加重平均、口座内訳メモ生成
+- 既存値と取込後の値、更新判定、CSVにない保有株候補のプレビュー
+- EDINETの日次3日、月次30日、初回90日、最大保存20件の設定
+- 設定を使うEDINET日次BATと初回バックフィルCLI・BAT
+- CLI指定を優先するEDINET設定解決とverbose集計
+- dry-run、部分失敗、再実行、処理順、候補保護、CLI終了コードのテスト
+
 - schema version 6で企業略称、市場、業種を既存stocksへ非破壊追加
 - 株価、決算、ニュース、適時開示、関連銘柄を集約する企業カルテサービス
 - ticker、会社名、略称検索とPC 2〜3列・モバイル優先縦表示の企業カルテページ
@@ -22,6 +41,12 @@
 - URL、PDF、パストラバーサル、CSV数式、HTML入力の防御テスト
 
 ### Changed
+
+- DB schema versionを6から7へ更新
+- RSS取得サービスを明示的な取得対象ソースで実行可能に変更
+- EDINET書類保存の部分失敗を取得明細へ記録するよう変更
+- EDINET証券コード照合を数字4桁tickerと数字5桁secCodeの厳密一致へ変更
+- MarketSpeed更新時に買い検討価格、自由記述メモ、企業カルテ情報を維持する限定更新
 
 - DB schema versionを5から6へ更新
 

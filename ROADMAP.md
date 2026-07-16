@@ -119,6 +119,24 @@ AIを使うこと自体を目的にせず、投資判断に必要な情報を効
 - [x] 既存画面からの遷移
 - [ ] Desktop・Mobile実画面最終確認
 
+## Free Automation Foundation（Candidate）
+
+- [x] RSS・AtomのCLI取得
+- [x] yfinance決算候補のCLI取得
+- [x] EDINET公式API v2の書類メタデータ取得
+- [x] yfinance企業情報候補の取得
+- [x] 候補による確定データの自動上書き防止
+- [x] ステップ別の一括実行履歴
+- [x] dry-runと銘柄・件数指定
+- [x] Windowsタスクスケジューラ用bat
+- [x] 設定画面の手動一括更新と履歴表示
+- [x] EDINET APIキーの設定状態表示
+- [x] 企業情報候補の項目別承認・全承認・保留・却下
+- [x] EDINET部分失敗の明細履歴
+- [ ] EDINET APIキーを設定した実通信確認
+- [ ] Windowsタスクスケジューラ実登録確認
+- [ ] 実データの企業情報候補を人間が確認して承認する
+
 ## Phase 4B 通知
 
 - [ ] Windows通知

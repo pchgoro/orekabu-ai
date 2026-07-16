@@ -46,6 +46,10 @@ DEFAULT_SETTINGS = {
     "related_earnings_limit": 5,
     "past_earnings_days": 30,
     "show_unconfirmed_earnings": True,
+    "edinet_daily_lookback_days": 3,
+    "edinet_monthly_lookback_days": 30,
+    "edinet_initial_backfill_days": 90,
+    "edinet_fetch_limit": 20,
     "earnings_auto_fetch": {
         "enabled": True,
         "provider": "yfinance",

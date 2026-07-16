@@ -7,6 +7,7 @@ import hashlib
 import io
 import logging
 import re
+import time
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -195,15 +196,23 @@ def get_article_tags(article_id: int, db_path: Path | str = DB_PATH) -> list[str
         return [row[0] for row in conn.execute("SELECT t.name FROM news_tags t JOIN news_article_tags x ON x.tag_id=t.id WHERE x.article_id=? ORDER BY t.name", (article_id,)).fetchall()]
 
 
-def fetch_enabled_sources(provider_factory: Any, db_path: Path | str = DB_PATH) -> dict[str, Any]:
+def fetch_enabled_sources(
+    provider_factory: Any,
+    db_path: Path | str = DB_PATH,
+    sources: list[dict[str, Any]] | None = None,
+    interval_seconds: float = 0.0,
+    sleep: Any = time.sleep,
+) -> dict[str, Any]:
     """Fetch enabled RSS/Atom sources independently and retain an audit trail."""
-    sources = [s for s in list_sources(db_path) if s["is_enabled"] and s["source_type"] in {"RSS", "Atom"}]
+    sources = sources if sources is not None else [
+        s for s in list_sources(db_path) if s["is_enabled"] and s["source_type"] in {"RSS", "Atom"}
+    ]
     now = _now()
     with connect(db_path) as conn:
         run_id = int(conn.execute("INSERT INTO news_fetch_runs(started_at,source_count,status,created_at) VALUES(?,?,?,?)", (now, len(sources), "running", now)).lastrowid)
     inserted = duplicates = failed = 0
     errors: list[str] = []
-    for source in sources:
+    for source_index, source in enumerate(sources):
         source_inserted = source_duplicates = 0
         try:
             provider: NewsProvider = provider_factory(source)
@@ -218,6 +227,8 @@ def fetch_enabled_sources(provider_factory: Any, db_path: Path | str = DB_PATH) 
         inserted += source_inserted; duplicates += source_duplicates
         with connect(db_path) as conn:
             conn.execute("INSERT INTO news_fetch_results(fetch_run_id,source_id,status,article_count,duplicate_count,error_message,retrieved_at,created_at) VALUES(?,?,?,?,?,?,?,?)", (run_id, source["id"], status, source_inserted, source_duplicates, error, _now(), _now()))
+        if source_index < len(sources) - 1 and interval_seconds > 0:
+            sleep(float(interval_seconds))
     final_status = "failed" if failed == len(sources) and sources else ("partial" if failed else "completed")
     with connect(db_path) as conn:
         conn.execute("UPDATE news_fetch_runs SET finished_at=?,article_count=?,duplicate_count=?,failed_count=?,status=?,error_summary=? WHERE id=?", (_now(), inserted, duplicates, failed, final_status, " / ".join(errors)[:1000], run_id))

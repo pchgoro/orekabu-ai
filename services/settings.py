@@ -43,6 +43,18 @@ def validate_settings(settings: dict[str, Any]) -> dict[str, Any]:
     settings["related_earnings_limit"] = _clamp_int(settings.get("related_earnings_limit"), 5, 1, 100)
     settings["past_earnings_days"] = _clamp_int(settings.get("past_earnings_days"), 30, 0, 3650)
     settings["show_unconfirmed_earnings"] = _as_bool(settings.get("show_unconfirmed_earnings"), True)
+    settings["edinet_daily_lookback_days"] = _clamp_int(
+        settings.get("edinet_daily_lookback_days"), 3, 1, 30
+    )
+    settings["edinet_monthly_lookback_days"] = _clamp_int(
+        settings.get("edinet_monthly_lookback_days"), 30, 1, 365
+    )
+    settings["edinet_initial_backfill_days"] = _clamp_int(
+        settings.get("edinet_initial_backfill_days"), 90, 1, 365
+    )
+    settings["edinet_fetch_limit"] = _clamp_int(
+        settings.get("edinet_fetch_limit"), 20, 1, 500
+    )
     auto = settings.get("earnings_auto_fetch", {})
     defaults = DEFAULT_SETTINGS["earnings_auto_fetch"]
     if not isinstance(auto, dict):

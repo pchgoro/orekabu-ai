@@ -54,7 +54,7 @@
 
 ## schema_versionテーブル
 
-現在のDBスキーマ番号を1行で保持します。Phase 4A企業カルテ対応のスキーマはversion 6です。
+現在のDBスキーマ番号を1行で保持します。無料取得自動化対応のスキーマはversion 7です。
 
 ## earnings_candidatesテーブル
 
@@ -92,6 +92,17 @@
 
 `disclosures.content_hash`は一意です。空でない`external_id`にも部分UNIQUEインデックスを設定します。開示削除時はタグ・ニュース関係をCASCADE削除しますが、ローカルPDF本体は削除しません。
 
+## 無料取得自動化テーブル
+
+- `edinet_documents`: docID、EDINETコード、証券コード、提出者、書類種別、提出日時、説明、公式参照URL、取得日時。`doc_id`はUNIQUE
+- `edinet_fetch_runs`: EDINET取得単位の対象日、件数、状態、エラー要約
+- `edinet_fetch_results`: EDINET取得の銘柄別・書類別結果
+- `stock_profile_candidates`: yfinanceの会社名、略称、市場、業種候補と取得時点の既存値。fingerprintはUNIQUE
+- `automation_runs`: 個別CLI・日次一括処理の開始、終了、成功、失敗、状態
+- `automation_run_steps`: RSS、決算候補、EDINET、企業情報候補、整理処理のステップ別結果
+
+EDINET書類は本文を保存しません。企業情報候補は`stocks`を自動更新しません。dry-runではこれらの履歴テーブルにも書き込みません。
+
 ## 初期化方法
 
 アプリ起動時に `services.database.init_db()` が実行される。テーブルは `CREATE TABLE IF NOT EXISTS` で作成されるため、複数回実行しても壊れない。
@@ -120,7 +131,7 @@ Copy-Item data\orekabu_backup.db data\orekabu.db
 
 ## マイグレーション方針
 
-`services/migrations.py` がversionを確認し、未適用の変更だけを実行します。version 6は`PRAGMA table_info(stocks)`で列を確認し、不足する企業メタデータ列だけを`ALTER TABLE ADD COLUMN`で追加します。同じ処理を複数回実行しても重複追加されません。
+`services/migrations.py` がversionを確認し、未適用の変更だけを実行します。version 6は`PRAGMA table_info(stocks)`で不足する企業メタデータ列だけを追加し、version 7は`CREATE TABLE/INDEX IF NOT EXISTS`で無料取得自動化テーブルを追加します。同じ処理を複数回実行しても重複追加されません。
 
 ## 破損時の注意
 

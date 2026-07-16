@@ -64,6 +64,31 @@ def test_auto_fetch_settings_are_clamped(tmp_path: Path) -> None:
     assert auto["cache_hours"] == 1
 
 
+def test_edinet_settings_defaults_and_ranges(tmp_path: Path) -> None:
+    db = tmp_path / "edinet-settings.db"
+    init_db(db)
+    defaults = load_settings(db)
+    assert defaults["edinet_daily_lookback_days"] == 3
+    assert defaults["edinet_monthly_lookback_days"] == 30
+    assert defaults["edinet_initial_backfill_days"] == 90
+    assert defaults["edinet_fetch_limit"] == 20
+
+    defaults.update(
+        {
+            "edinet_daily_lookback_days": 999,
+            "edinet_monthly_lookback_days": 0,
+            "edinet_initial_backfill_days": 366,
+            "edinet_fetch_limit": 9999,
+        }
+    )
+    save_settings(defaults, db)
+    loaded = load_settings(db)
+    assert loaded["edinet_daily_lookback_days"] == 30
+    assert loaded["edinet_monthly_lookback_days"] == 1
+    assert loaded["edinet_initial_backfill_days"] == 365
+    assert loaded["edinet_fetch_limit"] == 500
+
+
 def test_daily_ux_settings_merge_and_preserve_existing_settings(tmp_path: Path) -> None:
     db = tmp_path / "daily.db"; init_db(db)
     settings = load_settings(db)
