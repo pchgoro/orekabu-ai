@@ -20,6 +20,11 @@ flowchart TD
     C --> N["News Service"]
     N --> O["RSS / Atom / Manual / CSV Providers"]
     N --> P["Deduplication / Stock Matching"]
+    C --> Q["Disclosure Service"]
+    Q --> R["Manual / PDF Path / CSV"]
+    Q --> S["News Link Candidates / Prompt"]
+    C --> T["Company Profile Aggregator"]
+    T --> U["Stock / Earnings / News / Disclosure / Relations"]
 ```
 
 ## 画面層
@@ -32,6 +37,8 @@ flowchart TD
 ・`pages/5_決算.py`: 決算カレンダー、決算CRUD、関連銘柄、影響予定、CSV
 ・`pages/6_設定.py`: 設定、CSV、銘柄登録
 ・`pages/7_ニュース.py`: ニュース一覧、ソース、キーワード、手動登録、CSV、取得履歴
+・`pages/8_適時開示.py`: 開示一覧、手動登録、PDF参照、CSV、取込履歴、ニュース関連
+・`pages/9_企業カルテ.py`: 企業検索、横断カルテ、統合タイムライン、コピー用プロンプト
 
 ## Components
 
@@ -67,6 +74,8 @@ flowchart TD
 ・`services/news_providers/rss_provider.py`: 標準ライブラリによるRSS/Atom取得と正規化
 ・`services/news_providers/manual_provider.py`: 手動入力の正規化
 ・`services/news_providers/csv_provider.py`: 記事CSV行の正規化
+・`services/disclosures.py`: 開示CRUD、入力・URL・PDF検証、SHA-256重複排除、タグ、ニュース関連、CSV、集計、プロンプト
+・`services/company_profile.py`: 株価、決算、ニュース、適時開示、関連銘柄を企業単位で集約する唯一の横断サービス
 
 ## 候補承認フロー
 

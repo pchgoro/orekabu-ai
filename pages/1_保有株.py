@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from components.navigation import company_profile_button
+
 from components.cards import holding_metrics
 from components.forms import create_stock_section, edit_delete_section
 from components.tables import holdings_dataframe
@@ -26,6 +28,14 @@ stocks = get_stocks()
 settings = load_settings()
 rows = filter_holdings(enrich_stock_rows(build_analysis_rows(stocks, settings), near_days=int(settings["earnings_near_days"])))
 holding_metrics(rows)
+if rows:
+    profile_labels = {f"{row['ticker']} {row['company_name']}": row for row in rows}
+    profile_label = st.selectbox("企業カルテを開く銘柄", list(profile_labels), key="holding_profile")
+    company_profile_button(
+        profile_labels[profile_label]["ticker"],
+        "企業カルテを開く",
+        key="holding_profile_open",
+    )
 create_stock_section()
 edit_delete_section(rows, "holding")
 

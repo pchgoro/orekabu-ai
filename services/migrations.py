@@ -6,7 +6,7 @@ import logging
 import sqlite3
 
 logger = logging.getLogger(__name__)
-LATEST_SCHEMA_VERSION = 4
+LATEST_SCHEMA_VERSION = 6
 
 
 def migrate(conn: sqlite3.Connection) -> None:
@@ -21,6 +21,9 @@ def migrate(conn: sqlite3.Connection) -> None:
             version = 1
         else:
             version = int(row[0])
+
+        if version > LATEST_SCHEMA_VERSION:
+            raise RuntimeError(f"未対応のDBバージョンです: {version}")
 
         if version < 2:
             _migrate_to_v2(conn)
@@ -37,12 +40,22 @@ def migrate(conn: sqlite3.Connection) -> None:
             conn.execute("UPDATE schema_version SET version = 4")
             version = 4
 
+        if version < 5:
+            _migrate_to_v5(conn)
+            conn.execute("UPDATE schema_version SET version = 5")
+            version = 5
+
+        if version < 6:
+            _migrate_to_v6(conn)
+            conn.execute("UPDATE schema_version SET version = 6")
+            version = 6
+
         # CREATE IF NOT EXISTS also repairs a partially created v2 migration.
         _migrate_to_v2(conn)
         _migrate_to_v3(conn)
         _migrate_to_v4(conn)
-        if version != LATEST_SCHEMA_VERSION:
-            raise RuntimeError(f"未対応のDBバージョンです: {version}")
+        _migrate_to_v5(conn)
+        _migrate_to_v6(conn)
     except Exception:
         logger.exception("DBマイグレーション失敗 target_version=%s", LATEST_SCHEMA_VERSION)
         raise
@@ -260,3 +273,94 @@ def _migrate_to_v4(conn: sqlite3.Connection) -> None:
         CREATE INDEX IF NOT EXISTS idx_news_fetch_results_run ON news_fetch_results(fetch_run_id);
         """
     )
+
+
+def _migrate_to_v5(conn: sqlite3.Connection) -> None:
+    """Add manually managed disclosures, tags, news links, and import audit tables."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS disclosures (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_id INTEGER NOT NULL,
+            disclosure_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            disclosed_at TEXT NOT NULL,
+            source_name TEXT NOT NULL DEFAULT '',
+            source_url TEXT NOT NULL DEFAULT '',
+            document_url TEXT NOT NULL DEFAULT '',
+            local_file_path TEXT NOT NULL DEFAULT '',
+            summary TEXT NOT NULL DEFAULT '',
+            importance TEXT NOT NULL DEFAULT '通常',
+            is_read INTEGER NOT NULL DEFAULT 0,
+            is_favorite INTEGER NOT NULL DEFAULT 0,
+            user_memo TEXT NOT NULL DEFAULT '',
+            external_id TEXT NOT NULL DEFAULT '',
+            content_hash TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS disclosure_tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS disclosure_tag_links (
+            disclosure_id INTEGER NOT NULL,
+            tag_id INTEGER NOT NULL,
+            PRIMARY KEY(disclosure_id, tag_id),
+            FOREIGN KEY(disclosure_id) REFERENCES disclosures(id) ON DELETE CASCADE,
+            FOREIGN KEY(tag_id) REFERENCES disclosure_tags(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS disclosure_news_links (
+            disclosure_id INTEGER NOT NULL,
+            news_article_id INTEGER NOT NULL,
+            match_reason TEXT NOT NULL DEFAULT '',
+            confirmed INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY(disclosure_id, news_article_id),
+            FOREIGN KEY(disclosure_id) REFERENCES disclosures(id) ON DELETE CASCADE,
+            FOREIGN KEY(news_article_id) REFERENCES news_articles(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS disclosure_import_runs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            started_at TEXT NOT NULL,
+            finished_at TEXT,
+            row_count INTEGER NOT NULL DEFAULT 0,
+            inserted_count INTEGER NOT NULL DEFAULT 0,
+            updated_count INTEGER NOT NULL DEFAULT 0,
+            skipped_count INTEGER NOT NULL DEFAULT 0,
+            failed_count INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL,
+            error_summary TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS disclosure_import_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            import_run_id INTEGER NOT NULL,
+            row_number INTEGER NOT NULL,
+            ticker TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL,
+            disclosure_id INTEGER,
+            error_message TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(import_run_id) REFERENCES disclosure_import_runs(id) ON DELETE CASCADE,
+            FOREIGN KEY(disclosure_id) REFERENCES disclosures(id) ON DELETE SET NULL
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_disclosures_external_id
+            ON disclosures(external_id) WHERE external_id <> '';
+        CREATE INDEX IF NOT EXISTS idx_disclosures_date ON disclosures(disclosed_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_disclosures_stock_state ON disclosures(stock_id, is_read, importance);
+        CREATE INDEX IF NOT EXISTS idx_disclosure_news_article ON disclosure_news_links(news_article_id, confirmed);
+        CREATE INDEX IF NOT EXISTS idx_disclosure_import_results_run ON disclosure_import_results(import_run_id);
+        """
+    )
+
+
+def _migrate_to_v6(conn: sqlite3.Connection) -> None:
+    """Add optional company profile metadata without rebuilding stocks."""
+    columns = {str(row[1]) for row in conn.execute("PRAGMA table_info(stocks)").fetchall()}
+    for name in ("company_alias", "market", "industry"):
+        if name not in columns:
+            conn.execute(f"ALTER TABLE stocks ADD COLUMN {name} TEXT NOT NULL DEFAULT ''")

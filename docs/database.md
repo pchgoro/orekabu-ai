@@ -46,13 +46,15 @@
 
 `stock_id, fiscal_year, fiscal_quarter` は一意です。
 
+企業カルテ向けに`stocks`へ`company_alias`、`market`、`industry`のTEXT列を追加します。すべて空文字を初期値とし、既存銘柄データを変更しません。
+
 ## stock_relationsテーブル
 
 `source_stock_id` は影響を受ける側、`related_stock_id` は影響を与える可能性がある側です。同一組み合わせは一意で、自己参照は禁止します。関係タイプ、影響度、メモ、作成・更新日時を保持します。
 
 ## schema_versionテーブル
 
-現在のDBスキーマ番号を1行で保持します。Phase 3Aニュース基盤対応のスキーマはversion 4です。
+現在のDBスキーマ番号を1行で保持します。Phase 4A企業カルテ対応のスキーマはversion 6です。
 
 ## earnings_candidatesテーブル
 
@@ -78,6 +80,17 @@
 - `news_fetch_results`: ソース別の取得結果とエラー
 
 `news_articles.deduplication_key`、`news_sources.name`、`stock_news_keywords(stock_id, keyword)` は一意です。記事削除時は銘柄候補とタグ関係をCASCADE削除し、ソース削除時は記事を残して`source_id`のみNULLにします。
+
+## 適時開示関連テーブル
+
+- `disclosures`: 銘柄、開示種別、タイトル、日時、出典・文書URL、許可済みPDFパス、要約、状態、メモ、外部ID、SHA-256重複キー
+- `disclosure_tags`: タグマスター
+- `disclosure_tag_links`: 開示とタグの多対多関係
+- `disclosure_news_links`: 開示とニュースの候補・承認済み関係、一致理由
+- `disclosure_import_runs`: CSV取込単位の件数と状態
+- `disclosure_import_results`: CSV行ごとの成功、更新、スキップ、失敗
+
+`disclosures.content_hash`は一意です。空でない`external_id`にも部分UNIQUEインデックスを設定します。開示削除時はタグ・ニュース関係をCASCADE削除しますが、ローカルPDF本体は削除しません。
 
 ## 初期化方法
 
@@ -107,7 +120,7 @@ Copy-Item data\orekabu_backup.db data\orekabu.db
 
 ## マイグレーション方針
 
-`services/migrations.py` がversionを確認し、未適用の変更だけを実行します。version 4は既存テーブルをDROPせず、ニュース関連8テーブルとインデックスを追加します。同じ処理を複数回実行しても重複作成されません。
+`services/migrations.py` がversionを確認し、未適用の変更だけを実行します。version 6は`PRAGMA table_info(stocks)`で列を確認し、不足する企業メタデータ列だけを`ALTER TABLE ADD COLUMN`で追加します。同じ処理を複数回実行しても重複追加されません。
 
 ## 破損時の注意
 

@@ -8,9 +8,11 @@ from typing import Any
 
 def is_missing(value: Any) -> bool:
     """Return True when a value should be shown as missing data."""
+    if value is None:
+        return True
     try:
-        return value is None or (isinstance(value, float) and (math.isnan(value) or math.isinf(value)))
-    except TypeError:
+        return not math.isfinite(float(value))
+    except (TypeError, ValueError, OverflowError):
         return True
 
 

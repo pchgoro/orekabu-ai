@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from services.database import add_stock, delete_stock, get_stock, get_stocks, init_db, load_settings, save_settings, update_stock
+from services.database import add_stock, delete_stock, get_stock, get_stocks, init_db, load_settings, save_settings, set_setting, update_stock
 from services.settings import default_settings
 
 
@@ -75,6 +75,26 @@ def test_daily_ux_settings_merge_and_preserve_existing_settings(tmp_path: Path) 
     assert loaded["news_display_mode"] == "表"
     assert loaded["briefing_limit"] == 20 and loaded["daily_tasks_limit"] == 10
     assert loaded["earnings_auto_fetch"]["max_tickers_per_run"] == 7
+
+
+def test_invalid_persisted_settings_fall_back_without_breaking_startup(tmp_path: Path) -> None:
+    db = tmp_path / "invalid-settings.db"; init_db(db)
+    set_setting("settings", {
+        "briefing_limit": "not-a-number",
+        "stock_cache_minutes": None,
+        "buy_watch_near_percent": "nan",
+        "mobile_priority_display": "false",
+        "earnings_auto_fetch": "broken",
+        "score": {"base_score": "inf", "rsi_low": "invalid"},
+    }, db)
+    loaded = load_settings(db)
+    assert loaded["briefing_limit"] == 10
+    assert loaded["stock_cache_minutes"] == 15
+    assert loaded["buy_watch_near_percent"] == 3.0
+    assert loaded["mobile_priority_display"] is False
+    assert loaded["earnings_auto_fetch"]["max_tickers_per_run"] == 20
+    assert loaded["score"]["base_score"] == 50.0
+    assert loaded["score"]["rsi_low"] == 30.0
 
 
 def test_environment_db_override_uses_isolated_database(tmp_path: Path, monkeypatch) -> None:

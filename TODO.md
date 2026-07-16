@@ -2,6 +2,14 @@
 
 ## High
 
+- [ ] Phase 4A企業カルテのDesktop・Mobile実画面確認
+- [ ] 企業略称、市場、業種の実データ入力確認
+- [ ] 実データのタイムライン順序と既存画面からの遷移確認
+
+- [ ] Phase 3B適時開示のDesktop・Mobile実画面確認
+- [ ] 開示CSVを日本語版Excelで確認する
+- [ ] 実ファイルを使ったPDFアップロードと再起動保持を確認する
+
 - [x] Phase 3AのRSS実通信と日本語フィード表示を人間が確認する
 - [x] Phase 3AのCSVを日本語版Excelで確認する
 - [x] Phase 3AのDesktop・スマートフォン幅表示を確認する
@@ -22,7 +30,13 @@
 
 ## Completed
 
+- [x] schema version 6の企業メタデータ移行
+- [x] 企業カルテ集約サービス、ページ、プロンプト、タイムライン
+- [x] 企業カルテの単体テストとAppTest
+
 - [x] Phase 3Aニュース基盤とDaily UXをv0.4.0として正式化
+- [x] schema version 5の冪等マイグレーションと適時開示基盤
+- [x] 開示CRUD、重複排除、CSV、タグ、ニュース連携、プロンプトの自動テスト
 
 - [x] schema version 4の冪等マイグレーションと既存データ保持テスト
 - [x] RSS/Atom、手動、CSVニュース基盤

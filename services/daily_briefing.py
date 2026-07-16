@@ -9,10 +9,11 @@ def build_briefing(
     stock_rows: list[dict[str, Any]], earnings_rows: list[dict[str, Any]],
     candidates: list[dict[str, Any]], news_rows: list[dict[str, Any]],
     buy_watch_rows: list[dict[str, Any]], news_summary: dict[str, Any],
-    rss_failed_count: int = 0,
+    rss_failed_count: int = 0, disclosure_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Aggregate explainable daily counts without DB or UI dependencies."""
     pending = [row for row in candidates if row.get("review_status") == "pending"]
+    disclosures = disclosure_rows or []
     items = [
         _item("本日決算", sum(row.get("days_until") == 0 for row in earnings_rows), "決算", "danger"),
         _item("7日以内の決算", sum(isinstance(row.get("days_until"), int) and 0 <= row["days_until"] <= 7 for row in earnings_rows), "決算", "warning"),
@@ -28,6 +29,10 @@ def build_briefing(
         _item("注目スコア65以上", sum(float(row.get("score") or 0) >= 65 for row in stock_rows), "app", "warning"),
         _item("株価取得失敗", sum(row.get("data_status") != "OK" for row in stock_rows), "app", "danger"),
         _item("RSS取得失敗", int(rss_failed_count), "ニュース", "danger"),
+        _item("今日の開示", sum(str(row.get("disclosed_at") or "")[:10] == _today() for row in disclosures), "適時開示", "normal"),
+        _item("未読開示", sum(not row.get("is_read") for row in disclosures), "適時開示", "warning"),
+        _item("重要度高の開示", sum(row.get("importance") == "高" for row in disclosures), "適時開示", "danger"),
+        _item("保有株開示", sum(bool(row.get("is_holding")) for row in disclosures), "適時開示", "normal"),
     ]
     return items
 
@@ -36,6 +41,7 @@ def build_daily_tasks(
     stock_rows: list[dict[str, Any]], earnings_rows: list[dict[str, Any]],
     candidates: list[dict[str, Any]], news_rows: list[dict[str, Any]],
     buy_watch_rows: list[dict[str, Any]], rss_failed_count: int = 0, limit: int = 10,
+    disclosure_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Create up to ten actions in the documented priority order."""
     tasks: list[dict[str, Any]] = []
@@ -76,6 +82,19 @@ def build_daily_tasks(
             append_task(8, f"注目スコア {int(row['score'])}", _stock_label(row), target, "score", _row_identity(row))
     if rss_failed_count:
         append_task(9, "RSS取得失敗を確認", f"{rss_failed_count}件", "ニュース", "rss", "latest")
+    disclosures = disclosure_rows or []
+    disclosure_rules = (
+        ("業績予想修正", 10, "業績予想修正を確認"),
+        ("配当修正", 11, "配当修正を確認"),
+        ("決算短信", 12, "決算短信を確認"),
+    )
+    for disclosure_type, priority, label in disclosure_rules:
+        for row in disclosures:
+            if not row.get("is_read") and row.get("disclosure_type") == disclosure_type:
+                append_task(priority, label, _stock_label(row), "適時開示", "disclosure", _row_identity(row))
+    for row in disclosures:
+        if not row.get("is_read") and row.get("importance") == "高" and row.get("is_holding"):
+            append_task(13, "保有株の重要開示を確認", _stock_label(row), "適時開示", "disclosure", _row_identity(row))
     return sorted(tasks, key=lambda item: item["priority"])[: max(1, min(int(limit), 10))]
 
 
@@ -99,3 +118,8 @@ def _row_identity(row: dict[str, Any]) -> Any:
 def _news_identity(row: dict[str, Any]) -> Any:
     """Identify an article consistently across importance and holding-match rules."""
     return row.get("id") or row.get("deduplication_key") or row.get("url") or row.get("title") or "タイトルなし"
+
+
+def _today() -> str:
+    from datetime import datetime
+    return datetime.now().date().isoformat()

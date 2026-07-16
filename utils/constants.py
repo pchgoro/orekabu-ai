@@ -22,6 +22,9 @@ EARNINGS_CONFIDENCE_LEVELS = ["high", "medium", "low", "unknown"]
 NEWS_SOURCE_TYPES = ["RSS", "Atom", "手動", "CSV"]
 NEWS_IMPORTANCE_LEVELS = ["高", "通常", "低"]
 NEWS_CATEGORIES = ["決算", "業績", "適時開示", "製品・サービス", "業界", "市況", "その他"]
+DISCLOSURE_TYPES = ["決算短信", "業績予想修正", "配当修正", "自己株式", "資本政策", "M&A", "提携", "人事", "株主総会", "その他"]
+DISCLOSURE_IMPORTANCE_LEVELS = ["高", "通常", "低"]
+DISCLOSURE_MAX_FILE_SIZE = 10 * 1024 * 1024
 SAMPLE_STOCKS = [
     {"ticker": "5801.T", "company_name": "古河電気工業", "category": "監視銘柄"},
     {"ticker": "6976.T", "company_name": "太陽誘電", "category": "監視銘柄"},

@@ -15,6 +15,7 @@ from services.earnings_view_models import enrich_stock_rows, prepare_earnings_ro
 from services.relations import impact_candidates
 from services.news import list_articles, list_fetch_runs as list_news_fetch_runs, news_dashboard_summary
 from services.daily_briefing import build_briefing, build_daily_tasks
+from services.disclosures import dashboard_summary as disclosure_dashboard_summary, list_disclosures
 from services.stock_data import build_analysis_rows, make_prompt
 from services.view_models import build_buy_watch_rows
 from utils.constants import APP_NAME
@@ -27,6 +28,7 @@ apply_responsive_styles()
 
 st.title(APP_NAME)
 st.caption("注目スコアは売買推奨ではなく、確認優先度を示すものです。")
+st.page_link("pages/9_企業カルテ.py", label="企業カルテを開く")
 
 settings = load_settings()
 stocks = get_stocks()
@@ -38,13 +40,21 @@ news_summary = news_dashboard_summary()
 news_runs = list_news_fetch_runs()
 rss_failed = int(news_runs[0].get("failed_count") or 0) if news_runs else 0
 buy_watch_rows = build_buy_watch_rows(rows, float(settings["buy_watch_near_percent"]))
-briefing = build_briefing(rows, earnings_rows, candidates, news_rows, buy_watch_rows, news_summary, rss_failed)
-tasks = build_daily_tasks(rows, earnings_rows, candidates, news_rows, buy_watch_rows, rss_failed, int(settings["daily_tasks_limit"]))
+disclosure_rows = list_disclosures()
+disclosure_summary = disclosure_dashboard_summary()
+briefing = build_briefing(rows, earnings_rows, candidates, news_rows, buy_watch_rows, news_summary, rss_failed, disclosure_rows)
+tasks = build_daily_tasks(rows, earnings_rows, candidates, news_rows, buy_watch_rows, rss_failed, int(settings["daily_tasks_limit"]), disclosure_rows)
 compact = settings["dashboard_display_mode"] == "コンパクト"
 
 render_briefing(briefing, int(settings["briefing_limit"]), bool(settings["hide_zero_sections"]), compact)
 st.caption(f"RSS最終取得: {news_summary.get('last_fetch') or '未実行'} / 直近失敗: {rss_failed}件")
 render_daily_tasks(tasks)
+st.subheader("適時開示概要")
+disclosure_cols = st.columns(2)
+disclosure_cols[0].metric("今日の開示", disclosure_summary["today"])
+disclosure_cols[1].metric("未読開示", disclosure_summary["unread"])
+disclosure_cols[0].metric("重要度高", disclosure_summary["high"])
+disclosure_cols[1].metric("保有株開示", disclosure_summary["holding"])
 if not compact:
     st.subheader("ポートフォリオ概要")
     summary_metrics(stocks, rows, mobile=bool(settings["mobile_priority_display"]))
@@ -55,6 +65,14 @@ with st.expander("最新ニュース", expanded=False):
         st.dataframe(news_dataframe(latest_news), use_container_width=True, hide_index=True)
     else:
         st.info("ニュースはまだ登録されていません。")
+
+with st.expander("最新の適時開示", expanded=False):
+    if disclosure_rows:
+        for disclosure in disclosure_rows[:5]:
+            st.write(f"{disclosure['disclosed_at']} / {disclosure['ticker']} / {disclosure['disclosure_type']} / {disclosure['title']}")
+        st.page_link("pages/8_適時開示.py", label="適時開示を開く")
+    else:
+        st.info("適時開示はまだ登録されていません。")
 
 candidate_summary = candidate_dashboard_summary()
 if candidate_summary["pending"] or candidate_summary["last_fetched_at"]:

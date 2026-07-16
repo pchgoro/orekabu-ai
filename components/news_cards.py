@@ -6,6 +6,7 @@ from typing import Any
 
 import streamlit as st
 
+from components.navigation import company_profile_button
 from services.news import make_news_prompt, update_article
 from utils.constants import NEWS_IMPORTANCE_LEVELS
 
@@ -36,6 +37,13 @@ def render_news_cards(rows: list[dict[str, Any]], key_prefix: str) -> None:
         with st.expander("詳細を表示"):
             st.write(row.get("summary") or "要約なし")
             st.write(f"関連銘柄: {row.get('stock_labels') or 'なし'}")
+            stock_label = str(row.get("stock_labels") or "").split(",")[0].strip()
+            if stock_label:
+                company_profile_button(
+                    stock_label.split()[0],
+                    "企業カルテを開く",
+                    key=f"{key_prefix}_profile_{article_id}",
+                )
             st.write(f"メモ: {row.get('memo') or 'なし'}")
             st.text_area("ChatGPTニュース分析用プロンプト", make_news_prompt(row), height=280, key=f"{key_prefix}_prompt_{article_id}")
         st.divider()

@@ -28,7 +28,7 @@ def validate_category(value: str) -> str:
 
 def validate_non_negative_float(value: Any, field_name: str) -> float:
     """Validate a non-negative float; empty values are treated as zero."""
-    if value in (None, ""):
+    if value is None or (isinstance(value, str) and not value.strip()):
         return 0.0
     try:
         number = float(value)
@@ -41,15 +41,15 @@ def validate_non_negative_float(value: Any, field_name: str) -> float:
 
 def validate_non_negative_int(value: Any, field_name: str) -> int:
     """Validate a non-negative integer; empty values are treated as zero."""
-    if value in (None, ""):
+    if value is None or (isinstance(value, str) and not value.strip()):
         return 0
     try:
-        number = int(value)
+        numeric = float(value)
     except (TypeError, ValueError) as exc:
         raise ValueError(f"{field_name}は0以上の整数で入力してください。") from exc
-    if number < 0:
+    if not math.isfinite(numeric) or numeric < 0 or not numeric.is_integer():
         raise ValueError(f"{field_name}は0以上の整数で入力してください。")
-    return number
+    return int(numeric)
 
 
 def parse_bool(value: Any) -> bool:
@@ -57,7 +57,11 @@ def parse_bool(value: Any) -> bool:
     if isinstance(value, bool):
         return value
     text = str(value or "").strip().lower()
-    return text in {"1", "true", "yes", "y", "保有", "保有株"}
+    if text in {"1", "true", "yes", "y", "保有", "保有株"}:
+        return True
+    if text in {"", "0", "false", "no", "n", "非保有", "監視銘柄"}:
+        return False
+    raise ValueError("保有株フラグはtrue/falseまたは1/0で入力してください。")
 
 
 def validate_stock_payload(payload: dict[str, Any]) -> dict[str, Any]:
@@ -66,7 +70,7 @@ def validate_stock_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "ticker": normalize_ticker(payload.get("ticker")),
         "company_name": str(payload.get("company_name") or "").strip(),
         "category": validate_category(str(payload.get("category") or "監視銘柄")),
-        "is_holding": bool(payload.get("is_holding", False)),
+        "is_holding": parse_bool(payload.get("is_holding", False)),
         "shares": validate_non_negative_int(payload.get("shares"), "保有株数"),
         "average_price": validate_non_negative_float(payload.get("average_price"), "平均取得単価"),
         "buy_watch_price": validate_non_negative_float(payload.get("buy_watch_price"), "買い検討価格"),

@@ -94,6 +94,22 @@ def test_daily_tasks_suppress_duplicate_targets() -> None:
     assert [task["label"] for task in tasks] == ["本日決算", "重要ニュースを確認"]
 
 
+def test_disclosure_tasks_follow_existing_tasks_without_reordering_them() -> None:
+    disclosures = [
+        {"id": 4, "ticker": "D.T", "disclosure_type": "決算短信", "is_read": 0},
+        {"id": 3, "ticker": "C.T", "disclosure_type": "配当修正", "is_read": 0},
+        {"id": 2, "ticker": "B.T", "disclosure_type": "業績予想修正", "is_read": 0},
+        {"id": 1, "ticker": "A.T", "disclosure_type": "その他", "importance": "高", "is_holding": 1, "is_read": 0},
+    ]
+    existing = [{"ticker": "S.T", "score": 80}]
+    tasks = build_daily_tasks(existing, [], [], [], [], rss_failed_count=1, limit=10, disclosure_rows=disclosures)
+    assert [task["label"] for task in tasks] == [
+        "注目スコア 80", "RSS取得失敗を確認", "業績予想修正を確認", "配当修正を確認",
+        "決算短信を確認", "保有株の重要開示を確認",
+    ]
+    assert [task["priority"] for task in tasks] == [8, 9, 10, 11, 12, 13]
+
+
 def test_empty_briefing_and_tasks_are_safe() -> None:
     items = build_briefing([], [], [], [], [], {}, 0)
     assert all(item["count"] == 0 for item in items)

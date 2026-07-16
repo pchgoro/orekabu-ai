@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from utils.validators import normalize_ticker, validate_non_negative_float, validate_non_negative_int, validate_stock_payload
+from utils.validators import normalize_ticker, parse_bool, validate_non_negative_float, validate_non_negative_int, validate_stock_payload
 import pandas as pd
 
 from components.forms import export_csv, import_csv_rows
@@ -48,6 +48,18 @@ def test_shares_validation() -> None:
     assert validate_non_negative_int("10", "株数") == 10
     with pytest.raises(ValueError):
         validate_non_negative_int("-1", "株数")
+    with pytest.raises(ValueError):
+        validate_non_negative_int(1.5, "株数")
+    with pytest.raises(ValueError):
+        validate_non_negative_int(pd.NA, "株数")
+    assert validate_non_negative_int("10.0", "株数") == 10
+
+
+def test_boolean_validation_does_not_treat_false_string_as_true() -> None:
+    assert parse_bool("false") is False
+    assert validate_stock_payload({"ticker": "5801", "category": "監視銘柄", "is_holding": "false"})["is_holding"] is False
+    with pytest.raises(ValueError):
+        parse_bool("maybe")
 
 
 def test_csv_payload_validation() -> None:

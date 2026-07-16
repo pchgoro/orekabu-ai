@@ -7,6 +7,8 @@ import sqlite3
 
 import streamlit as st
 
+from components.navigation import company_profile_button
+
 from components.tables import news_dataframe
 from components.news_cards import render_news_cards
 from components.layout import apply_responsive_styles
@@ -19,6 +21,7 @@ from services.news import (
 )
 from services.news_providers.manual_provider import ManualNewsProvider
 from services.news_providers.rss_provider import RssNewsProvider
+from services.disclosures import links_for_news
 from utils.constants import NEWS_CATEGORIES, NEWS_IMPORTANCE_LEVELS, NEWS_SOURCE_TYPES
 from utils.logging_config import setup_logging
 
@@ -67,10 +70,21 @@ for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "�
                     st.write("銘柄候補（ルール一致）")
                     for match in matches:
                         cols = st.columns([3, 4, 2])
-                        cols[0].write(f"{match['ticker']} {match['company_name']}")
+                        with cols[0]:
+                            st.write(f"{match['ticker']} {match['company_name']}")
+                            company_profile_button(
+                                match["ticker"],
+                                "企業カルテ",
+                                key=f"news_match_profile_{article_key}_{match['ticker']}",
+                            )
                         cols[1].write(match["match_reason"] or "一致理由なし")
                         if cols[2].button("承認" if not match["confirmed"] else "未承認へ", key=f"match_{article_key}_{match['stock_id']}"):
                             confirm_stock_match(int(selected["id"]), int(match["stock_id"]), not bool(match["confirmed"])); st.rerun()
+                related_disclosures = links_for_news(int(selected["id"]))
+                if related_disclosures:
+                    st.write("関連開示")
+                    for disclosure in related_disclosures:
+                        st.write(f"{disclosure['ticker']} / {disclosure['disclosure_type']} / {disclosure['title']}")
                 st.text_area("ChatGPTニュース分析用プロンプト", make_news_prompt(selected), height=420, key=f"prompt_{article_key}")
         else:
             st.info("該当するニュースはありません。")
@@ -87,16 +101,17 @@ with tabs[5]:
     if sources:
         st.dataframe(sources, use_container_width=True, hide_index=True)
         source_labels = {f"{s['name']} ({s['source_type']})": s for s in sources}; selected_source = source_labels[st.selectbox("編集するソース", list(source_labels))]
+        source_edit_key = f"source_edit_{selected_source['id']}"
         with st.expander("ソースを編集・削除"):
-            edit_name = st.text_input("ソース名", selected_source["name"], key="source_edit_name")
-            edit_type = st.selectbox("種別", NEWS_SOURCE_TYPES, index=NEWS_SOURCE_TYPES.index(selected_source["source_type"]), key="source_edit_type")
-            edit_url = st.text_input("URL", selected_source["url"], key="source_edit_url"); edit_enabled = st.checkbox("有効", bool(selected_source["is_enabled"]), key="source_edit_enabled")
-            edit_memo = st.text_input("メモ", selected_source["memo"], key="source_edit_memo")
-            if st.button("ソースを更新"):
+            edit_name = st.text_input("ソース名", selected_source["name"], key=f"{source_edit_key}_name")
+            edit_type = st.selectbox("種別", NEWS_SOURCE_TYPES, index=NEWS_SOURCE_TYPES.index(selected_source["source_type"]), key=f"{source_edit_key}_type")
+            edit_url = st.text_input("URL", selected_source["url"], key=f"{source_edit_key}_url"); edit_enabled = st.checkbox("有効", bool(selected_source["is_enabled"]), key=f"{source_edit_key}_enabled")
+            edit_memo = st.text_input("メモ", selected_source["memo"], key=f"{source_edit_key}_memo")
+            if st.button("ソースを更新", key=f"{source_edit_key}_update"):
                 try: update_source(int(selected_source["id"]), {"name": edit_name, "source_type": edit_type, "url": edit_url, "is_enabled": edit_enabled, "memo": edit_memo}); st.success("更新しました。"); st.rerun()
                 except Exception as exc: st.error(str(exc)); logger.exception("ニュースソース更新失敗 source_id=%s", selected_source["id"])
-            delete_confirm = st.checkbox("削除を確認しました")
-            if st.button("ソースを削除", disabled=not delete_confirm): delete_source(int(selected_source["id"])); st.rerun()
+            delete_confirm = st.checkbox("削除を確認しました", key=f"{source_edit_key}_delete_confirm")
+            if st.button("ソースを削除", disabled=not delete_confirm, key=f"{source_edit_key}_delete"): delete_source(int(selected_source["id"])); st.rerun()
     if st.button("有効なRSS/Atomを取得"):
         result = fetch_enabled_sources(lambda source: RssNewsProvider(source["url"]))
         if result["errors"]:
