@@ -13,7 +13,7 @@ if str(ROOT) not in sys.path:
 from scripts.common import build_parser, exit_code, prepare, print_result, run_main
 from services.automation import run_steps
 from services.automation_jobs import run_earnings_job
-from services.earnings_providers.yfinance_provider import YFinanceEarningsProvider
+from services.earnings_providers.fallback_provider import build_default_earnings_provider
 from utils.constants import DB_PATH
 
 
@@ -28,7 +28,11 @@ def main(argv: Sequence[str] | None = None, db_path: Path | str = DB_PATH) -> in
             (
                 "earnings",
                 lambda: run_earnings_job(
-                    YFinanceEarningsProvider(),
+                    build_default_earnings_provider(
+                        db_path=db_path,
+                        dry_run=args.dry_run,
+                        force_ir=args.force,
+                    ),
                     ticker=ticker,
                     limit=args.limit,
                     force=args.force,

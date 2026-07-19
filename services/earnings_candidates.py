@@ -272,7 +272,12 @@ def run_candidate_fetch(
                 sleep(float(auto.get("request_interval_seconds", 1.0)))
         finish_fetch_run(run_id, counts, errors, db_path)
         logger.info("決算候補取得終了 run_id=%s counts=%s", run_id, counts)
-        return {"run_id": run_id, "counts": counts, "errors": errors}
+        return {
+            "run_id": run_id,
+            "counts": counts,
+            "errors": errors,
+            "provider_stats": getattr(provider, "stats", {}),
+        }
     except Exception:
         logger.exception("決算候補一括取得エラー run_id=%s", run_id)
         counts["failed"] += 1

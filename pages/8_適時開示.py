@@ -8,9 +8,10 @@ from datetime import datetime
 import streamlit as st
 
 from components.navigation import company_profile_button
+from components.ui import render_priority_badge
 
 from components.layout import apply_responsive_styles
-from services.database import get_stocks, init_db
+from services.database import get_stocks, init_db, load_settings
 from services.disclosures import (
     DISCLOSURE_DIR,
     delete_disclosure,
@@ -33,11 +34,13 @@ from utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
 st.set_page_config(page_title="適時開示 - オレ株AI", layout="wide")
-setup_logging(); init_db(); apply_responsive_styles()
+setup_logging(); init_db()
 st.title("適時開示")
 st.caption("適時開示を手動で整理する機能です。売買推奨やTDnetの自動取得、PDF本文解析は行いません。")
 
 stocks = get_stocks()
+settings = load_settings()
+apply_responsive_styles(settings["display_density"])
 stock_options = {f"{row['ticker']} {row['company_name']}": row for row in stocks}
 tabs = st.tabs(["最新", "保有株", "監視銘柄", "未読", "お気に入り", "手動登録", "CSV", "取込履歴", "設定"])
 
@@ -49,6 +52,10 @@ for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "�
             continue
         for row in rows[:30]:
             with st.expander(f"{row['ticker']} {row['disclosure_type']} | {row['title']}"):
+                render_priority_badge(
+                    "urgent" if row["importance"] == "高" and not row["is_read"]
+                    else "today" if not row["is_read"] else "later"
+                )
                 company_profile_button(
                     row["ticker"],
                     "企業カルテを開く",

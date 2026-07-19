@@ -10,10 +10,14 @@ def build_briefing(
     candidates: list[dict[str, Any]], news_rows: list[dict[str, Any]],
     buy_watch_rows: list[dict[str, Any]], news_summary: dict[str, Any],
     rss_failed_count: int = 0, disclosure_rows: list[dict[str, Any]] | None = None,
+    playbook_rows: list[dict[str, Any]] | None = None,
+    strategy_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Aggregate explainable daily counts without DB or UI dependencies."""
     pending = [row for row in candidates if row.get("review_status") == "pending"]
     disclosures = disclosure_rows or []
+    rules = [row for row in (playbook_rows or []) if row.get("is_holding")]
+    strategies = [row for row in (strategy_rows or []) if row.get("is_holding")]
     items = [
         _item("本日決算", sum(row.get("days_until") == 0 for row in earnings_rows), "決算", "danger"),
         _item("7日以内の決算", sum(isinstance(row.get("days_until"), int) and 0 <= row["days_until"] <= 7 for row in earnings_rows), "決算", "warning"),
@@ -33,6 +37,26 @@ def build_briefing(
         _item("未読開示", sum(not row.get("is_read") for row in disclosures), "適時開示", "warning"),
         _item("重要度高の開示", sum(row.get("importance") == "高" for row in disclosures), "適時開示", "danger"),
         _item("保有株開示", sum(bool(row.get("is_holding")) for row in disclosures), "適時開示", "normal"),
+        _item("利確ライン到達", sum((row.get("playbook_evaluation") or {}).get("take_profit_reached") for row in rules), "企業カルテ", "positive"),
+        _item("利確まで5%以内", sum((row.get("playbook_evaluation") or {}).get("take_profit_near") for row in rules), "企業カルテ", "warning"),
+        _item("損切りライン到達", sum((row.get("playbook_evaluation") or {}).get("stop_loss_reached") for row in rules), "企業カルテ", "negative"),
+        _item("損切りまで5%以内", sum((row.get("playbook_evaluation") or {}).get("stop_loss_near") for row in rules), "企業カルテ", "warning"),
+        _item("投資ルール未設定", sum(not (row.get("playbook_evaluation") or {}).get("configured") for row in rules), "企業カルテ", "muted"),
+        _item("戦略損切到達", sum(bool((row.get("strategy_lines") or {}).get("stop_loss_reached")) for row in strategies), "戦略・カテゴリ", "negative"),
+        _item("戦略損切接近", sum(bool((row.get("strategy_lines") or {}).get("stop_loss_near")) for row in strategies), "戦略・カテゴリ", "warning"),
+        _item("戦略利確到達", sum(bool((row.get("strategy_lines") or {}).get("take_profit_reached")) for row in strategies), "戦略・カテゴリ", "positive"),
+        _item("戦略利確接近", sum(bool((row.get("strategy_lines") or {}).get("take_profit_near")) for row in strategies), "戦略・カテゴリ", "warning"),
+        _item("戦略ルール競合", sum(bool((row.get("strategy_rule_resolution") or {}).get("conflict")) for row in strategies), "戦略・カテゴリ", "danger"),
+        _item(
+            "戦略ルール未設定",
+            sum(
+                not (row.get("strategy_rule_resolution") or {}).get("conflict")
+                and not (row.get("strategy_lines") or {}).get("configured")
+                for row in strategies
+            ),
+            "戦略・カテゴリ",
+            "muted",
+        ),
     ]
     return items
 
@@ -42,17 +66,61 @@ def build_daily_tasks(
     candidates: list[dict[str, Any]], news_rows: list[dict[str, Any]],
     buy_watch_rows: list[dict[str, Any]], rss_failed_count: int = 0, limit: int = 10,
     disclosure_rows: list[dict[str, Any]] | None = None,
+    playbook_rows: list[dict[str, Any]] | None = None,
+    strategy_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Create up to ten actions in the documented priority order."""
     tasks: list[dict[str, Any]] = []
     seen: set[tuple[str, str]] = set()
 
-    def append_task(priority: int, label: str, detail: str, page: str, kind: str, identity: Any) -> None:
+    def append_task(
+        priority: int, label: str, detail: str, page: str, kind: str,
+        identity: Any, ticker: str = "",
+    ) -> None:
         """Keep the first, highest-priority task for the same logical target."""
         key = (kind, str(identity or detail))
         if key not in seen:
             seen.add(key)
-            tasks.append(_task(priority, label, detail, page))
+            tasks.append(_task(priority, label, detail, page, ticker))
+
+    rules = [row for row in (playbook_rows or []) if row.get("is_holding")]
+    strategies = [row for row in (strategy_rows or []) if row.get("is_holding")]
+    unset_strategies: list[dict[str, Any]] = []
+    for row in strategies:
+        resolution = row.get("strategy_rule_resolution") or {}
+        lines = row.get("strategy_lines") or {}
+        ticker = str(row.get("ticker") or "")
+        if resolution.get("conflict"):
+            append_task(
+                0, "戦略ルール競合", _stock_label(row), "企業カルテ",
+                "strategy", _row_identity(row), ticker,
+            )
+        elif lines.get("stop_loss_reached"):
+            append_task(
+                -8, "戦略損切ライン到達", _stock_label(row), "企業カルテ",
+                "strategy", _row_identity(row), ticker,
+            )
+        elif lines.get("take_profit_reached"):
+            append_task(
+                -7, "戦略利確ライン到達", _stock_label(row), "企業カルテ",
+                "strategy", _row_identity(row), ticker,
+            )
+        elif not lines.get("configured"):
+            unset_strategies.append(row)
+    unset_rules: list[dict[str, Any]] = []
+    for row in rules:
+        evaluation = row.get("playbook_evaluation") or {}
+        ticker = str(row.get("ticker") or "")
+        if not evaluation.get("configured"):
+            unset_rules.append(row)
+        elif evaluation.get("stop_loss_reached"):
+            append_task(-4, "損切りライン到達", _stock_label(row), "企業カルテ", "playbook", _row_identity(row), ticker)
+        elif evaluation.get("take_profit_reached"):
+            append_task(-3, "利確ライン到達", _stock_label(row), "企業カルテ", "playbook", _row_identity(row), ticker)
+        elif evaluation.get("stop_loss_near"):
+            append_task(-2, "損切りまで5%以内", _stock_label(row), "企業カルテ", "playbook", _row_identity(row), ticker)
+        elif evaluation.get("take_profit_near"):
+            append_task(-1, "利確まで5%以内", _stock_label(row), "企業カルテ", "playbook", _row_identity(row), ticker)
 
     for row in earnings_rows:
         days = row.get("days_until")
@@ -95,6 +163,31 @@ def build_daily_tasks(
     for row in disclosures:
         if not row.get("is_read") and row.get("importance") == "高" and row.get("is_holding"):
             append_task(13, "保有株の重要開示を確認", _stock_label(row), "適時開示", "disclosure", _row_identity(row))
+    if unset_rules:
+        ticker = str(unset_rules[0].get("ticker") or "") if len(unset_rules) == 1 else ""
+        append_task(
+            7,
+            "投資ルール未設定",
+            f"{len(unset_rules)}銘柄",
+            "企業カルテ" if ticker else "保有株",
+            "playbook_unset",
+            "all",
+            ticker,
+        )
+    if unset_strategies:
+        ticker = (
+            str(unset_strategies[0].get("ticker") or "")
+            if len(unset_strategies) == 1 else ""
+        )
+        append_task(
+            14,
+            "戦略ルール未設定",
+            f"{len(unset_strategies)}銘柄",
+            "企業カルテ" if ticker else "戦略・カテゴリ",
+            "strategy_unset",
+            "all",
+            ticker,
+        )
     return sorted(tasks, key=lambda item: item["priority"])[: max(1, min(int(limit), 10))]
 
 
@@ -102,8 +195,16 @@ def _item(label: str, count: int, page: str, state: str) -> dict[str, Any]:
     return {"label": label, "count": int(count), "page": page, "state": state}
 
 
-def _task(priority: int, label: str, detail: str, page: str) -> dict[str, Any]:
-    return {"priority": priority, "label": label, "detail": detail, "page": page}
+def _task(
+    priority: int, label: str, detail: str, page: str, ticker: str = "",
+) -> dict[str, Any]:
+    return {
+        "priority": priority,
+        "label": label,
+        "detail": detail,
+        "page": page,
+        "ticker": ticker,
+    }
 
 
 def _stock_label(row: dict[str, Any]) -> str:

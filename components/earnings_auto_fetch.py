@@ -16,8 +16,17 @@ from services.earnings_candidates import (
     list_fetch_results, list_fetch_runs, parse_candidate_csv, review_candidate,
     run_candidate_fetch, purge_reviewed_candidates, validate_candidate_csv_preview,
 )
-from services.earnings_providers.yfinance_provider import YFinanceEarningsProvider
+from services.earnings_ir_sources import (
+    JPX_COMPANY_SEARCH_URL,
+    delete_ir_source,
+    fetch_ir_source_candidate,
+    ir_source_status_rows,
+    list_ir_sources,
+    save_ir_source,
+)
+from services.earnings_providers.fallback_provider import build_default_earnings_provider
 from services.earnings_reconciliation import candidate_diff
+from utils.constants import IR_SOURCE_TYPES
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +51,9 @@ APPROVAL_ACTIONS = {
 def render_earnings_auto_fetch() -> None:
     """Render fetch, review, history, and settings sub-tabs."""
     st.caption("外部情報は参考候補です。正式な決算データは、確認して承認するまで変更されません。")
-    fetch_tab, candidates_tab, history_tab, settings_tab = st.tabs(["取得実行", "取得候補", "取得履歴", "取得設定"])
+    fetch_tab, candidates_tab, history_tab, sources_tab, settings_tab = st.tabs(
+        ["取得実行", "取得候補", "取得履歴", "IR情報源", "取得設定"]
+    )
     settings = load_settings()
     with fetch_tab:
         _render_fetch(settings)
@@ -50,6 +61,8 @@ def render_earnings_auto_fetch() -> None:
         _render_candidates(settings)
     with history_tab:
         _render_history(settings)
+    with sources_tab:
+        _render_ir_sources(settings)
     with settings_tab:
         _render_settings(settings)
 
@@ -84,11 +97,18 @@ def _render_fetch(settings: dict[str, Any]) -> None:
             status.write(f"取得中: {ticker} ({current}/{total})")
 
         try:
-            result = run_candidate_fetch(limited, YFinanceEarningsProvider(), settings, progress=update_progress)
+            provider = build_default_earnings_provider()
+            result = run_candidate_fetch(limited, provider, settings, progress=update_progress)
             counts = result["counts"]
+            provider_stats = result.get("provider_stats", {})
             status.success(
                 f"取得完了: 成功{counts['success']} / 候補{counts['candidates']} / "
                 f"変更なし{counts['unchanged']} / キャッシュ{counts['cached']} / 失敗{counts['failed']}"
+            )
+            st.caption(
+                f"yfinance成功: {provider_stats.get('yfinance_success', 0)} / "
+                f"IRフォールバック対象: {provider_stats.get('ir_targets', 0)} / "
+                f"IR成功: {provider_stats.get('ir_success', 0)}"
             )
             for error in result["errors"]:
                 st.warning(error)
@@ -205,11 +225,162 @@ def _render_history(settings: dict[str, Any]) -> None:
             if st.button("失敗銘柄だけ再取得"):
                 stocks = [stock for stock in get_stocks() if stock["ticker"] in failed_tickers]
                 try:
-                    result = run_candidate_fetch(stocks, YFinanceEarningsProvider(), settings, force_fetch=True)
+                    result = run_candidate_fetch(
+                        stocks,
+                        build_default_earnings_provider(force_ir=True),
+                        settings,
+                        force_fetch=True,
+                    )
                     st.success(f"再取得を実行しました。run_id={result['run_id']}")
                     st.rerun()
                 except Exception as exc:
                     st.error(str(exc)); logger.exception("失敗銘柄再取得UIエラー")
+
+
+def _render_ir_sources(settings: dict[str, Any]) -> None:
+    """Render official IR source registration, status, and individual checks."""
+    rows = ir_source_status_rows()
+    sources = list_ir_sources()
+    failed = [
+        row
+        for row in rows
+        if row.get("latest_fetch_status") == "failed"
+        or row.get("latest_error_code") in {"empty_data", "ir_source_missing"}
+    ]
+    missing = [row for row in rows if not row.get("source_id")]
+    success = [row for row in rows if row.get("last_success_at")]
+    source_failed = [row for row in rows if row.get("last_error")]
+    metrics = st.columns(4)
+    metrics[0].metric("yfinance取得不能候補", len(failed))
+    metrics[1].metric("IR URL未登録", len(missing))
+    metrics[2].metric("公式IR取得成功", len(success))
+    metrics[3].metric("公式IR取得失敗", len(source_failed))
+    st.caption(
+        "公式IRはyfinanceに将来日がない銘柄だけ確認します。"
+        "HTML全文は保存せず、候補日と短い抽出根拠だけを保存します。"
+    )
+
+    stocks = get_stocks()
+    labels = {f"{row['ticker']} {row['company_name']}": row for row in stocks}
+    with st.form("ir_source_form"):
+        selected_label = st.selectbox("IR URLを設定する銘柄", list(labels))
+        source_type = st.selectbox(
+            "取得元種別",
+            IR_SOURCE_TYPES,
+            format_func={
+                "official_ir_calendar": "企業公式IRカレンダー",
+                "official_ir_news": "企業公式IRニュース",
+                "jpx_reference": "JPX確認リンク",
+                "manual": "手動確認",
+            }.get,
+        )
+        source_url = st.text_input("公式IR URL")
+        enabled = st.checkbox("有効", value=True)
+        submitted = st.form_submit_button("IR URLを保存")
+    if submitted:
+        try:
+            save_ir_source(
+                {
+                    "stock_id": labels[selected_label]["id"],
+                    "source_type": source_type,
+                    "source_url": source_url,
+                    "enabled": enabled,
+                }
+            )
+            st.success("IR取得元を保存しました。")
+            st.rerun()
+        except Exception as exc:
+            st.error(str(exc))
+            logger.exception("IR取得元保存失敗")
+
+    frame_rows = [
+        {
+            "ticker": row["ticker"],
+            "会社名": row["company_name"],
+            "取得元": row.get("source_type") or "未登録",
+            "URL": row.get("source_url") or "",
+            "有効": bool(row.get("enabled")) if row.get("source_id") else False,
+            "最終確認": row.get("last_checked_at") or "未確認",
+            "最終成功": row.get("last_success_at") or "未取得",
+            "状態": "失敗" if row.get("last_error") else ("成功" if row.get("last_success_at") else "未確認"),
+            "エラー": row.get("last_error") or "",
+        }
+        for row in rows
+    ]
+    st.dataframe(pd.DataFrame(frame_rows), use_container_width=True, hide_index=True)
+    st.caption("JPXは自動巡回せず、上場会社情報を手動確認します。")
+    st.link_button("JPX上場会社情報を手動確認", JPX_COMPANY_SEARCH_URL)
+
+    if sources:
+        source_labels = {
+            f"#{row['id']} {row['ticker']} {row['source_type']}": row
+            for row in sources
+        }
+        selected_source = source_labels[
+            st.selectbox("操作するIR取得元", list(source_labels))
+        ]
+        with st.form(f"ir_source_edit_{selected_source['id']}"):
+            edit_url = st.text_input(
+                "選択中の公式IR URL",
+                value=selected_source["source_url"],
+            )
+            edit_enabled = st.checkbox(
+                "選択中の取得元を有効にする",
+                value=bool(selected_source["enabled"]),
+            )
+            edit_submitted = st.form_submit_button("選択中のIR URLを更新")
+        if edit_submitted:
+            try:
+                save_ir_source(
+                    {
+                        "stock_id": selected_source["stock_id"],
+                        "source_type": selected_source["source_type"],
+                        "source_url": edit_url,
+                        "enabled": edit_enabled,
+                    }
+                )
+                st.success("IR取得元を更新しました。")
+                st.rerun()
+            except Exception as exc:
+                st.error(str(exc))
+                logger.exception(
+                    "IR取得元更新失敗 source_id=%s", selected_source["id"]
+                )
+        buttons = st.columns(2)
+        if buttons[0].button(
+            "公式IRを個別再取得",
+            disabled=selected_source["source_type"]
+            not in {"official_ir_calendar", "official_ir_news"},
+        ):
+            try:
+                result = fetch_ir_source_candidate(
+                    int(selected_source["id"]),
+                    settings,
+                )
+                if result["success"]:
+                    st.success(
+                        f"候補作成{result['created']}件 / "
+                        f"重複・変更なし{result['duplicates']}件"
+                    )
+                else:
+                    st.warning(result["message"])
+                st.rerun()
+            except Exception as exc:
+                st.error(str(exc))
+                logger.exception(
+                    "公式IR個別取得失敗 source_id=%s", selected_source["id"]
+                )
+        delete_confirm = buttons[1].checkbox("削除確認")
+        if buttons[1].button("IR取得元を削除", disabled=not delete_confirm):
+            try:
+                delete_ir_source(int(selected_source["id"]))
+                st.success("IR取得元を削除しました。")
+                st.rerun()
+            except Exception as exc:
+                st.error(str(exc))
+                logger.exception(
+                    "IR取得元削除失敗 source_id=%s", selected_source["id"]
+                )
 
 
 def _render_settings(settings: dict[str, Any]) -> None:

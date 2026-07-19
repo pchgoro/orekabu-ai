@@ -126,3 +126,12 @@ def test_daily_and_backfill_use_settings_when_not_explicit() -> None:
         20,
         "設定 initial",
     )
+
+
+def test_daily_bat_does_not_override_saved_limits() -> None:
+    root = Path(__file__).resolve().parents[1]
+    content = (root / "run_daily_update.bat").read_text(encoding="utf-8")
+    command = next(
+        line for line in content.splitlines() if "scripts\\run_daily_update.py" in line
+    )
+    assert "--limit" not in command

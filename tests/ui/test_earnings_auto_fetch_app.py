@@ -14,6 +14,7 @@ from services.earnings_candidates import (
     add_fetch_result, finish_fetch_run, list_candidates, review_candidate,
     save_candidate, start_fetch_run,
 )
+from services.earnings_ir_sources import save_ir_source
 from services.earnings_providers.base import EarningsFetchResult
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -51,6 +52,30 @@ def test_individual_fetch_candidate_detail_and_approval(ui_db, monkeypatch) -> N
     button(at, "承認").click().run(timeout=60)
     assert list_earnings()[0]["earnings_date"] == "2099-01-10"
     assert list_candidates()[0]["review_status"] == "approved"
+
+
+def test_ir_source_management_section_is_visible(ui_db) -> None:
+    at = app()
+    assert any(item.label == "IR情報源" for item in at.tabs)
+    labels = {item.label for item in at.text_input}
+    assert "公式IR URL" in labels
+    assert any("JPXは自動巡回せず" in item.value for item in at.caption)
+
+
+def test_existing_ir_source_can_be_edited(ui_db) -> None:
+    stock = get_stock("5801.T")
+    save_ir_source(
+        {
+            "stock_id": stock["id"],
+            "source_type": "official_ir_calendar",
+            "source_url": "https://example.com/ir/calendar",
+            "enabled": True,
+        }
+    )
+    at = app()
+    labels = {item.label for item in at.text_input}
+    assert "選択中の公式IR URL" in labels
+    assert any(item.label == "選択中のIR URLを更新" for item in at.button)
 
 
 def test_hold_and_reject_do_not_create_formal_events(ui_db) -> None:

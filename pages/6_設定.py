@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from components.layout import apply_responsive_styles
 from components.forms import create_stock_section, export_csv, import_csv_rows, parse_import_csv
 from scripts.run_daily_update import main as run_daily_update
 from services.automation import automation_summary, list_run_steps, list_runs
@@ -31,6 +32,7 @@ init_db()
 st.title("設定")
 
 settings = load_settings()
+apply_responsive_styles(settings["display_density"])
 stocks = get_stocks()
 
 create_stock_section()
@@ -38,19 +40,31 @@ create_stock_section()
 st.subheader("表示・取得設定")
 with st.form("settings_form"):
     st.subheader("毎日の表示設定")
-    cols = st.columns(2)
+    cols = st.columns(3)
     dashboard_display_mode = cols[0].selectbox("ダッシュボード表示", ["標準", "コンパクト"], index=["標準", "コンパクト"].index(settings["dashboard_display_mode"]))
     news_display_mode = cols[1].selectbox("ニュース表示", ["カード", "表"], index=["カード", "表"].index(settings["news_display_mode"]))
+    display_density = cols[2].selectbox(
+        "表示密度",
+        ["コンパクト", "標準", "ゆったり"],
+        index=["コンパクト", "標準", "ゆったり"].index(settings["display_density"]),
+    )
     cols = st.columns(2)
     briefing_limit = cols[0].number_input("ブリーフィング表示件数", 1, 20, int(settings["briefing_limit"]))
     daily_tasks_limit = cols[1].number_input("今日やること表示件数", 1, 10, int(settings["daily_tasks_limit"]))
     mobile_priority_display = st.checkbox("モバイル優先表示", value=bool(settings["mobile_priority_display"]))
     hide_zero_sections = st.checkbox("0件のセクションを隠す", value=bool(settings["hide_zero_sections"]))
 
-    cols = st.columns(3)
+    cols = st.columns(4)
     ranking_limit = cols[0].number_input("ランキング表示件数", min_value=1, max_value=100, step=1, value=int(settings["ranking_limit"]))
     stock_cache_minutes = cols[1].number_input("株価キャッシュ時間（分）", min_value=1, max_value=1440, step=1, value=int(settings["stock_cache_minutes"]))
     buy_watch_near_percent = cols[2].number_input("買い検討価格の接近判定率（%）", min_value=0.0, max_value=100.0, step=0.5, value=float(settings["buy_watch_near_percent"]))
+    strategy_rule_near_percent = cols[3].number_input(
+        "戦略ライン接近判定率（%）",
+        min_value=0.1,
+        max_value=20.0,
+        step=0.5,
+        value=float(settings["strategy_rule_near_percent"]),
+    )
 
     st.subheader("決算表示設定")
     cols = st.columns(3)
@@ -132,6 +146,7 @@ with st.form("settings_form"):
                 {
                     **settings,
                     "dashboard_display_mode": dashboard_display_mode,
+                    "display_density": display_density,
                     "news_display_mode": news_display_mode,
                     "mobile_priority_display": mobile_priority_display,
                     "briefing_limit": briefing_limit,
@@ -140,6 +155,7 @@ with st.form("settings_form"):
                     "ranking_limit": ranking_limit,
                     "stock_cache_minutes": stock_cache_minutes,
                     "buy_watch_near_percent": buy_watch_near_percent,
+                    "strategy_rule_near_percent": strategy_rule_near_percent,
                     "earnings_dashboard_limit": earnings_dashboard_limit,
                     "earnings_near_days": earnings_near_days,
                     "related_earnings_limit": related_earnings_limit,

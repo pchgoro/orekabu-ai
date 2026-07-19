@@ -6,6 +6,7 @@ import sqlite3
 from pathlib import Path
 
 from services.automation import JobResult, list_run_steps, list_runs, run_steps
+from services.automation_jobs import select_earnings_targets
 from services.database import init_db
 
 
@@ -72,3 +73,69 @@ def test_repeated_run_creates_independent_history(tmp_path: Path) -> None:
     for _ in range(2):
         run_steps("repeat", [("rss", lambda: JobResult(processed=1))], db_path=db)
     assert len(list_runs(db_path=db)) == 2
+
+
+def test_all_failed_steps_report_failed_consistently(tmp_path: Path) -> None:
+    db = tmp_path / "test.db"
+    init_db(db)
+    result = run_steps(
+        "failed",
+        [
+            ("rss", lambda: JobResult(processed=1, failed=1, message="rss failed")),
+            (
+                "edinet",
+                lambda: JobResult(processed=1, failed=1, message="edinet failed"),
+            ),
+        ],
+        db_path=db,
+    )
+    assert result["status"] == "failed"
+    assert list_runs(db_path=db)[0]["status"] == "failed"
+
+
+def test_partial_step_keeps_run_partial(tmp_path: Path) -> None:
+    db = tmp_path / "test.db"
+    init_db(db)
+    result = run_steps(
+        "partial",
+        [("rss", lambda: JobResult(processed=2, inserted=1, failed=1))],
+        db_path=db,
+    )
+    assert result["status"] == "partial"
+    assert list_runs(db_path=db)[0]["status"] == "partial"
+
+
+def test_daily_earnings_targets_include_every_holding_before_watchlist() -> None:
+    stocks = [
+        {"ticker": f"{1000 + index}.T", "is_holding": True}
+        for index in range(25)
+    ] + [
+        {"ticker": f"{2000 + index}.T", "is_holding": False}
+        for index in range(5)
+    ]
+    targets = select_earnings_targets(
+        stocks,
+        limit=20,
+        include_all_holdings=True,
+    )
+    assert len(targets) == 25
+    assert all(stock["is_holding"] for stock in targets)
+
+
+def test_daily_earnings_targets_fill_remaining_limit_with_watchlist() -> None:
+    stocks = [
+        {"ticker": "5801.T", "is_holding": True},
+        {"ticker": "6976.T", "is_holding": True},
+        {"ticker": "4062.T", "is_holding": False},
+        {"ticker": "285A.T", "is_holding": False},
+    ]
+    targets = select_earnings_targets(
+        stocks,
+        limit=3,
+        include_all_holdings=True,
+    )
+    assert [stock["ticker"] for stock in targets] == [
+        "5801.T",
+        "6976.T",
+        "4062.T",
+    ]

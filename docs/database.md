@@ -54,7 +54,7 @@
 
 ## schema_versionテーブル
 
-現在のDBスキーマ番号を1行で保持します。無料取得自動化対応のスキーマはversion 7です。
+現在のDBスキーマ番号を1行で保持します。戦略タグ・共通ルール対応の最新スキーマはversion 11です。
 
 ## earnings_candidatesテーブル
 
@@ -100,8 +100,29 @@
 - `stock_profile_candidates`: yfinanceの会社名、略称、市場、業種候補と取得時点の既存値。fingerprintはUNIQUE
 - `automation_runs`: 個別CLI・日次一括処理の開始、終了、成功、失敗、状態
 - `automation_run_steps`: RSS、決算候補、EDINET、企業情報候補、整理処理のステップ別結果
+- `stock_ir_sources`: 銘柄別の企業公式IR URL、種別、有効状態、最終確認・成功日時、短いエラー。schema version 8で追加
 
 EDINET書類は本文を保存しません。企業情報候補は`stocks`を自動更新しません。dry-runではこれらの履歴テーブルにも書き込みません。
+
+## 企業カルテ関連テーブル
+
+- `company_intelligence`: 銘柄ごとのテーマ、投資ストーリー、決算・適時開示・ニュース・EDINET・AI分析の確認状態
+- `company_notes`: 銘柄ごとの日付付きメモ。ニュース、適時開示、決算、EDINETと統合してタイムライン表示
+
+`company_intelligence.stock_id`は主キーです。どちらも銘柄削除時にCASCADE削除され、既存の株価・決算・ニュース・開示データは更新しません。schema version 9で追加します。
+
+## investment_playbooksテーブル
+
+銘柄ごとの投資ルールを1件だけ保存します。`stock_id`を主キーとし、買った理由、複数テーマ、利確価格と売却割合、最終目標、損切り価格、トレーリングストップ、保有予定、複数売却条件、リスクメモ、作成・更新日時を保持します。テーマと売却条件はJSON文字列です。銘柄削除時にCASCADE削除され、株数、取得単価、買い検討価格は更新しません。schema version 10で追加します。
+
+## 戦略タグ・共通ルール関連テーブル
+
+- `strategy_tags`: タグ名、グループ、説明、共通色キー、表示順、有効状態。`name, tag_group`はUNIQUE
+- `stock_strategy_tags`: 銘柄とタグの多対多関連。`stock_id, tag_id`はUNIQUE
+- `strategy_rule_sets`: タグごとの損切・利確・買い増し種類と値、決算方針、優先度、メモ。1タグ1件
+- `stock_trade_rules`: 銘柄へ適用したタグルールのスナップショットまたは個別上書き。1銘柄1件
+
+銘柄個別上書きは`is_overridden=1`で保持し、タグルールより優先します。タグ削除時は関連割当とタグルールをCASCADE削除し、適用済み銘柄ルールの`source_tag_id`はNULLへ変更します。schema version 11で追加します。
 
 ## 初期化方法
 
@@ -131,7 +152,7 @@ Copy-Item data\orekabu_backup.db data\orekabu.db
 
 ## マイグレーション方針
 
-`services/migrations.py` がversionを確認し、未適用の変更だけを実行します。version 6は`PRAGMA table_info(stocks)`で不足する企業メタデータ列だけを追加し、version 7は`CREATE TABLE/INDEX IF NOT EXISTS`で無料取得自動化テーブルを追加します。同じ処理を複数回実行しても重複追加されません。
+`services/migrations.py` がversionを確認し、未適用の変更だけを実行します。version 6は`PRAGMA table_info(stocks)`で不足する企業メタデータ列だけを追加し、version 7は無料取得自動化、version 8は公式IR情報源、version 9は企業カルテ用ユーザー記録、version 10は投資ルール、version 11は戦略タグ・共通ルールを追加します。同じ処理を複数回実行しても重複追加されません。
 
 ## 破損時の注意
 

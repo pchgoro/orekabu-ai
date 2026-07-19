@@ -28,7 +28,6 @@ from utils.logging_config import setup_logging
 logger = logging.getLogger(__name__)
 st.set_page_config(page_title="ニュース - オレ株AI", layout="wide")
 setup_logging(); init_db()
-apply_responsive_styles()
 st.title("ニュース")
 st.caption("ニュースは判断材料の整理用です。AI要約や売買推奨は行いません。RSS要約のみ保存し、本文全文は保存しません。")
 if flash := st.session_state.pop("news_flash", None):
@@ -36,6 +35,7 @@ if flash := st.session_state.pop("news_flash", None):
 
 stocks = get_stocks()
 settings = load_settings()
+apply_responsive_styles(settings["display_density"])
 card_mode = settings["news_display_mode"] == "カード" or bool(settings["mobile_priority_display"])
 stock_options = {f"{s['ticker']} {s['company_name']}": s for s in stocks}
 tabs = st.tabs(["最新", "保有株", "監視銘柄", "未読", "お気に入り", "ソース管理", "キーワード管理", "手動登録", "CSV", "取得履歴"])

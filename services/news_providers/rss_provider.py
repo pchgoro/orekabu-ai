@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import re
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -25,8 +26,21 @@ class RssNewsProvider:
     def fetch(self) -> list[NewsItem]:
         """Download and parse an RSS or Atom feed."""
         request = urllib.request.Request(self.url, headers={"User-Agent": "orekabu-ai/0.4 (+local personal use)"})
-        with urllib.request.urlopen(request, timeout=self.timeout) as response:
-            return self.parse(response.read())[: self.max_items]
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                content = response.read()
+                waf_action = response.headers.get("x-amzn-waf-action", "")
+        except urllib.error.HTTPError as exc:
+            raise RuntimeError(f"RSS/Atomの取得に失敗しました（HTTP {exc.code}）。配信元のアクセス制限を確認してください。") from exc
+
+        if waf_action:
+            raise RuntimeError("RSS/Atomの配信元でWAF認証が要求されたため、自動取得できませんでした。")
+        if not content.strip():
+            raise RuntimeError("RSS/Atomの応答本文が空でした。配信元のアクセス制限または配信状況を確認してください。")
+        try:
+            return self.parse(content)[: self.max_items]
+        except ET.ParseError as exc:
+            raise RuntimeError("RSS/AtomのXMLを解析できませんでした。配信元の応答内容を確認してください。") from exc
 
     @staticmethod
     def parse(content: bytes | str) -> list[NewsItem]:

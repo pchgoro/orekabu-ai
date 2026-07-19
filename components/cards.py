@@ -6,6 +6,7 @@ from typing import Any
 
 import streamlit as st
 
+from components.ui import render_market_metric
 from utils.formatters import fmt_percent, fmt_price, fmt_signed_price
 
 
@@ -17,10 +18,14 @@ def summary_metrics(stocks: list[dict[str, Any]], rows: list[dict[str, Any]], mo
     profit = sum(float(row.get("profit") or 0) for row in holdings)
     cost = sum(float(row.get("average_price") or 0) * int(row.get("shares") or 0) for row in holdings)
     profit_pct = (profit / cost * 100) if cost else None
-    metrics = [("登録銘柄数", len(stocks)), ("保有銘柄数", len(holdings)), ("監視銘柄数", len(watching)), ("評価額合計", fmt_price(market_value)), ("評価損益合計", fmt_signed_price(profit)), ("評価損益率", fmt_percent(profit_pct))]
+    metrics = [("登録銘柄数", len(stocks)), ("保有銘柄数", len(holdings)), ("監視銘柄数", len(watching)), ("評価額合計", fmt_price(market_value))]
     cols = st.columns(2 if mobile else 6)
     for index, (label, value) in enumerate(metrics):
         cols[index % len(cols)].metric(label, value)
+    with cols[4 % len(cols)]:
+        render_market_metric("評価損益合計", fmt_signed_price(profit), profit)
+    with cols[5 % len(cols)]:
+        render_market_metric("評価損益率", fmt_percent(profit_pct), profit_pct)
 
 
 def holding_metrics(rows: list[dict[str, Any]]) -> None:
@@ -31,8 +36,10 @@ def holding_metrics(rows: list[dict[str, Any]]) -> None:
     profit_pct = (profit / cost * 100) if cost else None
     cols = st.columns(3)
     cols[0].metric("評価額合計", fmt_price(market_value))
-    cols[1].metric("評価損益合計", fmt_signed_price(profit))
-    cols[2].metric("評価損益率", fmt_percent(profit_pct))
+    with cols[1]:
+        render_market_metric("評価損益合計", fmt_signed_price(profit), profit)
+    with cols[2]:
+        render_market_metric("評価損益率", fmt_percent(profit_pct), profit_pct)
 
 
 def earnings_metrics(summary: dict[str, int]) -> None:

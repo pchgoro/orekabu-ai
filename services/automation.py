@@ -35,6 +35,15 @@ class JobResult:
 AutomationStep = tuple[str, Callable[[], JobResult]]
 
 
+def _aggregate_status(results: Iterable[JobResult]) -> str:
+    """Return a run status consistent with the contained step results."""
+    rows = list(results)
+    failed = sum(row.failed for row in rows)
+    if not failed:
+        return "completed"
+    return "partial" if any(row.status != "failed" for row in rows) else "failed"
+
+
 def start_run(command: str, dry_run: bool, target_count: int, db_path: Path | str = DB_PATH) -> int:
     """Create a persistent automation run. Dry runs must not call this function."""
     now = _now()
@@ -85,7 +94,7 @@ def finish_run(run_id: int, results: Iterable[JobResult], db_path: Path | str = 
     rows = list(results)
     failed = sum(row.failed for row in rows)
     successful_steps = sum(row.status == "completed" for row in rows)
-    status = "failed" if failed and not successful_steps else ("partial" if failed else "completed")
+    status = _aggregate_status(rows)
     errors = [row.message for row in rows if row.failed and row.message]
     with connect(db_path) as conn:
         conn.execute(
@@ -124,7 +133,7 @@ def run_steps(
     return {
         "run_id": run_id,
         "dry_run": dry_run,
-        "status": "partial" if failed else "completed",
+        "status": _aggregate_status(result for _, result in results),
         "failed": failed,
         "steps": [{"name": name, **result.__dict__, "status": result.status} for name, result in results],
     }

@@ -13,6 +13,8 @@ from components.daily import render_stock_cards
 from components.layout import apply_responsive_styles
 from services.database import get_stocks, init_db, load_settings
 from services.stock_data import build_analysis_rows, make_prompt
+from services.investment_playbooks import enrich_rows_with_playbooks
+from services.strategy_rules import enrich_rows_with_strategy
 from services.earnings_view_models import enrich_stock_rows
 from services.view_models import filter_holdings
 from utils.logging_config import setup_logging
@@ -20,13 +22,23 @@ from utils.logging_config import setup_logging
 st.set_page_config(page_title="保有株 - オレ株AI", layout="wide")
 setup_logging()
 init_db()
-apply_responsive_styles()
 st.title("保有株")
 st.caption("注目スコアは売買推奨ではなく、確認優先度を示すものです。")
 
 stocks = get_stocks()
 settings = load_settings()
-rows = filter_holdings(enrich_stock_rows(build_analysis_rows(stocks, settings), near_days=int(settings["earnings_near_days"])))
+apply_responsive_styles(settings["display_density"])
+rows = filter_holdings(
+    enrich_rows_with_strategy(
+        enrich_rows_with_playbooks(
+            enrich_stock_rows(
+                build_analysis_rows(stocks, settings),
+                near_days=int(settings["earnings_near_days"]),
+            )
+        ),
+        near_percent=float(settings["strategy_rule_near_percent"]),
+    )
+)
 holding_metrics(rows)
 if rows:
     profile_labels = {f"{row['ticker']} {row['company_name']}": row for row in rows}
@@ -39,7 +51,7 @@ if rows:
 create_stock_section()
 edit_delete_section(rows, "holding")
 
-if settings["mobile_priority_display"]:
+if settings["mobile_priority_display"] or settings["display_density"] != "コンパクト":
     render_stock_cards(rows, holding=True)
 else:
     st.dataframe(holdings_dataframe(rows), use_container_width=True, hide_index=True, height=520)

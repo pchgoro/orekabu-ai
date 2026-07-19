@@ -19,6 +19,12 @@ IMPACT_LEVELS = ["高", "中", "低"]
 EARNINGS_COMPARISON_STATUSES = ["new", "same", "date_changed", "time_changed", "quarter_changed", "conflict", "past_date", "invalid", "unknown"]
 EARNINGS_REVIEW_STATUSES = ["pending", "approved", "rejected", "held"]
 EARNINGS_CONFIDENCE_LEVELS = ["high", "medium", "low", "unknown"]
+IR_SOURCE_TYPES = [
+    "official_ir_calendar",
+    "official_ir_news",
+    "jpx_reference",
+    "manual",
+]
 NEWS_SOURCE_TYPES = ["RSS", "Atom", "手動", "CSV"]
 NEWS_IMPORTANCE_LEVELS = ["高", "通常", "低"]
 NEWS_CATEGORIES = ["決算", "業績", "適時開示", "製品・サービス", "業界", "市況", "その他"]
@@ -33,6 +39,7 @@ SAMPLE_STOCKS = [
 
 DEFAULT_SETTINGS = {
     "dashboard_display_mode": "標準",
+    "display_density": "標準",
     "news_display_mode": "カード",
     "mobile_priority_display": False,
     "briefing_limit": 10,
@@ -41,6 +48,7 @@ DEFAULT_SETTINGS = {
     "ranking_limit": 10,
     "stock_cache_minutes": 15,
     "buy_watch_near_percent": 3.0,
+    "strategy_rule_near_percent": 3.0,
     "earnings_dashboard_limit": 5,
     "earnings_near_days": 7,
     "related_earnings_limit": 5,

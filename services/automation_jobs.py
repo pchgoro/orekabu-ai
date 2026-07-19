@@ -16,6 +16,25 @@ from services.news_providers.base import NewsProvider
 from utils.constants import DB_PATH
 
 
+def select_earnings_targets(
+    stocks: list[dict[str, Any]],
+    *,
+    ticker: str | None = None,
+    limit: int = 20,
+    include_all_holdings: bool = False,
+) -> list[dict[str, Any]]:
+    """Select earnings targets while allowing daily jobs to cover every holding."""
+    if ticker is not None:
+        return [stock for stock in stocks if stock["ticker"] == ticker][:1]
+    safe_limit = max(1, int(limit))
+    if not include_all_holdings:
+        return stocks[:safe_limit]
+    holdings = [stock for stock in stocks if stock.get("is_holding")]
+    watching = [stock for stock in stocks if not stock.get("is_holding")]
+    remaining = max(0, safe_limit - len(holdings))
+    return [*holdings, *watching[:remaining]]
+
+
 def run_news_job(
     provider_factory: Callable[[dict[str, Any]], NewsProvider],
     *,
@@ -69,11 +88,16 @@ def run_earnings_job(
     limit: int = 20,
     force: bool = False,
     dry_run: bool = False,
+    include_all_holdings: bool = False,
     db_path: Path | str = DB_PATH,
 ) -> JobResult:
     """Fetch yfinance earnings candidates without touching formal earnings events."""
-    stocks = [stock for stock in get_stocks(db_path) if ticker is None or stock["ticker"] == ticker]
-    targets = stocks[: max(1, int(limit))]
+    targets = select_earnings_targets(
+        get_stocks(db_path),
+        ticker=ticker,
+        limit=limit,
+        include_all_holdings=include_all_holdings,
+    )
     if dry_run:
         succeeded = failed = candidates = 0
         errors: list[str] = []
@@ -109,13 +133,22 @@ def run_earnings_job(
         force_fetch=force,
     )
     counts = result["counts"]
+    provider_stats = result.get("provider_stats", {})
     return JobResult(
         processed=len(targets),
         inserted=int(counts["candidates"]),
         duplicates=int(counts["unchanged"]) + int(counts["cached"]),
         failed=int(counts["failed"]),
         message=" / ".join(result["errors"]),
-        details={"run_id": result["run_id"]},
+        details={
+            "run_id": result["run_id"],
+            "target_count": len(targets),
+            "holding_count": sum(bool(stock.get("is_holding")) for stock in targets),
+            "yfinance_success": int(provider_stats.get("yfinance_success", 0)),
+            "ir_targets": int(provider_stats.get("ir_targets", 0)),
+            "ir_success": int(provider_stats.get("ir_success", 0)),
+            "missing_tickers": list(provider_stats.get("missing", [])),
+        },
     )
 
 

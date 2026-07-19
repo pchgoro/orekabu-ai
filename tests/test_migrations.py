@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from services.database import init_db
-from services.migrations import migrate
+from services.migrations import LATEST_SCHEMA_VERSION, migrate
 
 
 def test_existing_phase1_db_migrates_idempotently(tmp_path: Path) -> None:
@@ -26,10 +26,10 @@ def test_existing_phase1_db_migrates_idempotently(tmp_path: Path) -> None:
     init_db(db); init_db(db)
     conn = sqlite3.connect(db)
     assert conn.execute("SELECT ticker FROM stocks").fetchone()[0] == "7203.T"
-    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 7
+    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == LATEST_SCHEMA_VERSION
     assert {"company_alias", "market", "industry"}.issubset({row[1] for row in conn.execute("PRAGMA table_info(stocks)")})
     tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    assert {"earnings_events", "stock_relations", "earnings_candidates", "earnings_fetch_runs", "earnings_fetch_results", "news_sources", "news_articles", "news_article_stocks", "stock_news_keywords", "news_tags", "news_article_tags", "news_fetch_runs", "news_fetch_results", "disclosures", "disclosure_tags", "disclosure_tag_links", "disclosure_news_links", "disclosure_import_runs", "disclosure_import_results", "edinet_documents", "edinet_fetch_runs", "edinet_fetch_results", "stock_profile_candidates", "automation_runs", "automation_run_steps"}.issubset(tables)
+    assert {"earnings_events", "stock_relations", "earnings_candidates", "earnings_fetch_runs", "earnings_fetch_results", "news_sources", "news_articles", "news_article_stocks", "stock_news_keywords", "news_tags", "news_article_tags", "news_fetch_runs", "news_fetch_results", "disclosures", "disclosure_tags", "disclosure_tag_links", "disclosure_news_links", "disclosure_import_runs", "disclosure_import_results", "edinet_documents", "edinet_fetch_runs", "edinet_fetch_results", "stock_profile_candidates", "automation_runs", "automation_run_steps", "stock_ir_sources", "company_intelligence", "company_notes", "investment_playbooks", "strategy_tags", "stock_strategy_tags", "strategy_rule_sets", "stock_trade_rules"}.issubset(tables)
     conn.close()
 
 
@@ -45,7 +45,7 @@ def test_schema_version_2_migrates_to_latest_without_data_loss(tmp_path: Path) -
     conn.commit(); conn.close()
     init_db(db); init_db(db)
     conn = sqlite3.connect(db)
-    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 7
+    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == LATEST_SCHEMA_VERSION
     assert conn.execute("SELECT COUNT(*) FROM stocks").fetchone()[0] == before
     assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     conn.close()
@@ -64,7 +64,7 @@ def test_schema_version_3_migrates_to_4_idempotently(tmp_path: Path) -> None:
     conn.commit(); conn.close()
     init_db(db); init_db(db)
     conn = sqlite3.connect(db)
-    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 7
+    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == LATEST_SCHEMA_VERSION
     assert conn.execute("SELECT ticker,company_name FROM stocks ORDER BY id").fetchall() == before
     assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     conn.close()
@@ -83,7 +83,7 @@ def test_schema_version_4_migrates_to_5_idempotently(tmp_path: Path) -> None:
     conn.commit(); conn.close()
     init_db(db); init_db(db)
     conn = sqlite3.connect(db)
-    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 7
+    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == LATEST_SCHEMA_VERSION
     assert conn.execute("SELECT ticker,company_name FROM stocks ORDER BY id").fetchall() == before
     assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     conn.close()
@@ -98,7 +98,7 @@ def test_schema_version_5_migrates_to_6_idempotently(tmp_path: Path) -> None:
     conn.commit(); conn.close()
     init_db(db); init_db(db)
     conn = sqlite3.connect(db)
-    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 7
+    assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == LATEST_SCHEMA_VERSION
     columns = {row[1] for row in conn.execute("PRAGMA table_info(stocks)")}
     assert {"company_alias", "market", "industry"}.issubset(columns)
     assert conn.execute("SELECT COUNT(*) FROM stocks WHERE company_name='保持対象'").fetchone()[0] == 1
@@ -111,12 +111,15 @@ def test_future_schema_is_rejected_without_repair_writes(tmp_path: Path) -> None
     init_db(db)
     with sqlite3.connect(db) as conn:
         conn.execute("DROP TABLE disclosure_import_results")
-        conn.execute("UPDATE schema_version SET version=8")
+        conn.execute(
+            "UPDATE schema_version SET version=?",
+            (LATEST_SCHEMA_VERSION + 1,),
+        )
     with sqlite3.connect(db) as conn:
         with pytest.raises(RuntimeError, match="未対応のDBバージョン"):
             migrate(conn)
     with sqlite3.connect(db) as conn:
-        assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 8
+        assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == LATEST_SCHEMA_VERSION + 1
         assert conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='disclosure_import_results'").fetchone() is None
 
 
@@ -140,8 +143,118 @@ def test_schema_version_6_migrates_to_7_idempotently(tmp_path: Path) -> None:
     init_db(db)
     init_db(db)
     with sqlite3.connect(db) as conn:
-        assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == 7
+        assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == LATEST_SCHEMA_VERSION
         assert conn.execute("SELECT ticker,company_name FROM stocks ORDER BY id").fetchall() == before
         tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         assert set(automation_tables).issubset(tables)
+        assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+
+
+def test_schema_version_7_migrates_to_8_idempotently(tmp_path: Path) -> None:
+    db = tmp_path / "v7.db"
+    init_db(db)
+    with sqlite3.connect(db) as conn:
+        conn.execute("DROP TABLE stock_ir_sources")
+        conn.execute("UPDATE schema_version SET version=7")
+        before = conn.execute(
+            "SELECT ticker,company_name FROM stocks ORDER BY id"
+        ).fetchall()
+    init_db(db)
+    init_db(db)
+    with sqlite3.connect(db) as conn:
+        assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == LATEST_SCHEMA_VERSION
+        assert conn.execute(
+            "SELECT ticker,company_name FROM stocks ORDER BY id"
+        ).fetchall() == before
+        assert conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='stock_ir_sources'"
+        ).fetchone()
+        assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+
+
+def test_schema_version_8_migrates_to_9_idempotently(tmp_path: Path) -> None:
+    db = tmp_path / "v8.db"
+    init_db(db)
+    with sqlite3.connect(db) as conn:
+        conn.execute("DROP TABLE company_notes")
+        conn.execute("DROP TABLE company_intelligence")
+        conn.execute("UPDATE schema_version SET version=8")
+        before = conn.execute(
+            "SELECT ticker,company_name FROM stocks ORDER BY id"
+        ).fetchall()
+    init_db(db)
+    init_db(db)
+    with sqlite3.connect(db) as conn:
+        assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == LATEST_SCHEMA_VERSION
+        assert conn.execute(
+            "SELECT ticker,company_name FROM stocks ORDER BY id"
+        ).fetchall() == before
+        tables = {
+            row[0]
+            for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )
+        }
+        assert {"company_intelligence", "company_notes"}.issubset(tables)
+        assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+
+
+def test_schema_version_9_migrates_to_10_idempotently(tmp_path: Path) -> None:
+    db = tmp_path / "v9.db"
+    init_db(db)
+    with sqlite3.connect(db) as conn:
+        conn.execute("DROP TABLE investment_playbooks")
+        conn.execute("UPDATE schema_version SET version=9")
+        before = conn.execute(
+            "SELECT ticker,company_name FROM stocks ORDER BY id"
+        ).fetchall()
+    init_db(db)
+    init_db(db)
+    with sqlite3.connect(db) as conn:
+        assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == LATEST_SCHEMA_VERSION
+        assert conn.execute(
+            "SELECT ticker,company_name FROM stocks ORDER BY id"
+        ).fetchall() == before
+        assert conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='investment_playbooks'"
+        ).fetchone()
+        assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+
+
+def test_schema_version_10_migrates_to_11_idempotently(tmp_path: Path) -> None:
+    db = tmp_path / "v10.db"
+    init_db(db)
+    strategy_tables = [
+        "stock_trade_rules",
+        "strategy_rule_sets",
+        "stock_strategy_tags",
+        "strategy_tags",
+    ]
+    with sqlite3.connect(db) as conn:
+        conn.execute("PRAGMA foreign_keys=OFF")
+        for table in strategy_tables:
+            conn.execute(f"DROP TABLE {table}")
+        conn.execute("UPDATE schema_version SET version=10")
+        before = conn.execute(
+            "SELECT ticker,company_name FROM stocks ORDER BY id"
+        ).fetchall()
+    init_db(db)
+    init_db(db)
+    with sqlite3.connect(db) as conn:
+        assert conn.execute(
+            "SELECT version FROM schema_version"
+        ).fetchone()[0] == LATEST_SCHEMA_VERSION
+        assert conn.execute(
+            "SELECT ticker,company_name FROM stocks ORDER BY id"
+        ).fetchall() == before
+        tables = {
+            row[0]
+            for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )
+        }
+        assert set(strategy_tables).issubset(tables)
+        assert conn.execute(
+            "SELECT COUNT(*) FROM strategy_tags"
+        ).fetchone()[0] == 18
         assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"

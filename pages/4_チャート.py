@@ -5,6 +5,7 @@ from __future__ import annotations
 import streamlit as st
 
 from components.charts import price_chart, technical_charts
+from components.layout import apply_responsive_styles
 from services.database import get_stocks, init_db, load_settings
 from services.stock_data import cache_bucket, fetch_stock_history, period_to_yfinance
 from utils.logging_config import setup_logging
@@ -25,6 +26,7 @@ selected = cols[0].selectbox("銘柄", list(labels.keys()))
 period_label = cols[1].selectbox("期間", ["1か月", "3か月", "6か月", "1年"], index=3)
 stock = labels[selected]
 settings = load_settings()
+apply_responsive_styles(settings["display_density"])
 df = fetch_stock_history(stock["ticker"], period_to_yfinance(period_label), "1d", cache_bucket(settings.get("stock_cache_minutes", 15)))
 if df.empty:
     st.error("株価データを取得できませんでした。ネットワーク状況または銘柄コードを確認してください。")

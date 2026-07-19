@@ -6,7 +6,7 @@ import logging
 import sqlite3
 
 logger = logging.getLogger(__name__)
-LATEST_SCHEMA_VERSION = 7
+LATEST_SCHEMA_VERSION = 11
 
 
 def migrate(conn: sqlite3.Connection) -> None:
@@ -55,6 +55,26 @@ def migrate(conn: sqlite3.Connection) -> None:
             conn.execute("UPDATE schema_version SET version = 7")
             version = 7
 
+        if version < 8:
+            _migrate_to_v8(conn)
+            conn.execute("UPDATE schema_version SET version = 8")
+            version = 8
+
+        if version < 9:
+            _migrate_to_v9(conn)
+            conn.execute("UPDATE schema_version SET version = 9")
+            version = 9
+
+        if version < 10:
+            _migrate_to_v10(conn)
+            conn.execute("UPDATE schema_version SET version = 10")
+            version = 10
+
+        if version < 11:
+            _migrate_to_v11(conn)
+            conn.execute("UPDATE schema_version SET version = 11")
+            version = 11
+
         # CREATE IF NOT EXISTS also repairs a partially created v2 migration.
         _migrate_to_v2(conn)
         _migrate_to_v3(conn)
@@ -62,6 +82,10 @@ def migrate(conn: sqlite3.Connection) -> None:
         _migrate_to_v5(conn)
         _migrate_to_v6(conn)
         _migrate_to_v7(conn)
+        _migrate_to_v8(conn)
+        _migrate_to_v9(conn)
+        _migrate_to_v10(conn)
+        _migrate_to_v11(conn)
     except Exception:
         logger.exception("DBマイグレーション失敗 target_version=%s", LATEST_SCHEMA_VERSION)
         raise
@@ -480,3 +504,175 @@ def _migrate_to_v7(conn: sqlite3.Connection) -> None:
             ON automation_run_steps(automation_run_id, sequence_no);
         """
     )
+
+
+def _migrate_to_v8(conn: sqlite3.Connection) -> None:
+    """Add per-stock official IR sources for reviewable earnings fallbacks."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS stock_ir_sources (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_id INTEGER NOT NULL,
+            source_type TEXT NOT NULL,
+            source_url TEXT NOT NULL,
+            enabled INTEGER NOT NULL DEFAULT 1,
+            last_checked_at TEXT,
+            last_success_at TEXT,
+            last_error TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE(stock_id, source_type),
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_stock_ir_sources_enabled
+            ON stock_ir_sources(enabled, source_type, stock_id);
+        """
+    )
+
+
+def _migrate_to_v9(conn: sqlite3.Connection) -> None:
+    """Add company intelligence notes, themes, story, and checklist state."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS company_intelligence (
+            stock_id INTEGER PRIMARY KEY,
+            themes TEXT NOT NULL DEFAULT '',
+            investment_story TEXT NOT NULL DEFAULT '',
+            earnings_checked INTEGER NOT NULL DEFAULT 0,
+            disclosure_checked INTEGER NOT NULL DEFAULT 0,
+            news_checked INTEGER NOT NULL DEFAULT 0,
+            edinet_checked INTEGER NOT NULL DEFAULT 0,
+            ai_analyzed INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS company_notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_id INTEGER NOT NULL,
+            note TEXT NOT NULL,
+            occurred_at TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_company_notes_stock_date
+            ON company_notes(stock_id, occurred_at DESC, id DESC);
+        """
+    )
+
+
+def _migrate_to_v10(conn: sqlite3.Connection) -> None:
+    """Add one user-authored investment playbook per registered stock."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS investment_playbooks (
+            stock_id INTEGER PRIMARY KEY,
+            buy_reason TEXT NOT NULL DEFAULT '',
+            investment_theme TEXT NOT NULL DEFAULT '[]',
+            target_price_1 REAL,
+            target_price_1_sell_percent REAL,
+            target_price_2 REAL,
+            target_price_2_sell_percent REAL,
+            final_target_price REAL,
+            stop_loss_price REAL,
+            trailing_stop_percent REAL,
+            holding_period TEXT NOT NULL DEFAULT '',
+            exit_conditions TEXT NOT NULL DEFAULT '{"selected":[],"custom":""}',
+            risk_notes TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_investment_playbooks_updated
+            ON investment_playbooks(updated_at DESC);
+        """
+    )
+
+
+def _migrate_to_v11(conn: sqlite3.Connection) -> None:
+    """Add reusable strategy tags, tag rules, assignments, and stock overrides."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS strategy_tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            tag_group TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            color_key TEXT NOT NULL DEFAULT 'info',
+            display_order INTEGER NOT NULL DEFAULT 0,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE(name, tag_group)
+        );
+        CREATE TABLE IF NOT EXISTS stock_strategy_tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_id INTEGER NOT NULL,
+            tag_id INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            UNIQUE(stock_id, tag_id),
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE,
+            FOREIGN KEY(tag_id) REFERENCES strategy_tags(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS strategy_rule_sets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tag_id INTEGER NOT NULL UNIQUE,
+            stop_loss_type TEXT NOT NULL DEFAULT 'none',
+            stop_loss_value REAL,
+            take_profit_type TEXT NOT NULL DEFAULT 'none',
+            take_profit_value REAL,
+            add_position_type TEXT NOT NULL DEFAULT 'none',
+            add_position_value REAL,
+            earnings_policy TEXT NOT NULL DEFAULT '',
+            priority INTEGER NOT NULL DEFAULT 0,
+            memo TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(tag_id) REFERENCES strategy_tags(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS stock_trade_rules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_id INTEGER NOT NULL UNIQUE,
+            stop_loss_type TEXT NOT NULL DEFAULT 'none',
+            stop_loss_value REAL,
+            take_profit_type TEXT NOT NULL DEFAULT 'none',
+            take_profit_value REAL,
+            add_position_type TEXT NOT NULL DEFAULT 'none',
+            add_position_value REAL,
+            source_type TEXT NOT NULL DEFAULT 'individual',
+            source_tag_id INTEGER,
+            is_overridden INTEGER NOT NULL DEFAULT 0,
+            memo TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE,
+            FOREIGN KEY(source_tag_id) REFERENCES strategy_tags(id) ON DELETE SET NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_strategy_tags_group_order
+            ON strategy_tags(tag_group, display_order, name);
+        CREATE INDEX IF NOT EXISTS idx_stock_strategy_tags_tag
+            ON stock_strategy_tags(tag_id, stock_id);
+        CREATE INDEX IF NOT EXISTS idx_strategy_rules_priority
+            ON strategy_rule_sets(priority DESC, tag_id);
+        CREATE INDEX IF NOT EXISTS idx_stock_trade_rules_source
+            ON stock_trade_rules(source_type, source_tag_id);
+        """
+    )
+    now = conn.execute(
+        "SELECT COALESCE(MAX(updated_at), datetime('now')) FROM stocks"
+    ).fetchone()[0]
+    defaults = {
+        "theme": ("AI", "半導体", "電力", "データセンター", "防衛", "宇宙", "ロボット"),
+        "style": ("グロース", "バリュー", "高配当", "優待"),
+        "horizon": ("短期", "中期", "長期"),
+        "strategy": ("押し目買い", "決算跨ぎ", "イベント投資", "積立"),
+    }
+    for group, names in defaults.items():
+        for order, name in enumerate(names, start=1):
+            conn.execute(
+                """INSERT OR IGNORE INTO strategy_tags
+                (name,tag_group,description,color_key,display_order,is_active,created_at,updated_at)
+                VALUES(?,?,?,?,?,1,?,?)""",
+                (name, group, "", "info", order, now, now),
+            )

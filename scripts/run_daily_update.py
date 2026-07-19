@@ -25,7 +25,7 @@ from services.automation_jobs import run_candidate_cleanup, run_earnings_job, ru
 from services.database import load_settings
 from services.edinet import EdinetApiClient, lookback_dates, run_edinet_range
 from services.earnings import japan_today
-from services.earnings_providers.yfinance_provider import YFinanceEarningsProvider
+from services.earnings_providers.fallback_provider import build_default_earnings_provider
 from services.news_providers.rss_provider import RssNewsProvider
 from services.stock_profiles import YFinanceStockProfileProvider, run_profile_refresh
 from utils.constants import DB_PATH
@@ -111,11 +111,16 @@ def main(argv: Sequence[str] | None = None, db_path: Path | str = DB_PATH) -> in
         (
             "earnings",
             lambda: run_earnings_job(
-                YFinanceEarningsProvider(),
+                build_default_earnings_provider(
+                    db_path=db_path,
+                    dry_run=args.dry_run,
+                    force_ir=args.force,
+                ),
                 ticker=ticker,
                 limit=args.limit,
                 force=args.force,
                 dry_run=args.dry_run,
+                include_all_holdings=True,
                 db_path=db_path,
             ),
         ),

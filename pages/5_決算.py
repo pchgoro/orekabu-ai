@@ -31,12 +31,12 @@ logger = logging.getLogger(__name__)
 st.set_page_config(page_title="決算管理 - オレ株AI", layout="wide")
 setup_logging()
 init_db()
-apply_responsive_styles()
 st.title("決算管理")
 st.caption("決算接近は売買推奨ではなく、確認時期を整理するための情報です。決算日は手動登録です。")
 
 stocks = get_stocks()
 settings = load_settings()
+apply_responsive_styles(settings["display_density"])
 stock_options = {f"{s['ticker']} {s['company_name']}": s for s in stocks}
 events = list_earnings()
 prepared = prepare_earnings_rows(events, near_days=int(settings["earnings_near_days"]))
@@ -105,7 +105,7 @@ with list_tab:
     else:
         visible = [r for r in visible if r.get("days_until") is None or r["days_until"] >= 0]
     sorted_visible = sort_earnings_rows(visible, sort_label)
-    if settings["mobile_priority_display"]:
+    if settings["mobile_priority_display"] or settings["display_density"] != "コンパクト":
         render_earnings_cards(sorted_visible)
     else:
         st.dataframe(earnings_dataframe(sorted_visible), use_container_width=True, hide_index=True, height=560)

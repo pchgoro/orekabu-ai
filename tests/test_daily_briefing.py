@@ -114,3 +114,163 @@ def test_empty_briefing_and_tasks_are_safe() -> None:
     items = build_briefing([], [], [], [], [], {}, 0)
     assert all(item["count"] == 0 for item in items)
     assert build_daily_tasks([], [], [], [], [], 0) == []
+
+
+def test_playbook_tasks_and_briefing_are_integrated_before_existing_rules() -> None:
+    playbook_rows = [
+        {
+            "id": 1,
+            "ticker": "STOP.T",
+            "company_name": "Stop",
+            "is_holding": 1,
+            "playbook_evaluation": {
+                "configured": True,
+                "stop_loss_reached": True,
+                "take_profit_reached": False,
+                "stop_loss_near": False,
+                "take_profit_near": False,
+            },
+        },
+        {
+            "id": 2,
+            "ticker": "PROFIT.T",
+            "company_name": "Profit",
+            "is_holding": 1,
+            "playbook_evaluation": {
+                "configured": True,
+                "stop_loss_reached": False,
+                "take_profit_reached": True,
+                "stop_loss_near": False,
+                "take_profit_near": False,
+            },
+        },
+        {
+            "id": 3,
+            "ticker": "NEAR.T",
+            "company_name": "Near",
+            "is_holding": 1,
+            "playbook_evaluation": {
+                "configured": True,
+                "stop_loss_reached": False,
+                "take_profit_reached": False,
+                "stop_loss_near": False,
+                "take_profit_near": True,
+            },
+        },
+        {
+            "id": 4,
+            "ticker": "UNSET.T",
+            "company_name": "Unset",
+            "is_holding": 1,
+            "playbook_evaluation": {
+                "configured": False,
+                "stop_loss_reached": False,
+                "take_profit_reached": False,
+                "stop_loss_near": False,
+                "take_profit_near": False,
+            },
+        },
+    ]
+    tasks = build_daily_tasks(
+        [], [], [], [], [], playbook_rows=playbook_rows, limit=10
+    )
+    assert [task["label"] for task in tasks] == [
+        "損切りライン到達",
+        "利確ライン到達",
+        "利確まで5%以内",
+        "投資ルール未設定",
+    ]
+    assert [task["ticker"] for task in tasks] == [
+        "STOP.T", "PROFIT.T", "NEAR.T", "UNSET.T"
+    ]
+    items = build_briefing(
+        [], [], [], [], [], {}, playbook_rows=playbook_rows
+    )
+    counts = {item["label"]: item["count"] for item in items}
+    assert counts["損切りライン到達"] == 1
+    assert counts["利確ライン到達"] == 1
+    assert counts["利確まで5%以内"] == 1
+    assert counts["投資ルール未設定"] == 1
+
+
+def test_multiple_unset_playbooks_are_aggregated_into_one_task() -> None:
+    playbook_rows = [
+        {
+            "id": index,
+            "ticker": f"{index:04d}.T",
+            "company_name": f"Company {index}",
+            "is_holding": 1,
+            "playbook_evaluation": {"configured": False},
+        }
+        for index in range(1, 4)
+    ]
+
+    tasks = build_daily_tasks(
+        [], [], [], [], [], playbook_rows=playbook_rows, limit=10
+    )
+
+    assert tasks == [
+        {
+            "priority": 7,
+            "label": "投資ルール未設定",
+            "detail": "3銘柄",
+            "page": "保有株",
+            "ticker": "",
+        }
+    ]
+
+
+def test_strategy_tasks_and_counts_use_fixed_priority() -> None:
+    strategy_rows = [
+        {
+            "id": 1,
+            "ticker": "STOP.T",
+            "company_name": "Stop",
+            "is_holding": 1,
+            "strategy_rule_resolution": {"conflict": False},
+            "strategy_lines": {"configured": True, "stop_loss_reached": True},
+        },
+        {
+            "id": 2,
+            "ticker": "TAKE.T",
+            "company_name": "Take",
+            "is_holding": 1,
+            "strategy_rule_resolution": {"conflict": False},
+            "strategy_lines": {"configured": True, "take_profit_reached": True},
+        },
+        {
+            "id": 3,
+            "ticker": "CONFLICT.T",
+            "company_name": "Conflict",
+            "is_holding": 1,
+            "strategy_rule_resolution": {"conflict": True},
+            "strategy_lines": {"configured": False},
+        },
+        {
+            "id": 4,
+            "ticker": "UNSET.T",
+            "company_name": "Unset",
+            "is_holding": 1,
+            "strategy_rule_resolution": {"conflict": False},
+            "strategy_lines": {"configured": False},
+        },
+    ]
+    tasks = build_daily_tasks(
+        [], [], [], [], [], strategy_rows=strategy_rows, limit=10
+    )
+    assert [task["label"] for task in tasks] == [
+        "戦略損切ライン到達",
+        "戦略利確ライン到達",
+        "戦略ルール競合",
+        "戦略ルール未設定",
+    ]
+    assert [task["priority"] for task in tasks] == [-8, -7, 0, 14]
+
+    items = build_briefing(
+        [], [], [], [], [], {}, strategy_rows=strategy_rows
+    )
+    counts = {item["label"]: item["count"] for item in items}
+    assert counts["戦略損切到達"] == 1
+    assert counts["戦略利確到達"] == 1
+    assert counts["戦略ルール競合"] == 1
+    assert counts["戦略ルール未設定"] == 1

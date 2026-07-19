@@ -20,12 +20,12 @@ from utils.logging_config import setup_logging
 st.set_page_config(page_title="監視銘柄 - オレ株AI", layout="wide")
 setup_logging()
 init_db()
-apply_responsive_styles()
 st.title("監視銘柄")
 st.caption("注目スコアは売買推奨ではなく、確認優先度を示すものです。")
 
 stocks = get_stocks()
 settings = load_settings()
+apply_responsive_styles(settings["display_density"])
 rows = filter_watchlist(enrich_stock_rows(build_analysis_rows(stocks, settings), near_days=int(settings["earnings_near_days"])))
 
 if rows:
@@ -46,7 +46,7 @@ sort_label = cols[1].selectbox("並び替え", ["スコア順", "RSI昇順", "RS
 filtered = [row for row in rows if row.get("category") in category_filter]
 filtered = sort_watchlist(filtered, sort_label)
 
-if settings["mobile_priority_display"]:
+if settings["mobile_priority_display"] or settings["display_density"] != "コンパクト":
     render_stock_cards(filtered, holding=False)
 else:
     st.dataframe(watchlist_dataframe(filtered), use_container_width=True, hide_index=True, height=560)

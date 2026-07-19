@@ -187,6 +187,62 @@ def test_edinet_partial_failure_is_recorded(
     assert statuses == {"inserted", "failed"}
 
 
+def test_edinet_api_failure_is_recorded_for_selected_ticker(tmp_path: Path) -> None:
+    db = tmp_path / "test.db"
+    init_db(db)
+
+    class FailingClient:
+        def fetch_documents(self, _target_date: date):
+            raise RuntimeError("temporary API failure")
+
+    with pytest.raises(RuntimeError, match="temporary API failure"):
+        run_edinet_fetch(
+            FailingClient(),
+            target_date=date(2026, 7, 16),
+            ticker="5801.T",
+            db_path=db,
+        )
+    run = list_fetch_runs(db_path=db)[0]
+    assert run["target_count"] == 1
+    assert run["status"] == "failed"
+    assert run["failed_count"] == 1
+    assert "temporary API failure" in run["error_summary"]
+
+
+def test_duplicate_plus_save_failure_is_partial(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    db = tmp_path / "test.db"
+    init_db(db)
+    run_edinet_fetch(client(), target_date=date(2026, 7, 16), db_path=db)
+    stock_documents = payload()
+    stock_documents["results"].insert(
+        1,
+        {
+            "docID": "S100FAIL",
+            "secCode": "69760",
+            "docDescription": "臨時報告書",
+        },
+    )
+    partial_client = EdinetApiClient(
+        "secret", opener=lambda *_args, **_kwargs: Response(stock_documents)
+    )
+    original = edinet_service.save_document
+
+    def fail_one(stock, document, document_type, db_path):
+        if document["docID"] == "S100FAIL":
+            raise RuntimeError("forced save failure")
+        return original(stock, document, document_type, db_path)
+
+    monkeypatch.setattr(edinet_service, "save_document", fail_one)
+    result = run_edinet_fetch(
+        partial_client, target_date=date(2026, 7, 16), db_path=db
+    )
+    assert result.duplicates == 1
+    assert result.failed == 1
+    assert list_fetch_runs(db_path=db)[0]["status"] == "partial"
+
+
 def test_lookback_dates_cross_date_boundary_and_maximum() -> None:
     assert lookback_dates(date(2026, 1, 2), 3) == [
         date(2026, 1, 2),

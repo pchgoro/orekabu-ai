@@ -93,10 +93,12 @@ def test_daily_ux_settings_merge_and_preserve_existing_settings(tmp_path: Path) 
     db = tmp_path / "daily.db"; init_db(db)
     settings = load_settings(db)
     settings["earnings_auto_fetch"]["max_tickers_per_run"] = 7
-    settings.update({"dashboard_display_mode":"コンパクト","news_display_mode":"表","mobile_priority_display":True,"briefing_limit":99,"daily_tasks_limit":99,"hide_zero_sections":False})
+    settings.update({"dashboard_display_mode":"コンパクト","display_density":"ゆったり","news_display_mode":"表","mobile_priority_display":True,"briefing_limit":99,"daily_tasks_limit":99,"hide_zero_sections":False,"strategy_rule_near_percent":99})
     save_settings(settings, db)
     loaded = load_settings(db)
     assert loaded["dashboard_display_mode"] == "コンパクト"
+    assert loaded["display_density"] == "ゆったり"
+    assert loaded["strategy_rule_near_percent"] == 20.0
     assert loaded["news_display_mode"] == "表"
     assert loaded["briefing_limit"] == 20 and loaded["daily_tasks_limit"] == 10
     assert loaded["earnings_auto_fetch"]["max_tickers_per_run"] == 7

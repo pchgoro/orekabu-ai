@@ -9,7 +9,7 @@ if not exist ".venv\Scripts\python.exe" (
 )
 
 call ".venv\Scripts\activate.bat"
-python "scripts\run_daily_update.py" --limit 20
+python "scripts\run_daily_update.py"
 set EXIT_CODE=%ERRORLEVEL%
 
 echo.

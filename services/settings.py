@@ -30,6 +30,7 @@ def merge_settings(saved: dict[str, Any] | None) -> dict[str, Any]:
 def validate_settings(settings: dict[str, Any]) -> dict[str, Any]:
     """Clamp settings to values that keep the app operational."""
     settings["dashboard_display_mode"] = settings.get("dashboard_display_mode") if settings.get("dashboard_display_mode") in {"標準", "コンパクト"} else "標準"
+    settings["display_density"] = settings.get("display_density") if settings.get("display_density") in {"コンパクト", "標準", "ゆったり"} else "標準"
     settings["news_display_mode"] = settings.get("news_display_mode") if settings.get("news_display_mode") in {"カード", "表"} else "カード"
     settings["mobile_priority_display"] = _as_bool(settings.get("mobile_priority_display"), False)
     settings["briefing_limit"] = _clamp_int(settings.get("briefing_limit"), 10, 1, 20)
@@ -38,6 +39,9 @@ def validate_settings(settings: dict[str, Any]) -> dict[str, Any]:
     settings["ranking_limit"] = _clamp_int(settings.get("ranking_limit"), 10, 1, 100)
     settings["stock_cache_minutes"] = _clamp_int(settings.get("stock_cache_minutes"), 15, 1, 1440)
     settings["buy_watch_near_percent"] = _clamp_float(settings.get("buy_watch_near_percent"), 3.0, 0.0, 100.0)
+    settings["strategy_rule_near_percent"] = _clamp_float(
+        settings.get("strategy_rule_near_percent"), 3.0, 0.1, 20.0
+    )
     settings["earnings_dashboard_limit"] = _clamp_int(settings.get("earnings_dashboard_limit"), 5, 1, 100)
     settings["earnings_near_days"] = _clamp_int(settings.get("earnings_near_days"), 7, 1, 365)
     settings["related_earnings_limit"] = _clamp_int(settings.get("related_earnings_limit"), 5, 1, 100)

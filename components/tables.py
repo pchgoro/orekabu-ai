@@ -55,6 +55,24 @@ def holdings_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
                 "評価額": fmt_price(row.get("market_value")),
                 "評価損益": fmt_signed_price(row.get("profit")),
                 "損益率": fmt_signed_percent(row.get("profit_pct")),
+                "ルール": row.get("playbook_status") or "未設定",
+                "利確まで残り": _rule_distance(row.get("playbook_target_distance")),
+                "損切りまで残り": _rule_distance(row.get("playbook_stop_distance")),
+                "戦略タグ": " / ".join(
+                    str(tag.get("name"))
+                    for tag in row.get("strategy_tags") or []
+                ) or "未設定",
+                "戦略状態": row.get("strategy_status") or "未設定",
+                "戦略損切": fmt_price(
+                    (row.get("strategy_lines") or {}).get("stop_loss_price")
+                ),
+                "戦略利確": fmt_price(
+                    (row.get("strategy_lines") or {}).get("take_profit_price")
+                ),
+                "戦略買い増し": fmt_price(
+                    (row.get("strategy_lines") or {}).get("add_position_price")
+                ),
+                "戦略ルール由来": row.get("strategy_source") or "未設定",
                 "RSI": fmt_number(row.get("RSI14")),
                 "注目スコア": row.get("score"),
                 "買い検討価格": fmt_price(row.get("buy_watch_price")),
@@ -67,6 +85,15 @@ def holdings_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
             }
         )
     return pd.DataFrame(data)
+
+
+def _rule_distance(value: Any) -> str:
+    """Format a compact playbook distance for holdings tables."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return "未設定"
+    return f"{number:,.0f}円" if number > 0 else "到達"
 
 
 def watchlist_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:

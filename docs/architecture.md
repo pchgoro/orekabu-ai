@@ -41,7 +41,8 @@ flowchart TD
 ・`pages/6_設定.py`: 設定、CSV、銘柄登録
 ・`pages/7_ニュース.py`: ニュース一覧、ソース、キーワード、手動登録、CSV、取得履歴
 ・`pages/8_適時開示.py`: 開示一覧、手動登録、PDF参照、CSV、取込履歴、ニュース関連
-・`pages/9_企業カルテ.py`: 企業検索、横断カルテ、統合タイムライン、コピー用プロンプト
+・`pages/9_企業カルテ.py`: 企業検索、横断カルテ、テーマ・投資ストーリー・チェックリスト・メモ、統合タイムライン、コピー用プロンプト
+・`pages/10_戦略・カテゴリ.py`: 戦略タグ、タグ別銘柄、共通ルール、一括適用、競合、集計
 
 ## Components
 
@@ -64,11 +65,15 @@ flowchart TD
 ・`services/earnings_view_models.py`: 決算日、曜日、状態、欠損値の表示整形
 ・`services/earnings_providers/base.py`: プロバイダー共通契約と取得結果
 ・`services/earnings_providers/yfinance_provider.py`: yfinance返却形式の隔離と正規化
+・`services/earnings_providers/fallback_provider.py`: yfinance成功時は終了し、失敗時だけ登録済み公式IRへ進む順序制御
+・`services/earnings_providers/official_ir_provider.py`: robots.txtを尊重した公式IR HTML取得と保守的な将来日抽出
+・`services/earnings_ir_sources.py`: 銘柄別IR URL、24時間キャッシュ、取得状態、個別候補保存
 ・`services/earnings_providers/csv_provider.py`: 候補CSV行の正規化
 ・`services/earnings_reconciliation.py`: 既存決算との比較と差分表示
 ・`services/earnings_candidates.py`: 候補、履歴、取得制限、承認トランザクション
 ・`components/earnings_auto_fetch.py`: 取得・候補・履歴・設定UI
 ・`services/daily_briefing.py`: ブリーフィング集計と今日やることの純粋View Model
+・`services/strategy_rules.py`: タグCRUD、割当、共通ルール、個別上書き、ライン判定、CSV、集計
 ・`components/daily.py`: ブリーフィング、優先タスク、株・決算カード
 ・`components/news_cards.py`: ニュースの直接操作カード
 ・`components/layout.py`: 対象画面の共通レスポンシブ調整

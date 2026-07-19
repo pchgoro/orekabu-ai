@@ -201,13 +201,9 @@ def run_edinet_fetch(
 ) -> JobResult:
     """Fetch and save registered-stock metadata while isolating row failures."""
     stocks = get_stocks(db_path)
-    raw_documents = client.fetch_documents(target_date)
-    security_matches = count_security_matches(raw_documents, stocks, ticker=ticker)
-    matches = filter_registered_documents(
-        raw_documents, stocks, ticker=ticker, limit=max(1, int(limit))
-    )
-    inserted = duplicates = failed = 0
-    errors: list[str] = []
+    selected_stocks = [
+        stock for stock in stocks if ticker is None or stock["ticker"] == ticker
+    ]
     if not dry_run:
         now = _now()
         with connect(db_path) as conn:
@@ -216,11 +212,35 @@ def run_edinet_fetch(
                     """INSERT INTO edinet_fetch_runs
                     (started_at,target_date,target_count,status,created_at)
                     VALUES (?,?,?,?,?)""",
-                    (now, target_date.isoformat(), len(stocks), "running", now),
+                    (
+                        now,
+                        target_date.isoformat(),
+                        len(selected_stocks),
+                        "running",
+                        now,
+                    ),
                 ).lastrowid
             )
     else:
         run_id = None
+    try:
+        raw_documents = client.fetch_documents(target_date)
+    except Exception as exc:
+        if run_id is not None:
+            with connect(db_path) as conn:
+                conn.execute(
+                    """UPDATE edinet_fetch_runs
+                    SET finished_at=?,failed_count=1,status='failed',error_summary=?
+                    WHERE id=?""",
+                    (_now(), f"{type(exc).__name__}: {exc}"[:1000], run_id),
+                )
+        raise
+    security_matches = count_security_matches(raw_documents, selected_stocks)
+    matches = filter_registered_documents(
+        raw_documents, selected_stocks, limit=max(1, int(limit))
+    )
+    inserted = duplicates = failed = 0
+    errors: list[str] = []
     for stock, document, document_type in matches:
         try:
             status = "preview" if dry_run else save_document(
@@ -277,7 +297,11 @@ def run_edinet_fetch(
                         ),
                     )
     if run_id is not None:
-        status = "failed" if failed and not inserted else ("partial" if failed else "completed")
+        status = (
+            "failed"
+            if failed and not (inserted or duplicates)
+            else ("partial" if failed else "completed")
+        )
         with connect(db_path) as conn:
             conn.execute(
                 """UPDATE edinet_fetch_runs SET finished_at=?,document_count=?,inserted_count=?,

@@ -7,13 +7,17 @@
 ## CLI
 
 - `scripts/fetch_news.py`: 登録済みの有効なRSS・Atomソース
-- `scripts/fetch_earnings.py`: yfinanceの決算日候補
+- `scripts/fetch_earnings.py`: yfinance、失敗時は登録済み企業公式IRの決算日候補
 - `scripts/fetch_edinet.py`: EDINET公式API v2の書類メタデータ
 - `scripts/refresh_stock_profiles.py`: yfinanceの企業情報候補
 - `scripts/run_daily_update.py`: 上記と古い確認済み決算候補整理の一括実行
 - `scripts/run_edinet_backfill.py`: EDINET初回バックフィル
 
 共通オプションは`--dry-run`、`--ticker`、`--limit`、`--force`、`--verbose`です。
+
+日次一括更新の決算候補取得では、保有株を`--limit`より優先して全件確認します。保有株を入れても処理枠が残る場合のみ、銘柄コード順で監視銘柄を追加します。個別の`fetch_earnings.py`は従来どおり`--limit`を厳密な処理上限として扱います。
+
+決算候補はyfinanceを最初に確認し、将来日がない銘柄だけ登録済み企業公式IRページへ進みます。公式IRは24時間以上の間隔を空け、robots.txtで許可されないページは取得しません。1社の失敗後も残り銘柄を継続します。JPXは自動巡回せず、画面から手動確認します。
 
 ## データ保護
 
