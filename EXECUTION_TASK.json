@@ -1,15 +1,15 @@
 {
   "project": "orekabu-ai",
   "repository": "pchgoro/orekabu-ai",
-  "enabled": false,
+  "enabled": true,
   "current_phase": "Phase 3B",
   "current_task": "#2 Phase 3B 適時開示基盤の正式化 acceptance",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-05T22:44:00+09:00",
-  "last_completed_task": "Bootstrap: GitHub監査、main正規化、Issue整理、自動開発スケジュール設定",
-  "next_action": "After human acceptance evidence and TDnet/PDF/XBRL scope decisions, re-enable and review #2",
-  "blocked_reason": "Stopped after 5 consecutive idle checks: human acceptance evidence is still required for real data, Desktop/Mobile, and TDnet/PDF/XBRL scope decisions.",
+  "last_run_at": "2026-09-06T00:18:12+09:00",
+  "last_completed_task": "Phase 3B automated acceptance: disclosure/UI regression, full pytest, compileall, and diff validation",
+  "next_action": "Run automated Phase 3B acceptance tests and record evidence; keep real data, Desktop/Mobile, and TDnet/PDF/XBRL decisions as human-action boundaries",
+  "blocked_reason": null,
   "human_action_required": "Phase 3B実データ・Desktop/Mobile確認、TDnet/PDF/XBRL方針の確認",
-  "consecutive_idle_checks": 5,
-  "last_git_sha": "28827e172a4cd089969d378745043072fa852d68"
+  "consecutive_idle_checks": 0,
+  "last_git_sha": "f3b27b59e583c49291ee589484c3d3bf2f8ced1f"
 }
