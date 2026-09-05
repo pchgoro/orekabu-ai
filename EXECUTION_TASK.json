@@ -5,11 +5,11 @@
   "current_phase": "Phase 3B",
   "current_task": "#2 Phase 3B 適時開示基盤の正式化 acceptance",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-06T00:18:12+09:00",
+  "last_run_at": "2026-09-06T00:48:04+09:00",
   "last_completed_task": "Phase 3B automated acceptance: disclosure/UI regression, full pytest, compileall, and diff validation",
-  "next_action": "Run automated Phase 3B acceptance tests and record evidence; keep real data, Desktop/Mobile, and TDnet/PDF/XBRL decisions as human-action boundaries",
+  "next_action": "Human acceptance: verify real data and Desktop/Mobile; decide whether TDnet/PDF/XBRL remain outside Phase 3B",
   "blocked_reason": null,
   "human_action_required": "Phase 3B実データ・Desktop/Mobile確認、TDnet/PDF/XBRL方針の確認",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "f3b27b59e583c49291ee589484c3d3bf2f8ced1f"
+  "last_git_sha": "b075d544072fdb7a376e09edfa6253da77ea60c8"
 }
