@@ -86,6 +86,7 @@ AIを使うこと自体を目的にせず、投資判断に必要な情報を効
 - [x] ダッシュボード・今日やること連携
 - [ ] TDnetサイト自動巡回
 - [ ] PDF本文・XBRL解析
+- [ ] 実データ確認、Desktop・Mobile確認、regression test、v0.5.0 acceptance
 
 ## Phase 3C ニュース連携・高度化
 
@@ -109,7 +110,7 @@ AIを使うこと自体を目的にせず、投資判断に必要な情報を効
 - [x] Desktop・Mobile幅での表示確認
 - [ ] スマートフォン実機でのDaily UX最終確認
 
-## UI Refresh（Candidate）
+## UI Refresh（v0.5.0 Candidate）
 
 - [x] ダッシュボード上部の3ブロック化
 - [x] 詳細セクションの折りたたみ整理
@@ -121,7 +122,7 @@ AIを使うこと自体を目的にせず、投資判断に必要な情報を効
 - [x] 390px向けボタン・折り返し・1〜2列調整
 - [x] Desktop・390pxの実画面最終確認
 
-## Phase 4A 企業カルテ（v0.6.0 Candidate）
+## Phase 4A 企業カルテ・カテゴリ管理（v0.6.0 Candidate）
 
 - [x] ticker・会社名・略称検索
 - [x] 基本情報と企業メタデータ
@@ -139,7 +140,7 @@ AIを使うこと自体を目的にせず、投資判断に必要な情報を効
 - [x] 既存画面からの遷移
 - [ ] Desktop・Mobile実画面最終確認
 
-## Phase 4B 投資ルール（v0.7.0 Candidate）
+## Phase 4B 投資ルール・スコア（v0.7.0 Candidate）
 
 - [x] 1銘柄1件の投資ルール保存
 - [x] 買った理由と投資テーマ

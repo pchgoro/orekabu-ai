@@ -1,0 +1,15 @@
+{
+  "project": "orekabu-ai",
+  "repository": "pchgoro/orekabu-ai",
+  "enabled": true,
+  "current_phase": "Phase 3B",
+  "current_task": "GitHub issue queue bootstrap and Phase 3B acceptance preparation",
+  "task_source": "GitHub Issues + ROADMAP.md",
+  "last_run_at": null,
+  "last_completed_task": null,
+  "next_action": "Select the highest-priority executable open issue on main after checking blockers and open PRs",
+  "blocked_reason": null,
+  "human_action_required": "Phase 3B実データ・Desktop/Mobile確認、TDnet/PDF/XBRL方針の確認",
+  "consecutive_idle_checks": 0,
+  "last_git_sha": "fd09de6ca34a25ed566e48608d8110f02398081a"
+}
