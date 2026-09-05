@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "Phase 3B",
-  "current_task": "#2 Phase 3B 適時開示基盤の正式化 acceptance",
+  "current_task": "#2 Phase 3B disclosure foundation acceptance",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-06T00:48:04+09:00",
-  "last_completed_task": "Phase 3B automated acceptance: disclosure/UI regression, full pytest, compileall, and diff validation",
+  "last_run_at": "2026-09-06T01:05:00+09:00",
+  "last_completed_task": "Phase 3B automated acceptance: disclosure/UI regression, fixture checks, full pytest, compileall, and diff validation",
   "next_action": "Human acceptance: verify real data and Desktop/Mobile; decide whether TDnet/PDF/XBRL remain outside Phase 3B",
   "blocked_reason": null,
-  "human_action_required": "Phase 3B実データ・Desktop/Mobile確認、TDnet/PDF/XBRL方針の確認",
+  "human_action_required": "Phase 3B human acceptance: real data, Desktop/Mobile, and TDnet/PDF/XBRL scope",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "b075d544072fdb7a376e09edfa6253da77ea60c8"
+  "last_git_sha": "f039ab0"
 }
