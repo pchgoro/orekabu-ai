@@ -32,7 +32,7 @@ def seed_profile(db: Path) -> dict:
     assert stock and related
     update_company_metadata(int(stock["id"]), "古河電工", "東証プライム", "非鉄金属", db)
     add_earnings({"stock_id": stock["id"], "fiscal_year": 2025, "fiscal_quarter": "通期", "earnings_date": "2025-05-12", "date_status": "確定"}, db)
-    add_earnings({"stock_id": stock["id"], "fiscal_year": 2027, "fiscal_quarter": "Q1", "earnings_date": "2026-08-05", "date_status": "予定"}, db)
+    add_earnings({"stock_id": stock["id"], "fiscal_year": 2099, "fiscal_quarter": "Q1", "earnings_date": "2099-08-05", "date_status": "予定"}, db)
     add_earnings({"stock_id": related["id"], "fiscal_year": 2027, "fiscal_quarter": "Q1", "earnings_date": "2026-08-01", "date_status": "予定"}, db)
     add_relation({"source_stock_id": stock["id"], "related_stock_id": related["id"], "relation_type": "同業", "impact_level": "中", "memo": "比較"}, db)
     _, article_id = save_article(NewsItem(title="5801 古河電気工業の新製品", published_at="2026-07-12T09:00:00"), db_path=db)
@@ -118,7 +118,7 @@ def test_search_metadata_and_cross_domain_profile(tmp_path: Path) -> None:
     assert search_companies("5801", db)[0]["company_name"] == stock["company_name"]
     profile = build_company_profile("5801", load_settings(db), db, include_price=False)
     assert profile["stock"]["market"] == "東証プライム"
-    assert profile["next_earnings"]["earnings_date"] == "2026-08-05"
+    assert profile["next_earnings"]["earnings_date"] == "2099-08-05"
     assert profile["earnings_candidates"][0]["comparison_status"] == "date_changed"
     assert profile["related_earnings"][0]["related_ticker"] == "6976.T"
     assert profile["earnings_history"][0]["earnings_date"] == "2025-05-12"

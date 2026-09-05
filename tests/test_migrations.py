@@ -258,3 +258,19 @@ def test_schema_version_10_migrates_to_11_idempotently(tmp_path: Path) -> None:
             "SELECT COUNT(*) FROM strategy_tags"
         ).fetchone()[0] == 18
         assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+
+
+def test_schema_version_11_migrates_to_latest_with_categories_and_scores(tmp_path: Path) -> None:
+    db = tmp_path / "v11.db"
+    init_db(db)
+    with sqlite3.connect(db) as conn:
+        for table in ("score_history", "stock_scores", "trade_rules", "trade_notes", "category_rules", "stock_categories", "categories"):
+            conn.execute(f"DROP TABLE {table}")
+        conn.execute("UPDATE schema_version SET version=11")
+    init_db(db); init_db(db)
+    with sqlite3.connect(db) as conn:
+        assert conn.execute("SELECT version FROM schema_version").fetchone()[0] == LATEST_SCHEMA_VERSION
+        tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        assert {"categories", "stock_categories", "category_rules", "trade_notes", "trade_rules", "stock_scores", "score_history"}.issubset(tables)
+        assert conn.execute("SELECT COUNT(*) FROM categories").fetchone()[0] == 16
+        assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"

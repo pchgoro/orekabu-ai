@@ -15,6 +15,8 @@ from services.database import get_stocks, init_db, load_settings
 from services.stock_data import build_analysis_rows, make_prompt
 from services.investment_playbooks import enrich_rows_with_playbooks
 from services.strategy_rules import enrich_rows_with_strategy
+from services.categories import enrich_rows_with_categories
+from services.stock_scores import enrich_rows_with_ore_scores
 from services.earnings_view_models import enrich_stock_rows
 from services.view_models import filter_holdings
 from utils.logging_config import setup_logging
@@ -29,7 +31,7 @@ stocks = get_stocks()
 settings = load_settings()
 apply_responsive_styles(settings["display_density"])
 rows = filter_holdings(
-    enrich_rows_with_strategy(
+    enrich_rows_with_ore_scores(enrich_rows_with_categories(enrich_rows_with_strategy(
         enrich_rows_with_playbooks(
             enrich_stock_rows(
                 build_analysis_rows(stocks, settings),
@@ -37,7 +39,7 @@ rows = filter_holdings(
             )
         ),
         near_percent=float(settings["strategy_rule_near_percent"]),
-    )
+    )))
 )
 holding_metrics(rows)
 if rows:

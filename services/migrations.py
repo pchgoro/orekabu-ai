@@ -6,7 +6,7 @@ import logging
 import sqlite3
 
 logger = logging.getLogger(__name__)
-LATEST_SCHEMA_VERSION = 11
+LATEST_SCHEMA_VERSION = 13
 
 
 def migrate(conn: sqlite3.Connection) -> None:
@@ -75,6 +75,16 @@ def migrate(conn: sqlite3.Connection) -> None:
             conn.execute("UPDATE schema_version SET version = 11")
             version = 11
 
+        if version < 12:
+            _migrate_to_v12(conn)
+            conn.execute("UPDATE schema_version SET version = 12")
+            version = 12
+
+        if version < 13:
+            _migrate_to_v13(conn)
+            conn.execute("UPDATE schema_version SET version = 13")
+            version = 13
+
         # CREATE IF NOT EXISTS also repairs a partially created v2 migration.
         _migrate_to_v2(conn)
         _migrate_to_v3(conn)
@@ -86,6 +96,8 @@ def migrate(conn: sqlite3.Connection) -> None:
         _migrate_to_v9(conn)
         _migrate_to_v10(conn)
         _migrate_to_v11(conn)
+        _migrate_to_v12(conn)
+        _migrate_to_v13(conn)
     except Exception:
         logger.exception("DBマイグレーション失敗 target_version=%s", LATEST_SCHEMA_VERSION)
         raise
@@ -676,3 +688,110 @@ def _migrate_to_v11(conn: sqlite3.Connection) -> None:
                 VALUES(?,?,?,?,?,1,?,?)""",
                 (name, group, "", "info", order, now, now),
             )
+
+
+def _migrate_to_v12(conn: sqlite3.Connection) -> None:
+    """Add independent theme categories, category price lines, and trade notes."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            description TEXT NOT NULL DEFAULT '',
+            color_key TEXT NOT NULL DEFAULT 'info',
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS stock_categories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_id INTEGER NOT NULL,
+            category_id INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            UNIQUE(stock_id, category_id),
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE,
+            FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS category_rules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category_id INTEGER NOT NULL UNIQUE,
+            stop_loss_price REAL,
+            take_profit_price REAL,
+            add_position_price REAL,
+            memo TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS trade_notes (
+            stock_id INTEGER PRIMARY KEY,
+            holding_reason TEXT NOT NULL DEFAULT '',
+            sell_conditions TEXT NOT NULL DEFAULT '',
+            memo TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_categories_active_name
+            ON categories(is_active, name);
+        CREATE INDEX IF NOT EXISTS idx_stock_categories_category_stock
+            ON stock_categories(category_id, stock_id);
+        """
+    )
+    now = conn.execute(
+        "SELECT COALESCE(MAX(updated_at), datetime('now')) FROM stocks"
+    ).fetchone()[0]
+    defaults = (
+        "AI", "半導体", "半導体素材", "データセンター", "電力", "国策",
+        "宇宙", "防衛", "量子", "高配当", "優待", "グロース", "バリュー",
+        "短期", "中期", "長期",
+    )
+    for name in defaults:
+        conn.execute(
+            """INSERT OR IGNORE INTO categories
+            (name,description,color_key,is_active,created_at,updated_at)
+            VALUES(?,?,?,1,?,?)""",
+            (name, "", "info", now, now),
+        )
+
+
+def _migrate_to_v13(conn: sqlite3.Connection) -> None:
+    """Add category trade rules and auditable user score snapshots."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS trade_rules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category_id INTEGER NOT NULL UNIQUE,
+            buy_conditions TEXT NOT NULL DEFAULT '',
+            add_position_conditions TEXT NOT NULL DEFAULT '',
+            take_profit_percent REAL,
+            stop_loss_percent REAL,
+            max_holding_ratio_percent REAL,
+            memo TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS stock_scores (
+            stock_id INTEGER PRIMARY KEY,
+            score INTEGER NOT NULL,
+            breakdown_json TEXT NOT NULL DEFAULT '[]',
+            calculated_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS score_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_id INTEGER NOT NULL,
+            score INTEGER NOT NULL,
+            breakdown_json TEXT NOT NULL DEFAULT '[]',
+            recorded_at TEXT NOT NULL,
+            UNIQUE(stock_id, recorded_at),
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_score_history_stock_time
+            ON score_history(stock_id, recorded_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_stock_scores_score
+            ON stock_scores(score DESC, updated_at DESC);
+        """
+    )

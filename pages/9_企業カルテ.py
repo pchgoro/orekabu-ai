@@ -22,6 +22,11 @@ from components.strategy_rules import (
     render_strategy_summary,
     render_tag_badges,
 )
+from components.categories import (
+    render_category_badges,
+    render_stock_category_editor,
+    render_trade_notes_editor,
+)
 from components.ui import empty_state, render_market_metric, render_priority_badge
 from services.company_profile import (
     add_company_note,
@@ -120,6 +125,27 @@ with section_columns[1]:
     st.caption(f"更新日時: {price.get('price_updated_at') or '取得失敗・未取得'}")
 
 st.subheader("今日の注意点")
+st.subheader("オレ株スコア")
+ore_score = profile.get("ore_score") or {}
+score_cols = [st.container(), st.container()] if mobile else st.columns(2)
+with score_cols[0]:
+    st.metric("現在スコア", f"{ore_score.get('score', 0)}点")
+    st.caption(f"分類: {ore_score.get('classification') or '通常'}。売買推奨ではなく確認優先度です。")
+with score_cols[1]:
+    st.markdown("##### スコア内訳")
+    for part in ore_score.get("breakdown") or []:
+        st.write(f"{int(part.get('points') or 0):+d} {part.get('reason') or ''}")
+if ore_score.get("improvements"):
+    st.markdown("##### 改善ポイント")
+    for imp in ore_score["improvements"]:
+        st.info(imp)
+if profile.get("score_history"):
+    with st.expander("スコア履歴", expanded=False):
+        st.dataframe(
+            [{"記録日時": row["recorded_at"], "スコア": row["score"]} for row in profile["score_history"]],
+            use_container_width=True, hide_index=True,
+        )
+
 attention_items = []
 next_event = profile.get("next_earnings") or {}
 if next_event.get("days_until") == 0:
@@ -174,6 +200,21 @@ with strategy_cols[1]:
         render_individual_rule_editor(
             stock, profile.get("individual_strategy_rule")
         )
+
+st.subheader("テーマ・保有メモ")
+category_cols = [st.container(), st.container()] if mobile else st.columns(2)
+with category_cols[0]:
+    st.markdown("##### カテゴリ")
+    render_category_badges(profile.get("categories") or [])
+    with st.expander("カテゴリを編集", expanded=False):
+        render_stock_category_editor(int(stock["id"]))
+with category_cols[1]:
+    trade_notes = profile.get("trade_notes") or {}
+    st.markdown("##### 保有理由・売却条件")
+    st.write(trade_notes.get("holding_reason") or "保有理由は未設定です。")
+    st.caption(f"売却条件: {trade_notes.get('sell_conditions') or '未設定'}")
+    with st.expander("保有理由・売却条件・自由メモを編集", expanded=False):
+        render_trade_notes_editor(int(stock["id"]))
 
 st.subheader("決算")
 earnings_cols = [st.container(), st.container(), st.container()] if mobile else st.columns(3)

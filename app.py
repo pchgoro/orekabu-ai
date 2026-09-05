@@ -22,6 +22,7 @@ from services.automation import automation_summary
 from services.stock_data import build_analysis_rows, make_prompt
 from services.investment_playbooks import enrich_rows_with_playbooks
 from services.strategy_rules import enrich_rows_with_strategy, strategy_dashboard_summary
+from services.stock_scores import enrich_rows_with_ore_scores, score_rankings
 from services.view_models import build_buy_watch_rows
 from utils.constants import APP_NAME
 from utils.logging_config import setup_logging
@@ -37,7 +38,7 @@ st.page_link("pages/9_企業カルテ.py", label="企業カルテを開く")
 settings = load_settings()
 apply_responsive_styles(settings["display_density"])
 stocks = get_stocks()
-rows = enrich_rows_with_strategy(
+rows = enrich_rows_with_ore_scores(enrich_rows_with_strategy(
     enrich_rows_with_playbooks(
         enrich_stock_rows(
             build_analysis_rows(stocks, settings),
@@ -45,7 +46,7 @@ rows = enrich_rows_with_strategy(
         )
     ),
     near_percent=float(settings["strategy_rule_near_percent"]),
-)
+))
 earnings_rows = [r for r in prepare_earnings_rows(list_earnings(), near_days=int(settings["earnings_near_days"])) if r.get("days_until") is not None and r["days_until"] >= 0]
 candidates = list_candidates()
 news_rows = list_articles()
@@ -64,9 +65,38 @@ tasks = build_daily_tasks(
     int(settings["daily_tasks_limit"]), disclosure_rows, rows, rows,
 )
 strategy_summary = strategy_dashboard_summary(rows)
+ore_rankings = score_rankings(rows)
 compact = settings["dashboard_display_mode"] == "コンパクト"
 
 render_dashboard_focus(tasks, briefing, news_rows, disclosure_rows)
+with st.expander("オレ株スコア", expanded=not compact):
+    score_cols = st.columns(3)
+    with score_cols[0]:
+        st.markdown("#### 今日の注目 TOP10")
+        for row in ore_rankings["overall"][:10]:
+            st.write(f"{row['ticker']} {row['company_name']} - {row['ore_score']['score']}点 ({row['ore_score']['classification']})")
+    with score_cols[1]:
+        st.markdown("#### 今日の危険 TOP10")
+        danger = sorted(
+            ore_rankings["attention"],
+            key=lambda row: int(row["ore_score"]["score"]),
+        )[:10]
+        if danger:
+            for row in danger:
+                st.write(f"{row['ticker']} {row['company_name']} - {row['ore_score']['score']}点 ({row['ore_score']['classification']})")
+        else:
+            st.caption("現在、注意・売却候補はありません。")
+    with score_cols[2]:
+        st.markdown("#### スコア急変")
+        sudden = ore_rankings.get("sudden_changes") or []
+        if sudden:
+            for row in sudden[:10]:
+                diff = row["score_diff"]
+                sign = "+" if diff > 0 else ""
+                st.write(f"{row['ticker']} {row['company_name']} - {row['ore_score']['score']}点 ({sign}{diff}点)")
+        else:
+            st.caption("前回履歴保存から急変した銘柄はありません。")
+    st.page_link("pages/12_オレ株スコア.py", label="オレ株スコアのランキングを開く")
 st.caption(
     f"RSS最終取得: {news_summary.get('last_fetch') or '未実行'} / "
     f"直近失敗: {rss_failed}件"

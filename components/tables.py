@@ -73,6 +73,12 @@ def holdings_dataframe(rows: list[dict[str, Any]]) -> pd.DataFrame:
                     (row.get("strategy_lines") or {}).get("add_position_price")
                 ),
                 "戦略ルール由来": row.get("strategy_source") or "未設定",
+                "カテゴリ": " / ".join(
+                    str(category.get("name"))
+                    for category in row.get("stock_categories") or []
+                ) or "未設定",
+                "オレ株スコア": (row.get("ore_score") or {}).get("score", "未設定"),
+                "オレ株判定": (row.get("ore_score") or {}).get("classification", "未設定"),
                 "RSI": fmt_number(row.get("RSI14")),
                 "注目スコア": row.get("score"),
                 "買い検討価格": fmt_price(row.get("buy_watch_price")),

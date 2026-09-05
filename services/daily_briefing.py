@@ -148,6 +148,49 @@ def build_daily_tasks(
         if float(row.get("score") or 0) >= 65:
             target = "保有株" if row.get("is_holding") else "監視銘柄"
             append_task(8, f"注目スコア {int(row['score'])}", _stock_label(row), target, "score", _row_identity(row))
+    for row in stock_rows:
+        ore_score = row.get("ore_score") or {}
+        classification = ore_score.get("classification")
+        if classification == "売却候補":
+            append_task(5, "オレ株スコア: 売却候補", _stock_label(row), "企業カルテ", "ore_score", f"sell:{_row_identity(row)}")
+        elif classification == "買い候補":
+            append_task(8, "オレ株スコア: 買い候補", _stock_label(row), "企業カルテ", "ore_score", f"buy:{_row_identity(row)}")
+
+        if row.get("is_holding"):
+            if ore_score.get("stop_loss_reached"):
+                append_task(5, "ルール逸脱: カテゴリ損切りライン到達", _stock_label(row), "企業カルテ", "ore_score_rule", f"stop:{_row_identity(row)}")
+            if ore_score.get("take_profit_reached"):
+                append_task(5, "ルール逸脱: カテゴリ利確ライン到達", _stock_label(row), "企業カルテ", "ore_score_rule", f"profit:{_row_identity(row)}")
+
+    total_portfolio_value = sum((r.get("shares") or 0) * (r.get("current_price") or 0.0) for r in stock_rows if r.get("is_holding"))
+    if total_portfolio_value > 0:
+        cat_portfolio_values = {}
+        cat_max_ratios = {}
+        for r in stock_rows:
+            if not r.get("is_holding") or not r.get("shares"):
+                continue
+            val = (r.get("shares") or 0) * (r.get("current_price") or 0.0)
+            ore_score = r.get("ore_score") or {}
+            for cat in ore_score.get("categories") or []:
+                cat_name = cat["name"]
+                cat_portfolio_values[cat_name] = cat_portfolio_values.get(cat_name, 0.0) + val
+            for rule in ore_score.get("trade_rules") or []:
+                cat_name = next((c["name"] for c in ore_score.get("categories") or [] if c["id"] == rule["category_id"]), None)
+                if cat_name and rule.get("max_holding_ratio_percent") is not None:
+                    cat_max_ratios[cat_name] = float(rule["max_holding_ratio_percent"])
+
+        for cat_name, max_ratio in cat_max_ratios.items():
+            curr_ratio = (cat_portfolio_values.get(cat_name, 0.0) / total_portfolio_value) * 100.0
+            if curr_ratio > max_ratio:
+                append_task(
+                    5,
+                    "カテゴリ比率超過",
+                    f"{cat_name} ({curr_ratio:.1f}% > 最大{max_ratio:.1f}%)",
+                    "テーマ管理",
+                    "category_ratio",
+                    cat_name
+                )
+
     if rss_failed_count:
         append_task(9, "RSS取得失敗を確認", f"{rss_failed_count}件", "ニュース", "rss", "latest")
     disclosures = disclosure_rows or []

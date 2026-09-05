@@ -148,6 +148,12 @@ def render_stock_cards(rows: list[dict[str, Any]], holding: bool) -> None:
             cols = st.columns(2)
             cols[0].metric("現在値", fmt_price(row.get("current_price")))
             cols[1].metric("注目スコア", fmt_number(row.get("score"), 0))
+            ore_score = row.get("ore_score") or {}
+            if ore_score:
+                st.caption(
+                    f"オレ株スコア: {ore_score.get('score', 0)}点 / "
+                    f"{ore_score.get('classification') or '通常'}"
+                )
             render_market_metric("前日比", fmt_signed_price(row.get("change")), row.get("change"))
             st.write(f"決算: {row.get('next_earnings_date_display') or '未登録'} / {row.get('earnings_status') or '未登録'}")
             if holding:

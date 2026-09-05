@@ -17,6 +17,11 @@ from services.investment_playbooks import (
     format_playbook_for_prompt,
     get_playbook,
 )
+from services.categories import (
+    get_trade_notes,
+    list_stock_categories,
+)
+from services.stock_scores import calculate_ore_score, list_score_history
 from services.strategy_rules import (
     calculate_rule_lines,
     get_stock_rule,
@@ -199,6 +204,10 @@ def build_company_profile(
         near_percent=float(settings.get("strategy_rule_near_percent", 3.0)),
     )
     individual_strategy_rule = get_stock_rule(stock_id, db_path)
+    categories = list_stock_categories(stock_id, db_path)
+    trade_notes = get_trade_notes(stock_id, db_path)
+    ore_score = calculate_ore_score({**stock, **price}, db_path)
+    score_history = list_score_history(stock_id, db_path=db_path)
     notes = list_company_notes(stock_id, db_path)
     timeline = build_timeline(news, disclosures, earnings, edinet_documents, notes)
     profile = {
@@ -213,6 +222,10 @@ def build_company_profile(
         "strategy_rule_resolution": strategy_resolution,
         "strategy_lines": strategy_lines,
         "individual_strategy_rule": individual_strategy_rule,
+        "categories": categories,
+        "trade_notes": trade_notes,
+        "ore_score": ore_score,
+        "score_history": score_history,
         "timeline": timeline,
         "news_summary": _news_summary(news), "disclosure_summary": _disclosure_summary(disclosures),
     }
@@ -262,6 +275,11 @@ def make_company_prompt(profile: dict[str, Any]) -> str:
     strategy_tags = "、".join(
         str(row.get("name")) for row in profile.get("strategy_tags", [])
     ) or "未設定"
+    categories = "、".join(
+        str(row.get("name")) for row in profile.get("categories", [])
+    ) or "未設定"
+    trade_notes = profile.get("trade_notes") or {}
+    ore_score = profile.get("ore_score") or {}
     strategy_resolution = profile.get("strategy_rule_resolution") or {}
     strategy_lines = profile.get("strategy_lines") or {}
     checklist = " / ".join(
@@ -297,6 +315,12 @@ def make_company_prompt(profile: dict[str, Any]) -> str:
 {playbook_text}
 
 戦略タグ：{strategy_tags}
+カテゴリ：{categories}
+保有理由：{trade_notes.get('holding_reason') or '未設定'}
+売却条件：{trade_notes.get('sell_conditions') or '未設定'}
+自由メモ：{trade_notes.get('memo') or '未設定'}
+オレ株スコア：{ore_score.get('score', '未設定')}点
+スコア内訳：{' / '.join(f"{part.get('points', 0):+d} {part.get('reason', '')}" for part in ore_score.get('breakdown', [])) or '未設定'}
 適用中の戦略ルール：{strategy_resolution.get('source_label') or '未設定'}
 戦略ルール損切価格：{fmt_price(strategy_lines.get('stop_loss_price'))}
 戦略ルール利確価格：{fmt_price(strategy_lines.get('take_profit_price'))}
