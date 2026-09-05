@@ -1,15 +1,15 @@
 {
   "project": "orekabu-ai",
   "repository": "pchgoro/orekabu-ai",
-  "enabled": true,
+  "enabled": false,
   "current_phase": "Phase 3B",
   "current_task": "#2 Phase 3B disclosure foundation acceptance",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-06T07:14:00+09:00",
+  "last_run_at": "2026-09-06T07:32:00+09:00",
   "last_completed_task": "Phase 3B automated acceptance: disclosure/UI regression, fixture checks, full pytest, compileall, and diff validation",
-  "next_action": "Human acceptance: verify real data and Desktop/Mobile; decide whether TDnet/PDF/XBRL remain outside Phase 3B",
-  "blocked_reason": null,
+  "next_action": "Stopped after five consecutive idle checks; resume after Phase 3B human acceptance or a new supervisor instruction",
+  "blocked_reason": "Five consecutive idle checks: no independent executable task remains before Phase 3B human acceptance",
   "human_action_required": "Phase 3B human acceptance: real data, Desktop/Mobile, and TDnet/PDF/XBRL scope",
-  "consecutive_idle_checks": 4,
-  "last_git_sha": "a8494cc97ed3dbb17542b62c48c8a5c9232ee92f"
+  "consecutive_idle_checks": 5,
+  "last_git_sha": "3b55df13c43c2077380513c67dd96cb9951e79e9"
 }
