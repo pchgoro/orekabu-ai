@@ -5,11 +5,11 @@
   "current_phase": "Phase 3B",
   "current_task": "#2 Phase 3B disclosure foundation acceptance",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-06T03:14:50+09:00",
+  "last_run_at": "2026-09-06T04:17:54+09:00",
   "last_completed_task": "Phase 3B automated acceptance: disclosure/UI regression, fixture checks, full pytest, compileall, and diff validation",
   "next_action": "Human acceptance: verify real data and Desktop/Mobile; decide whether TDnet/PDF/XBRL remain outside Phase 3B",
   "blocked_reason": null,
   "human_action_required": "Phase 3B human acceptance: real data, Desktop/Mobile, and TDnet/PDF/XBRL scope",
-  "consecutive_idle_checks": 1,
-  "last_git_sha": "b7a45ab1ca94eb887cf9af220abc1f4f64c5ae69"
+  "consecutive_idle_checks": 0,
+  "last_git_sha": "1da9c9ba6743547cec563cd3e08267758adbf571"
 }
