@@ -5,11 +5,11 @@
   "current_phase": "Phase 3B",
   "current_task": "#2 Phase 3B 適時開示基盤の正式化 acceptance",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-05T19:42:59+09:00",
+  "last_run_at": "2026-09-05T20:47:41+09:00",
   "last_completed_task": "Bootstrap: GitHub監査、main正規化、Issue整理、自動開発スケジュール設定",
   "next_action": "Review #2 acceptance evidence and identify the smallest executable non-human-blocked task",
-  "blocked_reason": null,
+  "blocked_reason": "Human acceptance evidence is still required for real data, Desktop/Mobile, and TDnet/PDF/XBRL scope decisions.",
   "human_action_required": "Phase 3B実データ・Desktop/Mobile確認、TDnet/PDF/XBRL方針の確認",
-  "consecutive_idle_checks": 0,
-  "last_git_sha": "47206a295ec3ddee99ec1da48079d225d845f661"
+  "consecutive_idle_checks": 1,
+  "last_git_sha": "28827e172a4cd089969d378745043072fa852d68"
 }
