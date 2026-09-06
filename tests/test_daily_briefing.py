@@ -22,6 +22,14 @@ def test_briefing_aggregates_counts_and_missing_values() -> None:
     assert counts["RSS取得失敗"] == 1
 
 
+def test_briefing_surfaces_failed_daily_update() -> None:
+    items = build_briefing(
+        [], [], [], [], [], {}, automation_status={"last_status": "partial", "last_failed": 2}
+    )
+    counts = {item["label"]: item["count"] for item in items}
+    assert counts["一括更新の失敗"] == 2
+
+
 def test_daily_tasks_follow_documented_priority_and_limit() -> None:
     stocks, earnings, candidates, news, buy = fixtures()
     tasks = build_daily_tasks(stocks, earnings, candidates, news, buy, 1, limit=5)

@@ -38,6 +38,8 @@ init_db()
 if get_script_run_ctx() is not None and not os.getenv("PYTEST_CURRENT_TEST") and start_daily_update_if_needed():
     st.info("今日の無料データ更新をバックグラウンドで開始しました。画面はそのまま利用できます。")
 
+automation = automation_summary()
+
 st.title(APP_NAME)
 st.caption("注目スコアは売買推奨ではなく、確認優先度を示すものです。")
 st.page_link("pages/9_企業カルテ.py", label="企業カルテを開く")
@@ -65,7 +67,7 @@ disclosure_rows = list_disclosures()
 disclosure_summary = disclosure_dashboard_summary()
 briefing = build_briefing(
     rows, earnings_rows, candidates, news_rows, buy_watch_rows, news_summary,
-    rss_failed, disclosure_rows, rows, rows,
+    rss_failed, disclosure_rows, rows, rows, automation,
 )
 tasks = build_daily_tasks(
     rows, earnings_rows, candidates, news_rows, buy_watch_rows, rss_failed,
@@ -162,7 +164,7 @@ with st.expander("適時開示", expanded=False):
         st.caption("適時開示はまだ登録されていません。")
 
 with st.expander("自動取得状況", expanded=False):
-    auto = automation_summary()
+    auto = automation
     status_label = (
         "実行中"
         if is_daily_update_running()

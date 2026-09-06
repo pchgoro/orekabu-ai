@@ -12,12 +12,15 @@ def build_briefing(
     rss_failed_count: int = 0, disclosure_rows: list[dict[str, Any]] | None = None,
     playbook_rows: list[dict[str, Any]] | None = None,
     strategy_rows: list[dict[str, Any]] | None = None,
+    automation_status: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Aggregate explainable daily counts without DB or UI dependencies."""
     pending = [row for row in candidates if row.get("review_status") == "pending"]
     disclosures = disclosure_rows or []
     rules = [row for row in (playbook_rows or []) if row.get("is_holding")]
     strategies = [row for row in (strategy_rows or []) if row.get("is_holding")]
+    update_status = (automation_status or {}).get("last_status")
+    update_failed = int((automation_status or {}).get("last_failed") or 0)
     items = [
         _item("本日決算", sum(row.get("days_until") == 0 for row in earnings_rows), "決算", "danger"),
         _item("7日以内の決算", sum(isinstance(row.get("days_until"), int) and 0 <= row["days_until"] <= 7 for row in earnings_rows), "決算", "warning"),
@@ -33,6 +36,12 @@ def build_briefing(
         _item("注目スコア65以上", sum(float(row.get("score") or 0) >= 65 for row in stock_rows), "app", "warning"),
         _item("株価取得失敗", sum(row.get("data_status") != "OK" for row in stock_rows), "app", "danger"),
         _item("RSS取得失敗", int(rss_failed_count), "ニュース", "danger"),
+        _item(
+            "一括更新の失敗",
+            update_failed if update_status in {"partial", "failed"} else 0,
+            "app",
+            "danger",
+        ),
         _item("今日の開示", sum(str(row.get("disclosed_at") or "")[:10] == _today() for row in disclosures), "適時開示", "normal"),
         _item("未読開示", sum(not row.get("is_read") for row in disclosures), "適時開示", "warning"),
         _item("重要度高の開示", sum(row.get("importance") == "高" for row in disclosures), "適時開示", "danger"),
