@@ -203,6 +203,7 @@ try:
     automation_cols[1].metric("最終一括更新", automation["last_run_at"] or "未実行")
     automation_cols[2].metric("新着EDINET", automation["new_edinet"])
     automation_cols[3].metric("処理失敗", automation["last_failed"])
+    st.caption("当日の自動更新は無限再試行しません。失敗時は内容を確認して、必要な場合だけ手動更新してください。")
     automation_cols = st.columns(2)
     automation_cols[0].metric("未確認決算候補", automation["pending_earnings"])
     automation_cols[1].metric("企業情報候補", automation["pending_profiles"])

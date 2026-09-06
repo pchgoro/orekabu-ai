@@ -174,6 +174,7 @@ with st.expander("自動取得状況", expanded=False):
     cols[0].metric("状態", status_label)
     cols[1].metric("最終実行", auto.get("last_run_at") or "未実行")
     cols[2].metric("自動取得失敗", auto.get("last_failed") or 0)
+    st.caption("当日の自動更新は無限再試行しません。失敗時は内容を確認して、必要な場合だけ設定画面から手動更新してください。")
     cols[0].metric("EDINET新着", auto.get("new_edinet") or 0)
     cols[1].metric("未確認決算候補", auto.get("pending_earnings") or 0)
     st.page_link("pages/6_設定.py", label="自動取得設定を開く")
