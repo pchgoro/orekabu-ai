@@ -30,6 +30,19 @@ def test_briefing_surfaces_failed_daily_update() -> None:
     assert counts["一括更新の失敗"] == 2
 
 
+def test_daily_tasks_surface_failed_daily_update_without_changing_success() -> None:
+    failed = build_daily_tasks(
+        [], [], [], [], [], limit=10,
+        automation_status={"last_status": "failed", "last_failed": 1},
+    )
+    assert failed[0]["label"] == "一括更新の失敗を確認"
+    assert failed[0]["page"] == "設定"
+    assert build_daily_tasks(
+        [], [], [], [], [], limit=10,
+        automation_status={"last_status": "completed", "last_failed": 0},
+    ) == []
+
+
 def test_daily_tasks_follow_documented_priority_and_limit() -> None:
     stocks, earnings, candidates, news, buy = fixtures()
     tasks = build_daily_tasks(stocks, earnings, candidates, news, buy, 1, limit=5)

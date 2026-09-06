@@ -71,7 +71,7 @@ briefing = build_briefing(
 )
 tasks = build_daily_tasks(
     rows, earnings_rows, candidates, news_rows, buy_watch_rows, rss_failed,
-    int(settings["daily_tasks_limit"]), disclosure_rows, rows, rows,
+    int(settings["daily_tasks_limit"]), disclosure_rows, rows, rows, automation,
 )
 strategy_summary = strategy_dashboard_summary(rows)
 ore_rankings = score_rankings(rows)

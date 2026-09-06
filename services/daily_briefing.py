@@ -77,6 +77,7 @@ def build_daily_tasks(
     disclosure_rows: list[dict[str, Any]] | None = None,
     playbook_rows: list[dict[str, Any]] | None = None,
     strategy_rows: list[dict[str, Any]] | None = None,
+    automation_status: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Create up to ten actions in the documented priority order."""
     tasks: list[dict[str, Any]] = []
@@ -202,6 +203,10 @@ def build_daily_tasks(
 
     if rss_failed_count:
         append_task(9, "RSS取得失敗を確認", f"{rss_failed_count}件", "ニュース", "rss", "latest")
+    update_status = (automation_status or {}).get("last_status")
+    update_failed = int((automation_status or {}).get("last_failed") or 0)
+    if update_status in {"partial", "failed"} and update_failed:
+        append_task(9, "一括更新の失敗を確認", f"{update_failed}件", "設定", "automation", "latest")
     disclosures = disclosure_rows or []
     disclosure_rules = (
         ("業績予想修正", 10, "業績予想修正を確認"),
