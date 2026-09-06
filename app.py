@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import os
+
 import streamlit as st
+from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 from components.cards import summary_metrics
 from components.daily import (
@@ -19,6 +22,7 @@ from services.news import list_articles, list_fetch_runs as list_news_fetch_runs
 from services.daily_briefing import build_briefing, build_daily_tasks
 from services.disclosures import dashboard_summary as disclosure_dashboard_summary, list_disclosures
 from services.automation import automation_summary
+from services.startup_automation import start_daily_update_if_needed
 from services.stock_data import build_analysis_rows, make_prompt
 from services.investment_playbooks import enrich_rows_with_playbooks
 from services.strategy_rules import enrich_rows_with_strategy, strategy_dashboard_summary
@@ -30,6 +34,9 @@ from utils.logging_config import setup_logging
 st.set_page_config(page_title=APP_NAME, layout="wide", initial_sidebar_state="expanded")
 setup_logging()
 init_db()
+
+if get_script_run_ctx() is not None and not os.getenv("PYTEST_CURRENT_TEST") and start_daily_update_if_needed():
+    st.info("今日の無料データ更新をバックグラウンドで開始しました。画面はそのまま利用できます。")
 
 st.title(APP_NAME)
 st.caption("注目スコアは売買推奨ではなく、確認優先度を示すものです。")
