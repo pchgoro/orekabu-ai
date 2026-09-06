@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation",
-  "current_task": "#11 P1-C-1 更新済み銘柄情報の自動リンク候補設計",
+  "current_task": "#11 P1-B-5 / P1-J-1 今日見る銘柄3〜10件と朝の1画面完結",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T00:20:30+09:00",
+  "last_run_at": "2026-09-07T01:27:32+09:00",
   "last_completed_task": "#11 P1-B-4 隔離DBでデイリーブリーフィングの主要UI入力と空状態を確認",
-  "next_action": "既存の銘柄・ニュース・開示データを変更せず、企業カルテへの自動リンク候補判定の入力と曖昧時保留を設計する",
+  "next_action": "今日見る銘柄を0〜10件へ決定論的に集約し、各銘柄に理由を保持して同一銘柄の複数材料を束ねる。朝トップを最重要3件→今日見る銘柄→保有株異変→今日/近日決算→新着開示/EDINET/重要ニュースの順へ整理し、企業カルテへの1クリック導線と0件/1〜2件/3〜10件/10件超/複数理由/欠損データのテストを完了してからP1-Cへ進む。",
   "blocked_reason": null,
-  "human_action_required": "実機のDesktop/Mobile表示と本番データでの朝画面確認は未実施。候補リンクの自動承認や実データ更新は人間確認後に行う。",
+  "human_action_required": "実機のDesktop/Mobile表示と本番データでの朝画面確認は未実施。通常実装は人間確認を待たず継続する。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "af78b10"
+  "last_git_sha": "21b9a7d123d905309ef6f4bed1022eec0eb7bb9e"
 }
