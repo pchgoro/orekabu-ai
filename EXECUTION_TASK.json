@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation",
-  "current_task": "#11 P1-B-2 更新結果をデイリーブリーフィングへ反映",
+  "current_task": "#11 P1-B-3 更新失敗を今日やることへ反映",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-06T21:51:48+09:00",
-  "last_completed_task": "#11 P1-B-1 デイリーブリーフィングの入力・空データ・導線を棚卸し",
-  "next_action": "更新結果を既存のdaily_briefingへ反映する最小の表示またはデータ受け渡しを設計し、AI要約や有料APIは追加しない",
+  "last_run_at": "2026-09-06T22:26:46+09:00",
+  "last_completed_task": "#11 P1-B-2 更新結果の失敗件数を既存の重要イベントへ反映",
+  "next_action": "部分失敗・失敗時に今日やることへ確認タスクを追加し、成功時・未実行時の表示を変えない契約を実装する",
   "blocked_reason": null,
   "human_action_required": null,
   "consecutive_idle_checks": 0,
-  "last_git_sha": "2304177"
+  "last_git_sha": "38c95b9"
 }
