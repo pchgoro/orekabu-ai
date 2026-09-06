@@ -1,6 +1,6 @@
 """Daily briefing aggregation and priority tests."""
 
-from services.daily_briefing import build_briefing, build_daily_tasks
+from services.daily_briefing import build_briefing, build_daily_focus, build_daily_tasks
 
 
 def fixtures():
@@ -41,6 +41,30 @@ def test_daily_tasks_surface_failed_daily_update_without_changing_success() -> N
         [], [], [], [], [], limit=10,
         automation_status={"last_status": "completed", "last_failed": 0},
     ) == []
+
+
+def test_daily_focus_aggregates_reasons_and_keeps_company_link() -> None:
+    focus = build_daily_focus(
+        [
+            {"ticker": "5801.T", "label": "本日決算", "detail": "5801.T 古河電工", "page": "決算", "priority": 1},
+            {"ticker": "5801.T", "label": "重要ニュースを確認", "detail": "業績発表", "page": "ニュース", "priority": 6},
+            {"ticker": "6976.T", "label": "注目スコア 80", "detail": "6976.T 太陽誘電", "page": "監視銘柄", "priority": 8},
+        ]
+    )
+    assert [item["ticker"] for item in focus] == ["5801.T", "6976.T"]
+    assert focus[0]["reason_count"] == 2
+    assert focus[0]["page"] == "企業カルテ"
+    assert [reason["label"] for reason in focus[0]["reasons"]] == ["本日決算", "重要ニュースを確認"]
+
+
+def test_daily_focus_handles_empty_limit_and_deterministic_ties() -> None:
+    assert build_daily_focus([], limit=10) == []
+    tasks = [
+        {"ticker": "B.T", "label": "同順位", "detail": "B", "page": "app", "priority": 1},
+        {"ticker": "A.T", "label": "同順位", "detail": "A", "page": "app", "priority": 1},
+    ]
+    assert [item["ticker"] for item in build_daily_focus(tasks, limit=1)] == ["A.T"]
+    assert len(build_daily_focus(tasks, limit=0)) == 0
 
 
 def test_daily_tasks_follow_documented_priority_and_limit() -> None:

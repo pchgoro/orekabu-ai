@@ -78,6 +78,8 @@ def render_dashboard_focus(
                     render_priority_badge(priority_level(task["priority"]))
                     st.write(f"**{task['label']}**")
                     st.caption(task["detail"])
+                    if task.get("reason_count", 1) > 1:
+                        st.caption("確認理由: " + " / ".join(reason["label"] for reason in task["reasons"]))
                     _task_link(
                         task,
                         st,

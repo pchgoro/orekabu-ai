@@ -19,7 +19,7 @@ from services.earnings import list_earnings
 from services.earnings_candidates import candidate_dashboard_summary, list_candidates
 from services.earnings_view_models import enrich_stock_rows, prepare_earnings_rows
 from services.news import list_articles, list_fetch_runs as list_news_fetch_runs, news_dashboard_summary
-from services.daily_briefing import build_briefing, build_daily_tasks
+from services.daily_briefing import build_briefing, build_daily_focus, build_daily_tasks
 from services.disclosures import dashboard_summary as disclosure_dashboard_summary, list_disclosures
 from services.automation import automation_summary
 from services.startup_automation import is_daily_update_running, start_daily_update_if_needed
@@ -73,6 +73,7 @@ tasks = build_daily_tasks(
     rows, earnings_rows, candidates, news_rows, buy_watch_rows, rss_failed,
     int(settings["daily_tasks_limit"]), disclosure_rows, rows, rows, automation,
 )
+tasks = build_daily_focus(tasks, limit=10)
 strategy_summary = strategy_dashboard_summary(rows)
 ore_rankings = score_rankings(rows)
 compact = settings["dashboard_display_mode"] == "コンパクト"

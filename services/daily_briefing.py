@@ -135,42 +135,42 @@ def build_daily_tasks(
     for row in earnings_rows:
         days = row.get("days_until")
         if days == 0:
-            append_task(1, "本日決算", _stock_label(row), "決算", "earnings", _row_identity(row))
+            append_task(1, "本日決算", _stock_label(row), "決算", "earnings", _row_identity(row), str(row.get("ticker") or ""))
         elif isinstance(days, int) and 1 <= days <= 3:
-            append_task(2, f"決算まであと{days}日", _stock_label(row), "決算", "earnings", _row_identity(row))
+            append_task(2, f"決算まであと{days}日", _stock_label(row), "決算", "earnings", _row_identity(row), str(row.get("ticker") or ""))
     for comparison_status, priority, label in (
         ("conflict", 3, "決算候補の競合"),
         ("date_changed", 4, "決算日の変更候補"),
     ):
         for row in candidates:
             if row.get("review_status") == "pending" and row.get("comparison_status") == comparison_status:
-                append_task(priority, label, _stock_label(row), "決算", "candidate", _row_identity(row))
+                append_task(priority, label, _stock_label(row), "決算", "candidate", _row_identity(row), str(row.get("ticker") or ""))
     for row in buy_watch_rows:
         if row.get("buy_watch_status") == "到達":
-            append_task(5, "買い検討ライン到達", _stock_label(row), "買い検討ライン", "buy_watch", _row_identity(row))
+            append_task(5, "買い検討ライン到達", _stock_label(row), "買い検討ライン", "buy_watch", _row_identity(row), str(row.get("ticker") or ""))
     for row in news_rows:
         if not row.get("is_read") and row.get("importance") == "高":
-            append_task(6, "重要ニュースを確認", row.get("title") or "タイトルなし", "ニュース", "news", _news_identity(row))
+            append_task(6, "重要ニュースを確認", row.get("title") or "タイトルなし", "ニュース", "news", _news_identity(row), str(row.get("ticker") or ""))
     for row in news_rows:
         if not row.get("is_read") and row.get("has_holding_match"):
-            append_task(7, "保有株ニュースを確認", row.get("title") or "タイトルなし", "ニュース", "news", _news_identity(row))
+            append_task(7, "保有株ニュースを確認", row.get("title") or "タイトルなし", "ニュース", "news", _news_identity(row), str(row.get("ticker") or ""))
     for row in sorted(stock_rows, key=lambda item: float(item.get("score") or 0), reverse=True):
         if float(row.get("score") or 0) >= 65:
             target = "保有株" if row.get("is_holding") else "監視銘柄"
-            append_task(8, f"注目スコア {int(row['score'])}", _stock_label(row), target, "score", _row_identity(row))
+            append_task(8, f"注目スコア {int(row['score'])}", _stock_label(row), target, "score", _row_identity(row), str(row.get("ticker") or ""))
     for row in stock_rows:
         ore_score = row.get("ore_score") or {}
         classification = ore_score.get("classification")
         if classification == "売却候補":
-            append_task(5, "オレ株スコア: 売却候補", _stock_label(row), "企業カルテ", "ore_score", f"sell:{_row_identity(row)}")
+            append_task(5, "オレ株スコア: 売却候補", _stock_label(row), "企業カルテ", "ore_score", f"sell:{_row_identity(row)}", str(row.get("ticker") or ""))
         elif classification == "買い候補":
-            append_task(8, "オレ株スコア: 買い候補", _stock_label(row), "企業カルテ", "ore_score", f"buy:{_row_identity(row)}")
+            append_task(8, "オレ株スコア: 買い候補", _stock_label(row), "企業カルテ", "ore_score", f"buy:{_row_identity(row)}", str(row.get("ticker") or ""))
 
         if row.get("is_holding"):
             if ore_score.get("stop_loss_reached"):
-                append_task(5, "ルール逸脱: カテゴリ損切りライン到達", _stock_label(row), "企業カルテ", "ore_score_rule", f"stop:{_row_identity(row)}")
+                append_task(5, "ルール逸脱: カテゴリ損切りライン到達", _stock_label(row), "企業カルテ", "ore_score_rule", f"stop:{_row_identity(row)}", str(row.get("ticker") or ""))
             if ore_score.get("take_profit_reached"):
-                append_task(5, "ルール逸脱: カテゴリ利確ライン到達", _stock_label(row), "企業カルテ", "ore_score_rule", f"profit:{_row_identity(row)}")
+                append_task(5, "ルール逸脱: カテゴリ利確ライン到達", _stock_label(row), "企業カルテ", "ore_score_rule", f"profit:{_row_identity(row)}", str(row.get("ticker") or ""))
 
     total_portfolio_value = sum((r.get("shares") or 0) * (r.get("current_price") or 0.0) for r in stock_rows if r.get("is_holding"))
     if total_portfolio_value > 0:
@@ -216,10 +216,10 @@ def build_daily_tasks(
     for disclosure_type, priority, label in disclosure_rules:
         for row in disclosures:
             if not row.get("is_read") and row.get("disclosure_type") == disclosure_type:
-                append_task(priority, label, _stock_label(row), "適時開示", "disclosure", _row_identity(row))
+                append_task(priority, label, _stock_label(row), "適時開示", "disclosure", _row_identity(row), str(row.get("ticker") or ""))
     for row in disclosures:
         if not row.get("is_read") and row.get("importance") == "高" and row.get("is_holding"):
-            append_task(13, "保有株の重要開示を確認", _stock_label(row), "適時開示", "disclosure", _row_identity(row))
+            append_task(13, "保有株の重要開示を確認", _stock_label(row), "適時開示", "disclosure", _row_identity(row), str(row.get("ticker") or ""))
     if unset_rules:
         ticker = str(unset_rules[0].get("ticker") or "") if len(unset_rules) == 1 else ""
         append_task(
@@ -246,6 +246,60 @@ def build_daily_tasks(
             ticker,
         )
     return sorted(tasks, key=lambda item: item["priority"])[: max(1, min(int(limit), 10))]
+
+
+def build_daily_focus(tasks: list[dict[str, Any]], limit: int = 10) -> list[dict[str, Any]]:
+    """Aggregate daily tasks by ticker while retaining every confirmation reason."""
+    groups: dict[str, dict[str, Any]] = {}
+    for index, task in enumerate(tasks):
+        ticker = str(task.get("ticker") or "")
+        key = (
+            f"ticker:{ticker}"
+            if ticker
+            else f"task:{task.get('page', '')}:{task.get('label', '')}:{task.get('detail', '')}"
+        )
+        group = groups.setdefault(
+            key,
+            {
+                "ticker": ticker,
+                "priority": int(task.get("priority") or 0),
+                "page": task.get("page") or "app",
+                "label": task.get("label") or "確認事項",
+                "detail": task.get("detail") or "対象不明",
+                "reasons": [],
+                "_first_index": index,
+            },
+        )
+        group["priority"] = min(group["priority"], int(task.get("priority") or 0))
+        group["reasons"].append(
+            {
+                "label": task.get("label") or "確認事項",
+                "detail": task.get("detail") or "対象不明",
+                "page": task.get("page") or "app",
+                "priority": int(task.get("priority") or 0),
+            }
+        )
+
+    ordered = sorted(
+        groups.values(),
+        key=lambda item: (
+            int(item["priority"]),
+            str(item["ticker"]),
+            str(item["label"]),
+            str(item["detail"]),
+            int(item["_first_index"]),
+        ),
+    )
+    result: list[dict[str, Any]] = []
+    for group in ordered[: max(0, min(int(limit), 10))]:
+        group = dict(group)
+        group.pop("_first_index")
+        group["reasons"] = list(group["reasons"])
+        group["reason_count"] = len(group["reasons"])
+        if group["ticker"]:
+            group["page"] = "企業カルテ"
+        result.append(group)
+    return result
 
 
 def _item(label: str, count: int, page: str, state: str) -> dict[str, Any]:
