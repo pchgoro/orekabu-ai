@@ -22,7 +22,7 @@ from services.news import list_articles, list_fetch_runs as list_news_fetch_runs
 from services.daily_briefing import build_briefing, build_daily_tasks
 from services.disclosures import dashboard_summary as disclosure_dashboard_summary, list_disclosures
 from services.automation import automation_summary
-from services.startup_automation import start_daily_update_if_needed
+from services.startup_automation import is_daily_update_running, start_daily_update_if_needed
 from services.stock_data import build_analysis_rows, make_prompt
 from services.investment_playbooks import enrich_rows_with_playbooks
 from services.strategy_rules import enrich_rows_with_strategy, strategy_dashboard_summary
@@ -163,9 +163,17 @@ with st.expander("適時開示", expanded=False):
 
 with st.expander("自動取得状況", expanded=False):
     auto = automation_summary()
-    cols = st.columns(2)
-    cols[0].metric("最終実行", auto.get("last_run_at") or "未実行")
-    cols[1].metric("自動取得失敗", auto.get("last_failed") or 0)
+    status_label = (
+        "実行中"
+        if is_daily_update_running()
+        else {"completed": "完了", "partial": "一部失敗", "failed": "失敗"}.get(
+            auto.get("last_status"), "未実行"
+        )
+    )
+    cols = st.columns(3)
+    cols[0].metric("状態", status_label)
+    cols[1].metric("最終実行", auto.get("last_run_at") or "未実行")
+    cols[2].metric("自動取得失敗", auto.get("last_failed") or 0)
     cols[0].metric("EDINET新着", auto.get("new_edinet") or 0)
     cols[1].metric("未確認決算候補", auto.get("pending_earnings") or 0)
     st.page_link("pages/6_設定.py", label="自動取得設定を開く")

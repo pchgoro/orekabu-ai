@@ -21,6 +21,7 @@ from services.marketspeed_import import (
 )
 from services.settings import default_settings
 from services.stock_profiles import list_profile_candidates, review_profile_candidate
+from services.startup_automation import is_daily_update_running
 from utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -190,10 +191,18 @@ st.caption(
 )
 try:
     automation = automation_summary()
-    automation_cols = st.columns(3)
-    automation_cols[0].metric("最終一括更新", automation["last_run_at"] or "未実行")
-    automation_cols[1].metric("新着EDINET", automation["new_edinet"])
-    automation_cols[2].metric("処理失敗", automation["last_failed"])
+    status_label = (
+        "実行中"
+        if is_daily_update_running()
+        else {"completed": "完了", "partial": "一部失敗", "failed": "失敗"}.get(
+            automation.get("last_status"), "未実行"
+        )
+    )
+    automation_cols = st.columns(4)
+    automation_cols[0].metric("状態", status_label)
+    automation_cols[1].metric("最終一括更新", automation["last_run_at"] or "未実行")
+    automation_cols[2].metric("新着EDINET", automation["new_edinet"])
+    automation_cols[3].metric("処理失敗", automation["last_failed"])
     automation_cols = st.columns(2)
     automation_cols[0].metric("未確認決算候補", automation["pending_earnings"])
     automation_cols[1].metric("企業情報候補", automation["pending_profiles"])

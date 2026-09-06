@@ -16,6 +16,13 @@ _STATE_LOCK = threading.Lock()
 _IN_FLIGHT: set[str] = set()
 
 
+def is_daily_update_running(db_path: Path | str = DB_PATH) -> bool:
+    """Return whether this process currently owns the daily-update worker."""
+    key = str(Path(db_path).resolve())
+    with _STATE_LOCK:
+        return key in _IN_FLIGHT
+
+
 def _run_in_background(key: str, runner: Callable[..., int], db_path: Path | str, limit: int) -> None:
     try:
         runner(["--limit", str(limit)], db_path=db_path)

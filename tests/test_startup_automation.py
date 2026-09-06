@@ -23,6 +23,7 @@ def test_startup_update_starts_once_while_in_flight(tmp_path: Path) -> None:
     init_db(db)
     assert startup_automation.start_daily_update_if_needed(db, runner=runner) is True
     assert started.wait(timeout=2)
+    assert startup_automation.is_daily_update_running(db) is True
     assert startup_automation.start_daily_update_if_needed(db, runner=runner) is False
     assert calls == [(["--limit", "20"], db)]
     release.set()
