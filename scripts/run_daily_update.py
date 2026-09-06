@@ -22,6 +22,7 @@ from scripts.common import (
 )
 from scripts.fetch_edinet import print_edinet_summary
 from services.automation import JobResult, run_steps
+from services.automation_lock import AutomationLock
 from services.automation_jobs import run_candidate_cleanup, run_earnings_job, run_news_job
 from services.database import load_settings
 from services.edinet import EdinetApiClient, lookback_dates, run_edinet_range
@@ -155,6 +156,20 @@ def main(argv: Sequence[str] | None = None, db_path: Path | str = DB_PATH) -> in
     )
     args = parser.parse_args(raw_argv)
     ticker = prepare(args, db_path)
+    lock = AutomationLock(db_path)
+    if not lock.acquire():
+        print("自動更新は別プロセスで実行中のため、今回はスキップしました。")
+        return 0
+    try:
+        return _run_daily_update(args, raw_argv, ticker, db_path)
+    finally:
+        lock.release()
+
+
+def _run_daily_update(
+    args: object, raw_argv: Sequence[str], ticker: str | None, db_path: Path | str
+) -> int:
+    """Execute one guarded update after local setup and lock acquisition."""
     settings = load_settings(db_path)
     edinet_days, edinet_limit, edinet_source = resolve_daily_edinet_options(
         args, raw_argv, settings
