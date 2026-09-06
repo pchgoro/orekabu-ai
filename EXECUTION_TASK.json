@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation",
-  "current_task": "#11 P1-A-5 起動時更新の状態表示・再実行条件",
+  "current_task": "#11 P1-A-6 起動時更新の完了通知・失敗再試行方針",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-06T20:10:17+09:00",
-  "last_completed_task": "#11 P1-A-4 Streamlit起動時の非blocking日次更新トリガー",
-  "next_action": "起動時更新の実行中・完了・部分失敗を既存の自動取得状況へ明示し、当日再実行条件と手動更新導線を確認可能にする",
+  "last_run_at": "2026-09-06T20:45:36+09:00",
+  "last_completed_task": "#11 P1-A-5 起動時更新の状態表示と当日再実行条件の可視化",
+  "next_action": "起動時バックグラウンド更新の完了・部分失敗を次回表示へ反映し、失敗時の再試行方針を安全に決める",
   "blocked_reason": null,
   "human_action_required": null,
   "consecutive_idle_checks": 0,
-  "last_git_sha": "91b4f40"
+  "last_git_sha": "fc9d018"
 }
