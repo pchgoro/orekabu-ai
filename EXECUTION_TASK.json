@@ -5,11 +5,11 @@
   "current_phase": "UX Automation",
   "current_task": "#11 P1-B-5 / P1-J-1 今日見る銘柄3〜10件と朝の1画面完結",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T01:27:32+09:00",
+  "last_run_at": "2026-09-07T02:27:10+09:00",
   "last_completed_task": "#11 P1-B-4 隔離DBでデイリーブリーフィングの主要UI入力と空状態を確認",
-  "next_action": "今日見る銘柄を0〜10件へ決定論的に集約し、各銘柄に理由を保持して同一銘柄の複数材料を束ねる。朝トップを最重要3件→今日見る銘柄→保有株異変→今日/近日決算→新着開示/EDINET/重要ニュースの順へ整理し、企業カルテへの1クリック導線と0件/1〜2件/3〜10件/10件超/複数理由/欠損データのテストを完了してからP1-Cへ進む。",
+  "next_action": "services/daily_briefing.py の既存 build_briefing/build_daily_tasks を再利用し、ticker単位で0〜10件へ決定論的に集約する pure view-model builder を最小実装する。各銘柄に複数の確認理由を保持し、0件/1〜2件/3〜10件/10件超/複数理由/欠損/tie-breakの単体テスト後、Dashboardへ統合して朝トップ順序と企業カルテ1クリック導線をAppTestで確認する。通常pytest/compileall/diff checkを通してmainへpushし、Issue #11へ証跡を追記してからP1-Cへ進む。",
   "blocked_reason": null,
   "human_action_required": "実機のDesktop/Mobile表示と本番データでの朝画面確認は未実施。通常実装は人間確認を待たず継続する。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "21b9a7d123d905309ef6f4bed1022eec0eb7bb9e"
+  "last_git_sha": "865feca52735df582177a3f97175780a7c36f8a6"
 }
