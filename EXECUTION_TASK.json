@@ -5,11 +5,11 @@
   "current_phase": "UX Automation",
   "current_task": "#11 P1-B-5 / P1-J-1 今日見る銘柄3〜10件と朝の1画面完結",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T02:27:10+09:00",
+  "last_run_at": "2026-09-07T03:28:51+09:00",
   "last_completed_task": "#11 P1-B-4 隔離DBでデイリーブリーフィングの主要UI入力と空状態を確認",
   "next_action": "services/daily_briefing.py の既存 build_briefing/build_daily_tasks を再利用し、ticker単位で0〜10件へ決定論的に集約する pure view-model builder を最小実装する。各銘柄に複数の確認理由を保持し、0件/1〜2件/3〜10件/10件超/複数理由/欠損/tie-breakの単体テスト後、Dashboardへ統合して朝トップ順序と企業カルテ1クリック導線をAppTestで確認する。通常pytest/compileall/diff checkを通してmainへpushし、Issue #11へ証跡を追記してからP1-Cへ進む。",
   "blocked_reason": null,
-  "human_action_required": "実機のDesktop/Mobile表示と本番データでの朝画面確認は未実施。通常実装は人間確認を待たず継続する。",
+  "human_action_required": "コード仕様判断は不要。Codex Scheduled Task / runner が有効で、このrepoの EXECUTION_TASK.json と Issue #11 を実際に消費できる状態かのみ確認対象。runnerが有効なら人間確認を待たず通常実装を継続する。実機Desktop/Mobile表示と本番データでの朝画面確認は後続acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "865feca52735df582177a3f97175780a7c36f8a6"
+  "last_git_sha": "4ca70dbafc9c8729d199e33d7eedf5d5b5a116f0"
 }
