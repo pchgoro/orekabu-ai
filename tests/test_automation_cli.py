@@ -14,7 +14,7 @@ from scripts.fetch_edinet import (
     resolve_target_dates,
 )
 from scripts.common import build_parser, run_main
-from scripts.run_daily_update import resolve_daily_edinet_options
+from scripts.run_daily_update import build_daily_update_steps, resolve_daily_edinet_options
 from scripts.run_edinet_backfill import resolve_backfill_options
 
 
@@ -135,3 +135,25 @@ def test_daily_bat_does_not_override_saved_limits() -> None:
         line for line in content.splitlines() if "scripts\\run_daily_update.py" in line
     )
     assert "--limit" not in command
+
+
+def test_daily_update_step_builder_exposes_stable_shared_order(tmp_path: Path) -> None:
+    steps = build_daily_update_steps(
+        ticker=None,
+        limit=3,
+        force=False,
+        dry_run=True,
+        settings={"earnings_auto_fetch": {"candidate_retention_days": 30}},
+        edinet_dates=[date(2026, 7, 20)],
+        edinet_limit=20,
+        verbose=False,
+        db_path=tmp_path / "orekabu.db",
+    )
+
+    assert [name for name, _ in steps] == [
+        "rss",
+        "earnings",
+        "edinet",
+        "stock_profiles",
+        "candidate_cleanup",
+    ]

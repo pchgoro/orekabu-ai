@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from typing import Sequence
 
@@ -56,6 +57,91 @@ def resolve_daily_edinet_options(
     return days, limit, source
 
 
+def build_daily_update_steps(
+    *,
+    ticker: str | None,
+    limit: int,
+    force: bool,
+    dry_run: bool,
+    settings: dict,
+    edinet_dates: Sequence,
+    edinet_limit: int,
+    verbose: bool,
+    db_path: Path | str = DB_PATH,
+) -> list[tuple[str, Callable[[], JobResult]]]:
+    """Build the shared daily-update steps for CLI and future startup callers."""
+
+    def show_edinet_progress(row: dict) -> None:
+        if verbose:
+            print(
+                f"{row['date']} API取得={row['api_documents']} "
+                f"ticker一致={row['security_matches']} "
+                f"対象書類={row['target_documents']} 保存候補={row['inserted']} "
+                f"重複={row['duplicates']} 失敗={row['failed']}"
+            )
+
+    def edinet_step() -> JobResult:
+        key = api_key()
+        if not key:
+            return JobResult(processed=1, failed=1, message="EDINET_API_KEYが未設定です。")
+        return run_edinet_range(
+            EdinetApiClient(key),
+            target_dates=edinet_dates,
+            ticker=ticker,
+            limit=edinet_limit,
+            dry_run=dry_run,
+            db_path=db_path,
+            progress=show_edinet_progress,
+        )
+
+    return [
+        (
+            "rss",
+            lambda: run_news_job(
+                lambda source: RssNewsProvider(source["url"], max_items=limit),
+                limit=limit,
+                dry_run=dry_run,
+                db_path=db_path,
+            ),
+        ),
+        (
+            "earnings",
+            lambda: run_earnings_job(
+                build_default_earnings_provider(
+                    db_path=db_path,
+                    dry_run=dry_run,
+                    force_ir=force,
+                ),
+                ticker=ticker,
+                limit=limit,
+                force=force,
+                dry_run=dry_run,
+                include_all_holdings=True,
+                db_path=db_path,
+            ),
+        ),
+        ("edinet", edinet_step),
+        (
+            "stock_profiles",
+            lambda: run_profile_refresh(
+                YFinanceStockProfileProvider(),
+                ticker=ticker,
+                limit=limit,
+                dry_run=dry_run,
+                db_path=db_path,
+            ),
+        ),
+        (
+            "candidate_cleanup",
+            lambda: run_candidate_cleanup(
+                int(settings["earnings_auto_fetch"]["candidate_retention_days"]),
+                dry_run=dry_run,
+                db_path=db_path,
+            ),
+        ),
+    ]
+
+
 def main(argv: Sequence[str] | None = None, db_path: Path | str = DB_PATH) -> int:
     """Run RSS, earnings, EDINET, profiles, then reviewed-candidate cleanup."""
     raw_argv = list(argv) if argv is not None else sys.argv[1:]
@@ -75,75 +161,17 @@ def main(argv: Sequence[str] | None = None, db_path: Path | str = DB_PATH) -> in
     )
     edinet_dates = lookback_dates(japan_today(), edinet_days)
 
-    def show_edinet_progress(row: dict) -> None:
-        if args.verbose:
-            print(
-                f"{row['date']} API取得={row['api_documents']} "
-                f"ticker一致={row['security_matches']} "
-                f"対象書類={row['target_documents']} 保存候補={row['inserted']} "
-                f"重複={row['duplicates']} 失敗={row['failed']}"
-            )
-
-    def edinet_step() -> JobResult:
-        key = api_key()
-        if not key:
-            return JobResult(processed=1, failed=1, message="EDINET_API_KEYが未設定です。")
-        return run_edinet_range(
-            EdinetApiClient(key),
-            target_dates=edinet_dates,
-            ticker=ticker,
-            limit=edinet_limit,
-            dry_run=args.dry_run,
-            db_path=db_path,
-            progress=show_edinet_progress,
-        )
-
-    steps = [
-        (
-            "rss",
-            lambda: run_news_job(
-                lambda source: RssNewsProvider(source["url"], max_items=args.limit),
-                limit=args.limit,
-                dry_run=args.dry_run,
-                db_path=db_path,
-            ),
-        ),
-        (
-            "earnings",
-            lambda: run_earnings_job(
-                build_default_earnings_provider(
-                    db_path=db_path,
-                    dry_run=args.dry_run,
-                    force_ir=args.force,
-                ),
-                ticker=ticker,
-                limit=args.limit,
-                force=args.force,
-                dry_run=args.dry_run,
-                include_all_holdings=True,
-                db_path=db_path,
-            ),
-        ),
-        ("edinet", edinet_step),
-        (
-            "stock_profiles",
-            lambda: run_profile_refresh(
-                YFinanceStockProfileProvider(),
-                ticker=ticker,
-                limit=args.limit,
-                dry_run=args.dry_run,
-                db_path=db_path,
-            ),
-        ),
-        (
-            "candidate_cleanup",
-            lambda: run_candidate_cleanup(
-                int(settings["earnings_auto_fetch"]["candidate_retention_days"]),
-                dry_run=args.dry_run,
-                db_path=db_path,
-            ),
-        ),
-    ]
+    steps = build_daily_update_steps(
+        ticker=ticker,
+        limit=args.limit,
+        force=args.force,
+        dry_run=args.dry_run,
+        settings=settings,
+        edinet_dates=edinet_dates,
+        edinet_limit=edinet_limit,
+        verbose=args.verbose,
+        db_path=db_path,
+    )
     result = run_steps(
         "run_daily_update",
         steps,
