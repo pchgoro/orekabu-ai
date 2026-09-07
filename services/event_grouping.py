@@ -102,6 +102,9 @@ def collapse_news_rows(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "event_record_count": group["record_count"],
                 "event_provenance": group["provenance"],
                 "event_group_importance": group["importance"],
+                "importance": group["importance"],
+                "is_read": group["is_read"],
+                "is_favorite": group["is_favorite"],
             }
         )
         rows.append(representative)

@@ -46,9 +46,11 @@ def test_display_adapter_preserves_state_without_mutating_records() -> None:
 
 def test_news_collapse_keeps_editable_representative_and_provenance() -> None:
     rows = collapse_news_rows([
-        {"id": 1, "ticker": "5801.T", "title": "決算", "published_at": "2026-09-07", "url": "https://a.example"},
-        {"id": 2, "ticker": "5801.T", "title": "決算", "published_at": "2026-09-07", "url": "https://b.example"},
+        {"id": 1, "ticker": "5801.T", "title": "決算", "published_at": "2026-09-07", "url": "https://a.example", "importance": "通常", "is_read": 1, "is_favorite": 0},
+        {"id": 2, "ticker": "5801.T", "title": "決算", "published_at": "2026-09-07", "url": "https://b.example", "importance": "高", "is_read": 0, "is_favorite": 1},
     ])
     assert rows[0]["id"] == 1
     assert rows[0]["event_record_count"] == 2
     assert [entry["record_id"] for entry in rows[0]["event_provenance"]] == [1, 2]
+    assert rows[0]["importance"] == "高"
+    assert rows[0]["is_read"] is False and rows[0]["is_favorite"] is True
