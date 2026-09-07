@@ -24,6 +24,7 @@ def test_company_profile_page_loads_all_sections(ui_db, monkeypatch) -> None:
     assert any(item.label == "投資ルールを保存" for item in at.button)
     assert any(item.label == "企業カルテ情報を保存" for item in at.button)
     assert any(item.label == "メモを追加" for item in at.button)
+    assert any("状態:" in item.value for item in at.caption)
     assert not at.exception
 
 

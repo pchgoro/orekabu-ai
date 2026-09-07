@@ -241,6 +241,15 @@ with earnings_cols[0]:
     st.markdown("##### 次回決算")
     st.write(next_event.get("earnings_date") or "未登録")
     st.caption(f"{next_event.get('fiscal_quarter') or '未設定'} / {next_event.get('date_status') or '未確認'}")
+    earnings_state = profile.get("earnings_state") or {}
+    state_labels = {
+        "scheduled": "次回予定",
+        "candidate_pending": "候補確認待ち",
+        "past_no_next": "発表済み・次回未登録",
+        "date_unconfirmed": "日付未確認",
+        "none": "予定なし",
+    }
+    st.caption(f"状態: {state_labels.get(earnings_state.get('status'), '未確認')}")
 with earnings_cols[1]:
     st.markdown("##### 決算候補")
     candidates = profile["earnings_candidates"][:5]
