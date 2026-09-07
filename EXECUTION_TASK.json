@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P1-A-H2 起動時日次ガードのtimezone-aware比較回帰",
+  "current_task": "#11 P2-H-1 RSS/企業IR/適時開示/EDINETの同一材料統合境界棚卸し",
   "task_source": "GitHub Issue #11 + ROADMAP.md + Supervisor correction",
-  "last_run_at": "2026-09-07T22:30:00+09:00",
-  "last_completed_task": "#11 P1-A hardening: 起動時自動更新のJST基準日補強 (0ed6ffb)",
-  "next_action": "P1-A本体は再実装しない。services/startup_automation.py の既存run判定で automation_runs.started_at をtimezone-awareにparseしJST日付へ正規化してから japan_today() と比較する。UTC/異なるoffsetでJST同日になるfixture、malformed/naive timestampのfail-safe、既存in-flight多重実行ガードを回帰確認する。pytest/該当テスト/compileall/diff check PASS後、このhardeningを閉じて P2-H-1 重複イベント統合の既存データ境界棚卸しへ進む。P2-Hは通知ではなくRSS/企業IR/適時開示/EDINET等の同一材料統合。",
+  "last_run_at": "2026-09-07T22:51:40.2286045+09:00",
+  "last_completed_task": "#11 P1-A-H2 起動時日次ガードのtimezone-aware比較回帰 (486d370)",
+  "next_action": "RSS、企業IR、適時開示、EDINETの既存保存・紐付けキーとprovenanceを読み、元データを削除せず同一材料を決定論的に束ねる最小の純粋view model/fixture境界を定義する。通知機能は対象外。",
   "blocked_reason": null,
   "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認はHuman Acceptanceとして残す。P2-H/Iの通常技術判断は自律継続。P2-F実CSV確認は後続Human Action。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "0ed6ffb"
+  "last_git_sha": "486d370"
 }
