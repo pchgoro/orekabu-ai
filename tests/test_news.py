@@ -68,6 +68,13 @@ def test_rule_based_news_classification_is_explainable_and_pending() -> None:
     assert unknown["review_status"] == "pending"
 
 
+def test_rule_based_news_classification_uses_issue_contract_categories() -> None:
+    assert classify_news_text("上方修正を発表")["category"] == "上方修正"
+    assert classify_news_text("自社株買いを決定")["category"] == "自社株買い"
+    assert classify_news_text("新サービスを開始")["category"] == "新製品/新サービス"
+    assert classify_news_text("業務提携を発表")["category"] == "提携"
+
+
 def test_dedup_matching_state_and_tags(tmp_path: Path) -> None:
     db = tmp_path / "news.db"; init_db(db)
     stock = get_stock("5801.T", db); assert stock
