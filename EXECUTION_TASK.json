@@ -2,14 +2,14 @@
   "project": "orekabu-ai",
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
-  "current_phase": "UX Automation",
-  "current_task": "#11 P1-D-4 分類候補の手動確認状態とタグ・重要度非上書き回帰",
+  "current_phase": "Disclosure Automation",
+  "current_task": "#11 P1-E-1 無料ソース中心の適時開示provider最小経路調査",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T12:53:42.9230193+09:00",
-  "last_completed_task": "#11 P1-D-3 曖昧・未分類分類候補のUI受け入れテスト",
-  "next_action": "分類候補表示が既存の手動タグ・重要度・カテゴリを自動上書きしない回帰テストを追加し、確認UIの保存境界を固定する",
+  "last_run_at": "2026-09-07T13:29:21.6644612+09:00",
+  "last_completed_task": "#11 P1-D-4 分類候補表示が手動タグ・重要度・カテゴリを上書きしない回帰テスト",
+  "next_action": "既存の公式IR/RSS・適時開示保存・dedupe・provenanceを棚卸しし、登録銘柄限定の無料provider最小経路とfail-closed境界を設計する",
   "blocked_reason": null,
   "human_action_required": "なし。通常技術判断として自律継続。実機Desktop/Mobile表示と本番データでの朝画面確認のみ後続acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "e9c3fe7"
+  "last_git_sha": "d441c82"
 }
