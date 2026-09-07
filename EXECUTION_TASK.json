@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation",
-  "current_task": "#11 P1-C-2 自動リンク候補の確認UI統合",
+  "current_task": "#11 P1-C-3 ニュース候補の曖昧一致受け入れテスト",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T09:21:07+09:00",
-  "last_completed_task": "#11 P1-C-1 ニュースの銘柄リンク候補を信頼度・理由・曖昧状態付きpure判定へ分離",
-  "next_action": "既存ニュース確認画面で信頼度・一致理由・曖昧保留を表示し、承認操作以外はDBを変更しないUIテストを追加する",
+  "last_run_at": "2026-09-07T09:56:15+09:00",
+  "last_completed_task": "#11 P1-C-2 ニュース確認UIへ信頼度・曖昧保留・自動未確定の表示を統合",
+  "next_action": "同一キーワードで複数候補が出る実データ形状をfixture化し、候補の自動確定なし・承認操作のみ状態変更の受け入れテストを追加する",
   "blocked_reason": null,
   "human_action_required": "コード仕様判断は不要。Codex Scheduled Task / runner が有効で、このrepoの EXECUTION_TASK.json と Issue #11 を実際に消費できる状態かのみ確認対象。runnerが有効なら人間確認を待たず通常実装を継続する。実機Desktop/Mobile表示と本番データでの朝画面確認は後続acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "600807a"
+  "last_git_sha": "27cfe08"
 }
