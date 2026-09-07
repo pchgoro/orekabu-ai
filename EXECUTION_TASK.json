@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "Disclosure Automation",
-  "current_task": "#11 Disclosure-2 provider結果の保存・重複排除・部分失敗テスト",
+  "current_task": "#11 Disclosure-3 daily startup orchestrationへの低頻度step統合",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T14:04:44.1807311+09:00",
-  "last_completed_task": "#11 Disclosure-1 無料ソース中心の公式IR RSS/Atom providerとrobots・サイズ制限のfixtureテスト",
-  "next_action": "provider候補を既存のsource_is_due・record_ir_source_result・save_disclosureへ接続し、duplicate防止と1銘柄失敗時の他銘柄継続をfixtureで検証する",
+  "last_run_at": "2026-09-07T14:39:23.3984443+09:00",
+  "last_completed_task": "#11 Disclosure-2 公式IRニュース候補の保存・重複排除・部分失敗継続",
+  "next_action": "既存のdaily startup orchestrationへofficial_ir_newsを低頻度stepとして追加し、設定無効・キャッシュ内・部分失敗でも既存stepとDBを保全するfixtureを検証する",
   "blocked_reason": null,
   "human_action_required": "なし。通常技術判断として自律継続。実機Desktop/Mobile・本番IRページ確認、有料サービス・外部認証・規約上グレーな取得方法のみ後続human acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "72ec500"
+  "last_git_sha": "b2a4dfa"
 }
