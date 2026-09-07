@@ -11,6 +11,7 @@ from services.database import _now, connect, get_stock
 from services.disclosures import list_disclosures
 from services.edinet import list_documents
 from services.earnings import get_stock_earnings, japan_today, next_earnings_by_stock
+from services.earnings_view_models import build_post_earnings_state
 from services.earnings_candidates import list_candidates
 from services.investment_playbooks import (
     evaluate_playbook,
@@ -221,6 +222,7 @@ def build_company_profile(
         "earnings_candidates": candidates, "related_earnings": related_earnings,
         "profile_candidates": profile_candidates,
         "earnings_history": _earnings_history(earnings), "news": news,
+        "earnings_state": build_post_earnings_state(earnings, candidates),
         "disclosures": disclosures, "edinet_documents": edinet_documents,
         "relations": relations, "intelligence": intelligence, "notes": notes,
         "investment_playbook": playbook,

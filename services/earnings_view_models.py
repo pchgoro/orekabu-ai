@@ -47,6 +47,52 @@ def prepare_earnings_rows(events: list[dict[str, Any]], today: date | None = Non
     return rows
 
 
+def build_post_earnings_state(
+    events: list[dict[str, Any]],
+    candidates: list[dict[str, Any]] | None = None,
+    today: date | None = None,
+) -> dict[str, Any]:
+    """Separate past events from the next event without mutating stored data."""
+    reference = today or date.today()
+    dated_events = [
+        (event, parse_earnings_date(event.get("earnings_date")))
+        for event in events
+    ]
+    past_events = [event for event, event_date in dated_events if event_date and event_date < reference]
+    upcoming = [
+        (event, event_date)
+        for event, event_date in dated_events
+        if event_date and event_date >= reference
+    ]
+    next_event = min(upcoming, key=lambda item: item[1])[0] if upcoming else None
+    pending_candidates = [
+        candidate
+        for candidate in candidates or []
+        if candidate.get("review_status", "pending") == "pending"
+        and (
+            not candidate.get("candidate_date")
+            or parse_earnings_date(candidate.get("candidate_date")) >= reference
+        )
+    ]
+    if next_event:
+        status = "scheduled"
+    elif pending_candidates:
+        status = "candidate_pending"
+    elif past_events:
+        status = "past_no_next"
+    elif any(event_date is None for _, event_date in dated_events):
+        status = "date_unconfirmed"
+    else:
+        status = "none"
+    return {
+        "status": status,
+        "next_event": next_event,
+        "past_events": past_events,
+        "pending_candidates": pending_candidates,
+        "suppress_past_warning": bool(past_events),
+    }
+
+
 def enrich_stock_rows(rows: list[dict[str, Any]], db_path: Path | str = DB_PATH, today: date | None = None, near_days: int = 7) -> list[dict[str, Any]]:
     """Attach each stock's next earnings and related earnings summary."""
     next_map = next_earnings_by_stock(db_path, today)
