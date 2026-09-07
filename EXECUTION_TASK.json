@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "Company Profile Automation",
-  "current_task": "#11 P1-E-2 企業情報候補の取得元・時刻・確認状態表示",
+  "current_task": "#11 P1-E-3 企業カルテ候補表示のDesktop/Mobile受け入れ境界",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T16:20:29.3407282+09:00",
-  "last_completed_task": "#11 P1-E-1 企業カルテの既存service境界を棚卸ししドキュメント化",
-  "next_action": "既存stock_profile_candidatesのprovider_name・retrieved_at・review_statusを再利用し、企業カルテで確認可能なview modelとAppTestを小さく追加する。候補の自動承認は行わない",
+  "last_run_at": "2026-09-07T16:59:42.2271583+09:00",
+  "last_completed_task": "#11 P1-E-2 企業情報候補の取得元・時刻・確認状態を企業カルテview modelとUIへ追加",
+  "next_action": "企業カルテ候補表示のDesktop/Mobile幅回帰をfixtureで確認し、実データ・実画面確認はHuman Actionとして明示する。候補の自動承認は行わない",
   "blocked_reason": null,
   "human_action_required": "なし。通常技術判断として自律継続。実機Desktop/Mobile・本番IRページ確認、有料サービス・外部認証・規約上グレーな取得方法のみ後続human acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "77c71a7"
+  "last_git_sha": "82ba365"
 }
