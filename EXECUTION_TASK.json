@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-H-2A event grouping 日付・曖昧性境界hardening",
+  "current_task": "#11 P2-H-2B event grouping表示接続の安全境界",
   "task_source": "GitHub Issue #11 + ROADMAP.md + Supervisor correction",
-  "last_run_at": "2026-09-07T23:30:25+09:00",
-  "last_completed_task": "#11 P2-H-1 同一材料の決定論的グループキーとprovenance保持境界 (2a4631d)",
-  "next_action": "Daily Briefing/ニュース・開示表示へ接続する前に、retrieved_atをsemantic event dateキーから除外し、実イベント日時なし・ticker/title欠損・malformed dateをfail-closedにするfixtureを追加する。同一canonical URL完全一致のみ安全なfallback統合を許容し、曖昧レコードは自動統合しない。元DB行削除・migration・通知送信は行わない。hardening後に表示統合へ最小接続する。",
+  "last_run_at": "2026-09-08T00:02:00.6279378+09:00",
+  "last_completed_task": "#11 P2-H-2A event grouping日付・曖昧性境界hardening (46d3991)",
+  "next_action": "event_groupingを既存のニュース/開示表示へ接続する前に、グループ化後も元レコード件数・provenance・既読/重要度を失わない表示adapterを純粋関数として追加する。曖昧グループは単独表示し、DB変更・自動確定・通知送信は行わない。",
   "blocked_reason": null,
   "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認はHuman Acceptanceとして残す。P2-H/Iの通常技術判断は自律継続。P2-F実CSV確認は後続Human Action。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "2a4631d"
+  "last_git_sha": "46d3991"
 }
