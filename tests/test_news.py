@@ -8,10 +8,45 @@ from pathlib import Path
 from services.database import get_stock, init_db
 from services.news import (
     add_keyword, add_source, confirm_stock_match, export_csv, get_article_tags, import_csv,
-    list_articles, list_stock_matches, make_news_prompt, parse_csv, save_article,
+    build_stock_match_candidates, list_articles, list_stock_matches, make_news_prompt, parse_csv, save_article,
     set_article_tags, update_article,
 )
 from services.news_providers.base import NewsItem
+
+
+def test_stock_match_candidates_rank_and_hold_ambiguous_matches() -> None:
+    stocks = [
+        {"id": 1, "ticker": "5801.T", "company_name": "古河電気工業"},
+        {"id": 2, "ticker": "6976.T", "company_name": "太陽誘電"},
+    ]
+    candidates = build_stock_match_candidates(
+        "5801 古河電気工業と光ファイバー業界",
+        stocks,
+        [{"stock_id": 1, "keyword": "光ファイバー", "is_enabled": 1}],
+    )
+    assert candidates[0]["ticker"] == "5801.T"
+    assert candidates[0]["confidence"] == "high"
+    assert candidates[0]["review_status"] == "pending"
+    assert candidates[0]["matched_terms"] == ["5801", "光ファイバー", "古河電気工業"]
+
+    ambiguous = build_stock_match_candidates(
+        "電線業界のニュース",
+        stocks,
+        [
+            {"stock_id": 1, "keyword": "電線", "is_enabled": 1},
+            {"stock_id": 2, "keyword": "電線", "is_enabled": 1},
+        ],
+    )
+    assert [row["ticker"] for row in ambiguous] == ["5801.T", "6976.T"]
+    assert all(row["ambiguous"] for row in ambiguous)
+
+
+def test_stock_match_candidates_do_not_return_missing_or_disabled_keywords() -> None:
+    stocks = [{"id": 1, "ticker": "5801.T", "company_name": "古河電気工業"}]
+    assert build_stock_match_candidates("無関係な記事", stocks) == []
+    assert build_stock_match_candidates(
+        "光ファイバー", stocks, [{"stock_id": 1, "keyword": "光ファイバー", "is_enabled": 0}]
+    ) == []
 
 
 def test_dedup_matching_state_and_tags(tmp_path: Path) -> None:

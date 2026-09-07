@@ -337,13 +337,65 @@ RSS要約：{article.get('summary') or 'データなし'}
 """
 
 
-def _match_article(conn: Any, article_id: int, text: str) -> None:
-    normalized = text.casefold()
-    keywords = conn.execute("SELECT * FROM stock_news_keywords WHERE is_enabled=1").fetchall()
+def build_stock_match_candidates(
+    text: str,
+    stocks: list[dict[str, Any]],
+    keywords: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Return explainable, unapproved stock-link candidates without writing data."""
+    normalized = str(text or "").casefold()
     custom: dict[int, list[str]] = {}
-    for row in keywords: custom.setdefault(int(row["stock_id"]), []).append(row["keyword"])
-    for stock in conn.execute("SELECT id,ticker,company_name FROM stocks").fetchall():
-        ticker = str(stock["ticker"]); terms = [ticker, ticker.removesuffix(".T"), str(stock["company_name"]), *custom.get(int(stock["id"]), [])]
-        matched = [term for term in terms if len(term) >= 2 and term.casefold() in normalized]
-        if matched:
-            now = _now(); conn.execute("INSERT OR IGNORE INTO news_article_stocks(article_id,stock_id,match_reason,confirmed,created_at,updated_at) VALUES(?,?,?,0,?,?)", (article_id, stock["id"], ", ".join(matched), now, now))
+    for row in keywords or []:
+        if row.get("is_enabled", True):
+            custom.setdefault(int(row["stock_id"]), []).append(str(row.get("keyword") or ""))
+
+    candidates: list[dict[str, Any]] = []
+    for stock in stocks:
+        stock_id = int(stock["id"])
+        matched: list[str] = []
+        scores: list[int] = []
+        ticker = str(stock.get("ticker") or "")
+        for term in (ticker, ticker.removesuffix(".T")):
+            if len(term) >= 2 and term.casefold() in normalized:
+                matched.append(term)
+                scores.append(100)
+        company_name = str(stock.get("company_name") or "")
+        if len(company_name) >= 2 and company_name.casefold() in normalized:
+            matched.append(company_name)
+            scores.append(80)
+        for keyword in custom.get(stock_id, []):
+            if len(keyword) >= 2 and keyword.casefold() in normalized:
+                matched.append(keyword)
+                scores.append(60)
+        if not matched:
+            continue
+        score = max(scores)
+        candidates.append(
+            {
+                "stock_id": stock_id,
+                "ticker": ticker,
+                "company_name": company_name,
+                "score": score,
+                "confidence": "high" if score >= 80 else "medium",
+                "matched_terms": sorted(set(matched), key=str.casefold),
+                "match_reason": ", ".join(sorted(set(matched), key=str.casefold)),
+                "review_status": "pending",
+            }
+        )
+    candidates.sort(key=lambda row: (-int(row["score"]), str(row["ticker"]), int(row["stock_id"])))
+    top_score = int(candidates[0]["score"]) if candidates else None
+    top_count = sum(int(row["score"]) == top_score for row in candidates) if top_score is not None else 0
+    for row in candidates:
+        row["ambiguous"] = top_count > 1 and int(row["score"]) == top_score
+    return candidates
+
+
+def _match_article(conn: Any, article_id: int, text: str) -> None:
+    stocks = [dict(row) for row in conn.execute("SELECT id,ticker,company_name FROM stocks").fetchall()]
+    keywords = [dict(row) for row in conn.execute("SELECT * FROM stock_news_keywords WHERE is_enabled=1").fetchall()]
+    for candidate in build_stock_match_candidates(text, stocks, keywords):
+        now = _now()
+        conn.execute(
+            "INSERT OR IGNORE INTO news_article_stocks(article_id,stock_id,match_reason,confirmed,created_at,updated_at) VALUES(?,?,?,0,?,?)",
+            (article_id, candidate["stock_id"], candidate["match_reason"], now, now),
+        )
