@@ -86,6 +86,20 @@ def test_switching_article_refreshes_prompt_and_state(ui_db) -> None:
     assert next(item for item in at.selectbox if item.label == "カテゴリ").value == "業績"
 
 
+def test_rule_category_candidate_does_not_overwrite_manual_category(ui_db) -> None:
+    from services.news import list_articles, save_article
+    from services.news_providers.base import NewsItem
+
+    save_article(
+        NewsItem(title="上方修正を発表"),
+        metadata={"importance": "低", "category": "業界"},
+    )
+    at = AppTest.from_file(str(ROOT / "pages" / "7_ニュース.py"), default_timeout=60).run(timeout=60)
+    assert next(item for item in at.selectbox if item.label == "カテゴリ").value == "業界"
+    assert any("分類候補: 上方修正" in item.value for item in at.info)
+    assert list_articles()[0]["category"] == "業界"
+
+
 def test_switching_source_refreshes_edit_fields(ui_db) -> None:
     from services.news import add_source
 

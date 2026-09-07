@@ -14,7 +14,7 @@ from components.news_cards import render_news_cards
 from components.layout import apply_responsive_styles
 from services.database import get_stocks, init_db, load_settings
 from services.news import (
-    add_keyword, add_source, build_stock_match_candidates, confirm_stock_match, delete_keyword, delete_source, export_csv,
+    add_keyword, add_source, build_stock_match_candidates, classify_news_text, confirm_stock_match, delete_keyword, delete_source, export_csv,
     fetch_enabled_sources, get_article_tags, import_csv, list_articles, list_fetch_runs,
     list_keywords, list_sources, list_stock_matches, make_news_prompt, parse_csv, save_article,
     set_article_tags, update_article, update_source,
@@ -60,6 +60,19 @@ for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "�
                 category = st.selectbox("カテゴリ", NEWS_CATEGORIES, index=NEWS_CATEGORIES.index(selected["category"]), key=f"category_{article_key}")
                 memo = st.text_area("メモ", value=selected.get("memo") or "", key=f"memo_{article_key}")
                 tags = st.text_input("タグ（カンマ区切り）", value=", ".join(get_article_tags(int(selected["id"]))), key=f"tags_{article_key}")
+                classification = classify_news_text(selected.get("title") or "", selected.get("summary") or "")
+                if classification["confidence"] == "ambiguous":
+                    st.warning(
+                        "分類候補: " + ", ".join(classification["candidate_categories"]) + " / 曖昧・手動確認"
+                    )
+                elif classification["confidence"] == "unclassified":
+                    st.caption("分類候補: その他 / 未分類・手動確認")
+                else:
+                    st.info(
+                        "分類候補: " + str(classification["category"])
+                        + " / 一致語: " + ", ".join(classification["matched_terms"])
+                        + " / 保存は手動操作のみ"
+                    )
                 if st.button("記事情報を保存", key=f"save_{article_key}"):
                     try:
                         update_article(int(selected["id"]), {"is_read": read, "is_favorite": favorite, "importance": importance, "category": category, "memo": memo})
