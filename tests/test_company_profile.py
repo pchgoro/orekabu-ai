@@ -144,6 +144,30 @@ def test_search_metadata_and_cross_domain_profile(tmp_path: Path) -> None:
     assert reverse_profile["relations"][0]["related_ticker"] == "5801.T"
 
 
+def test_company_profile_includes_profile_candidate_provenance(tmp_path: Path) -> None:
+    from services.stock_profiles import run_profile_refresh
+
+    db = tmp_path / "profile-candidate.db"
+    init_db(db)
+    class Provider:
+        name = "fixture-provider"
+
+        def fetch(self, ticker: str) -> dict[str, str]:
+            return {
+                "company_name": "候補会社名",
+                "market": "候補市場",
+                "industry": "候補業種",
+                "retrieved_at": "2026-09-07T09:00:00+09:00",
+            }
+
+    run_profile_refresh(Provider(), ticker="5801.T", db_path=db)
+    profile = build_company_profile("5801.T", load_settings(db), db, include_price=False)
+    candidate = profile["profile_candidates"][0]
+    assert candidate["provider_name"] == "fixture-provider"
+    assert candidate["retrieved_at"] == "2026-09-07T09:00:00+09:00"
+    assert candidate["review_status"] == "pending"
+
+
 def test_timeline_is_newest_first_and_missing_values_are_safe() -> None:
     timeline = build_timeline(
         [{"title": "ニュース", "published_at": "2026-07-12T09:00:00"}],

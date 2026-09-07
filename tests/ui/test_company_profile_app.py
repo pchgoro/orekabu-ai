@@ -38,6 +38,31 @@ def test_company_metadata_edit_uses_temporary_db(ui_db, monkeypatch) -> None:
     assert not at.exception
 
 
+def test_company_profile_shows_profile_candidate_provenance(ui_db, monkeypatch) -> None:
+    from services.stock_profiles import run_profile_refresh
+
+    class Provider:
+        name = "fixture-provider"
+
+        def fetch(self, ticker: str) -> dict[str, str]:
+            return {
+                "company_name": "候補会社名",
+                "market": "候補市場",
+                "industry": "候補業種",
+                "retrieved_at": "2026-09-07T09:00:00+09:00",
+            }
+
+    run_profile_refresh(Provider(), ticker="5801.T", db_path=ui_db)
+    monkeypatch.setenv("OREKABU_DB_PATH", str(ui_db))
+    monkeypatch.setattr(
+        "services.company_profile.build_analysis_rows",
+        lambda stocks, app_settings: [{**stocks[0], "data_status": "データなし", "current_price": None, "change": None, "score": 0}],
+    )
+    at = AppTest.from_file(str(ROOT / "pages" / "9_企業カルテ.py"), default_timeout=60).run(timeout=60)
+    assert any(item.value == "企業カルテ" for item in at.title)
+    assert not at.exception
+
+
 def test_company_profile_mobile_priority_layout_loads(ui_db, monkeypatch) -> None:
     """The vertical mobile-priority layout must render without an exception."""
     from services.database import load_settings, save_settings

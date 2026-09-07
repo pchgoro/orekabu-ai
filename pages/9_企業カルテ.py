@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 
 import streamlit as st
@@ -38,6 +39,7 @@ from services.company_profile import (
 )
 from services.database import init_db, load_settings
 from utils.formatters import fmt_number, fmt_price, fmt_signed_price
+from utils.constants import DB_PATH
 from utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -82,7 +84,8 @@ selected = labels[selected_label]
 st.query_params["ticker"] = selected["ticker"]
 
 try:
-    profile = build_company_profile(selected["ticker"], settings)
+    profile_db_path = os.getenv("OREKABU_DB_PATH", str(DB_PATH))
+    profile = build_company_profile(selected["ticker"], settings, profile_db_path)
 except Exception as exc:
     st.error(str(exc)); logger.exception("企業カルテ生成失敗 ticker=%s", selected["ticker"]); st.stop()
 
@@ -113,6 +116,22 @@ with section_columns[0]:
                 st.success("企業情報を保存しました。"); st.rerun()
             except Exception as exc:
                 st.error(str(exc)); logger.exception("企業情報更新失敗 stock_id=%s", stock["id"])
+    st.markdown("#### 企業情報候補")
+    profile_candidates = profile.get("profile_candidates") or []
+    if profile_candidates:
+        for candidate in profile_candidates[:5]:
+            st.caption(
+                f"取得元: {candidate.get('provider_name') or '不明'} / "
+                f"取得日時: {candidate.get('retrieved_at') or '不明'} / "
+                f"確認状態: {candidate.get('review_status') or '不明'}"
+            )
+            values = " / ".join(
+                f"{label}: {candidate.get(field) or '未取得'}"
+                for label, field in (("会社名", "company_name"), ("市場", "market"), ("業種", "industry"))
+            )
+            st.write(values)
+    else:
+        st.caption("自動取得候補はありません。")
 
 with section_columns[1]:
     st.markdown("#### 株価概要")

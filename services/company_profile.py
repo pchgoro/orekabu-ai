@@ -22,6 +22,7 @@ from services.categories import (
     list_stock_categories,
 )
 from services.stock_scores import calculate_ore_score, list_score_history
+from services.stock_profiles import list_profile_candidates
 from services.strategy_rules import (
     calculate_rule_lines,
     get_stock_rule,
@@ -182,6 +183,11 @@ def build_company_profile(
     earnings = get_stock_earnings(stock_id, db_path)
     next_earnings = next_earnings_by_stock(db_path).get(stock_id)
     candidates = [row for row in list_candidates(db_path) if int(row["stock_id"]) == stock_id]
+    profile_candidates = [
+        row
+        for row in list_profile_candidates(review_status=None, limit=1000, db_path=db_path)
+        if int(row["stock_id"]) == stock_id
+    ]
     related_earnings = [row for row in impact_candidates(db_path) if int(row["source_stock_id"]) == stock_id]
     news = _stock_news(stock_id, db_path)
     disclosures = [row for row in list_disclosures(db_path) if int(row["stock_id"]) == stock_id]
@@ -213,6 +219,7 @@ def build_company_profile(
     profile = {
         "stock": stock, "price": price, "next_earnings": next_earnings,
         "earnings_candidates": candidates, "related_earnings": related_earnings,
+        "profile_candidates": profile_candidates,
         "earnings_history": _earnings_history(earnings), "news": news,
         "disclosures": disclosures, "edinet_documents": edinet_documents,
         "relations": relations, "intelligence": intelligence, "notes": notes,
