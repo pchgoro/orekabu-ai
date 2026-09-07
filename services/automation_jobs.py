@@ -87,6 +87,7 @@ def run_news_job(
 def run_official_ir_news_job(
     provider_factory: Callable[[dict[str, Any]], OfficialIRNewsProvider] = OfficialIRNewsProvider,
     *,
+    ticker: str | None = None,
     limit: int = 20,
     force: bool = False,
     dry_run: bool = False,
@@ -96,7 +97,9 @@ def run_official_ir_news_job(
     sources = [
         source
         for source in list_ir_sources(db_path)
-        if source["enabled"] and source["source_type"] == "official_ir_news"
+        if source["enabled"]
+        and source["source_type"] == "official_ir_news"
+        and (ticker is None or source["ticker"] == ticker)
     ][: max(1, int(limit))]
     processed = inserted = duplicates = failed = 0
     errors: list[str] = []
@@ -107,7 +110,6 @@ def run_official_ir_news_job(
         try:
             rows = provider_factory(source).fetch()
             if dry_run:
-                record_ir_source_result(source["id"], success=True, db_path=db_path)
                 inserted += len(rows)
                 continue
             for row in rows:

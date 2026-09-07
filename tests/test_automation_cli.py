@@ -152,6 +152,7 @@ def test_daily_update_step_builder_exposes_stable_shared_order(tmp_path: Path) -
 
     assert [name for name, _ in steps] == [
         "rss",
+        "official_ir_news",
         "earnings",
         "edinet",
         "stock_profiles",

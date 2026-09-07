@@ -23,7 +23,7 @@ from scripts.common import (
 from scripts.fetch_edinet import print_edinet_summary
 from services.automation import JobResult, run_steps
 from services.automation_lock import AutomationLock
-from services.automation_jobs import run_candidate_cleanup, run_earnings_job, run_news_job
+from services.automation_jobs import run_candidate_cleanup, run_earnings_job, run_news_job, run_official_ir_news_job
 from services.database import load_settings
 from services.edinet import EdinetApiClient, lookback_dates, run_edinet_range
 from services.earnings import japan_today
@@ -101,6 +101,16 @@ def build_daily_update_steps(
             lambda: run_news_job(
                 lambda source: RssNewsProvider(source["url"], max_items=limit),
                 limit=limit,
+                dry_run=dry_run,
+                db_path=db_path,
+            ),
+        ),
+        (
+            "official_ir_news",
+            lambda: run_official_ir_news_job(
+                ticker=ticker,
+                limit=limit,
+                force=force,
                 dry_run=dry_run,
                 db_path=db_path,
             ),

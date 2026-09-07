@@ -54,6 +54,7 @@ def test_daily_steps_keep_order_and_continue_after_failure(tmp_path: Path) -> No
         "daily",
         [
             ("rss", step("rss")),
+            ("official_ir_news", step("official_ir_news")),
             ("earnings", step("earnings", True)),
             ("edinet", step("edinet")),
             ("stock_profiles", step("stock_profiles")),
@@ -61,7 +62,7 @@ def test_daily_steps_keep_order_and_continue_after_failure(tmp_path: Path) -> No
         ],
         db_path=db,
     )
-    assert called == ["rss", "earnings", "edinet", "stock_profiles", "candidate_cleanup"]
+    assert called == ["rss", "official_ir_news", "earnings", "edinet", "stock_profiles", "candidate_cleanup"]
     assert result["failed"] == 1
     assert [row["step_name"] for row in list_run_steps(result["run_id"], db)] == called
     assert list_runs(db_path=db)[0]["status"] == "partial"
