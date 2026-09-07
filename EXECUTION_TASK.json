@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "CSV Import Automation",
-  "current_task": "#11 P2-F-1 証券会社CSV adapterの既存取込境界調査",
+  "current_task": "#11 P2-F-2 保有株CSV preview/importのUI受け入れ境界",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T18:40:43.2586434+09:00",
-  "last_completed_task": "#11 P1-E-5 企業カルテ自動充填の自動テスト証跡とHuman Action境界の整理",
-  "next_action": "既存の保有株CSV/マーケットスピード取込を棚卸しし、証券会社別adapter・preview必須・不明形式fail-closed・既存保有データ非削除の最小設計をfixtureで固定する",
+  "last_run_at": "2026-09-07T19:12:56.6242300+09:00",
+  "last_completed_task": "#11 P2-F-1 既存マーケットスピードCSV adapterの境界とHuman Action整理",
+  "next_action": "設定画面のマーケットスピードCSV preview/importについて、正常fixture・不明形式・CSVにない保有株候補をUIで確認できる受け入れテストを追加する。実CSVは人間確認まで実行しない",
   "blocked_reason": null,
   "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認は人間確認。通常技術判断は自律継続。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "3a0237c"
+  "last_git_sha": "342e51a"
 }
