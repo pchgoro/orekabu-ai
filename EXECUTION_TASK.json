@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation",
-  "current_task": "#11 P1-D-2 分類候補の確認UI設計",
+  "current_task": "#11 P1-D-1b Issue契約に合わせた自動分類カテゴリ補正",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T11:07:38+09:00",
+  "last_run_at": "2026-09-07T11:29:35+09:00",
   "last_completed_task": "#11 P1-D-1 説明可能なニュースカテゴリ候補分類と曖昧・未分類保留",
-  "next_action": "ニュース確認UIで分類候補・一致語・曖昧保留を表示し、承認前にカテゴリや重要度を自動保存しない受け入れテストを追加する",
+  "next_action": "P1-D-2 UI統合の前に、分類カテゴリをIssue #11の初期契約（決算、上方修正、下方修正、増配、減配、自社株買い、株式分割、M&A、大口受注、提携、新製品/新サービス、人事、その他）へ合わせる。代表fixture、曖昧時pending、手動カテゴリ/タグ/重要度非上書き回帰テストを追加し、完了後P1-D-2へ進む",
   "blocked_reason": null,
-  "human_action_required": "コード仕様判断は不要。Codex Scheduled Task / runner が有効で、このrepoの EXECUTION_TASK.json と Issue #11 を実際に消費できる状態かのみ確認対象。runnerが有効なら人間確認を待たず通常実装を継続する。実機Desktop/Mobile表示と本番データでの朝画面確認は後続acceptance。",
+  "human_action_required": "なし。通常技術判断として自律継続。実機Desktop/Mobile表示と本番データでの朝画面確認のみ後続acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "2cae81c"
+  "last_git_sha": "8e119a9"
 }
