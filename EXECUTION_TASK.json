@@ -2,14 +2,14 @@
   "project": "orekabu-ai",
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
-  "current_phase": "Post-Earnings State Automation",
-  "current_task": "#11 P2-H-2 通知候補の重複抑制とadapter境界テスト",
+  "current_phase": "UX Automation / Zero-touch Daily Workflow",
+  "current_task": "#11 P1-A-2 起動時ワンストップ更新の実行境界・状態表示",
   "task_source": "GitHub Issue #11 + ROADMAP.md + Supervisor priority correction",
-  "last_run_at": "2026-09-07T21:40:27.3901724+09:00",
-  "last_completed_task": "#11 P2-G-4 post-earnings日付安全性・回帰補強",
-  "next_action": "通知候補を同一ticker・同一kind単位で安定して重複抑制する純粋なview model/テストを追加する。Windows通知・Discord送信・webhook設定・実送信は人間承認まで実装境界に留める。",
+  "last_run_at": "2026-09-07T22:02:00+09:00",
+  "last_completed_task": "#11 P1-A-1 起動時自動更新の日付境界と多重実行ガード",
+  "next_action": "既存run_daily_updateの共有step、automation_runsの成功/部分失敗/失敗状態、設定画面の最終更新表示を棚卸しし、起動時更新の状態を1か所で追跡できる最小のview model/testを追加する。外部API失敗時も既存DBを変更しない境界を維持する。",
   "blocked_reason": null,
   "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認はHuman Acceptanceとして残す。P2-G/H/Iの通常技術判断は自律継続。P2-F実CSV確認は後続Human Action。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "54357f3"
+  "last_git_sha": "0ed6ffb"
 }
