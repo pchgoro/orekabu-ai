@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "Disclosure Automation",
-  "current_task": "#11 Disclosure-3 daily startup orchestrationへの低頻度step統合",
+  "current_task": "#11 Disclosure-4 startup dry-run・設定無効・部分失敗の受け入れテスト",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T14:39:23.3984443+09:00",
-  "last_completed_task": "#11 Disclosure-2 公式IRニュース候補の保存・重複排除・部分失敗継続",
-  "next_action": "既存のdaily startup orchestrationへofficial_ir_newsを低頻度stepとして追加し、設定無効・キャッシュ内・部分失敗でも既存stepとDBを保全するfixtureを検証する",
+  "last_run_at": "2026-09-07T15:13:56.8094062+09:00",
+  "last_completed_task": "#11 Disclosure-3 daily startup orchestrationへofficial_ir_news低頻度stepを統合",
+  "next_action": "daily update全体のdry-runでDB非変更、設定無効/キャッシュ内のスキップ、公式IRニュース失敗時の他step継続をfixtureで固定する",
   "blocked_reason": null,
   "human_action_required": "なし。通常技術判断として自律継続。実機Desktop/Mobile・本番IRページ確認、有料サービス・外部認証・規約上グレーな取得方法のみ後続human acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "b2a4dfa"
+  "last_git_sha": "7a6d9fd"
 }
