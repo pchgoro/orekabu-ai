@@ -20,6 +20,7 @@ def test_company_profile_page_loads_all_sections(ui_db, monkeypatch) -> None:
     headings = [item.value for item in at.subheader]
     for label in ("今日の注意点", "投資ルール", "戦略タグ・共通ルール", "決算", "ニュース", "適時開示", "EDINET", "関連銘柄", "テーマ・投資ストーリー", "メモ", "タイムライン", "ChatGPT分析用プロンプト"):
         assert label in headings
+    assert any("企業情報候補" in item.value for item in at.markdown)
     assert any(item.label == "投資ルールを保存" for item in at.button)
     assert any(item.label == "企業カルテ情報を保存" for item in at.button)
     assert any(item.label == "メモを追加" for item in at.button)
@@ -60,6 +61,7 @@ def test_company_profile_shows_profile_candidate_provenance(ui_db, monkeypatch) 
     )
     at = AppTest.from_file(str(ROOT / "pages" / "9_企業カルテ.py"), default_timeout=60).run(timeout=60)
     assert any(item.value == "企業カルテ" for item in at.title)
+    assert any("企業情報候補" in item.value for item in at.markdown)
     assert not at.exception
 
 
