@@ -9,7 +9,10 @@ from typing import Any, Callable
 
 from services.automation import JobResult
 from services.database import connect, get_stocks, load_settings
+from services.disclosure_providers.official_ir_news import OfficialIRNewsProvider
+from services.disclosures import save_disclosure
 from services.earnings_candidates import purge_reviewed_candidates, run_candidate_fetch
+from services.earnings_ir_sources import list_ir_sources, record_ir_source_result, source_is_due
 from services.earnings_providers.base import EarningsProvider
 from services.news import fetch_enabled_sources, list_sources
 from services.news_providers.base import NewsProvider
@@ -78,6 +81,52 @@ def run_news_job(
         failed=int(result["failed"]),
         message=" / ".join(result["errors"]),
         details={"run_id": result["run_id"]},
+    )
+
+
+def run_official_ir_news_job(
+    provider_factory: Callable[[dict[str, Any]], OfficialIRNewsProvider] = OfficialIRNewsProvider,
+    *,
+    limit: int = 20,
+    force: bool = False,
+    dry_run: bool = False,
+    db_path: Path | str = DB_PATH,
+) -> JobResult:
+    """Fetch due official IR news sources and save only deduplicated candidates."""
+    sources = [
+        source
+        for source in list_ir_sources(db_path)
+        if source["enabled"] and source["source_type"] == "official_ir_news"
+    ][: max(1, int(limit))]
+    processed = inserted = duplicates = failed = 0
+    errors: list[str] = []
+    for source in sources:
+        if not source_is_due(source, force=force):
+            continue
+        processed += 1
+        try:
+            rows = provider_factory(source).fetch()
+            if dry_run:
+                record_ir_source_result(source["id"], success=True, db_path=db_path)
+                inserted += len(rows)
+                continue
+            for row in rows:
+                status, _ = save_disclosure(row, db_path=db_path)
+                inserted += status == "inserted"
+                duplicates += status == "duplicate"
+            record_ir_source_result(source["id"], success=True, db_path=db_path)
+        except Exception as exc:
+            failed += 1
+            message = f"{source.get('ticker') or source['id']}: 公式IRニュース取得に失敗しました。"
+            errors.append(message)
+            record_ir_source_result(source["id"], success=False, error=message, db_path=db_path)
+    return JobResult(
+        processed=processed,
+        inserted=inserted,
+        duplicates=duplicates,
+        failed=failed,
+        message=" / ".join(errors),
+        details={"source_count": len(sources), "skipped_cached": len(sources) - processed},
     )
 
 
