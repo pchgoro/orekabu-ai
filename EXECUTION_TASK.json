@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation",
-  "current_task": "#11 P1-D-1 ルールベースカテゴリ分類の入力設計",
+  "current_task": "#11 P1-D-2 分類候補の確認UI設計",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T10:31:48+09:00",
-  "last_completed_task": "#11 P1-C-3 同一キーワード複数候補の曖昧保留と未承認UI受け入れテスト",
-  "next_action": "既存カテゴリ・重要度・タグのルールを棚卸しし、AIや有料APIなしで説明可能な分類入力と未分類保留を設計する",
+  "last_run_at": "2026-09-07T11:07:38+09:00",
+  "last_completed_task": "#11 P1-D-1 説明可能なニュースカテゴリ候補分類と曖昧・未分類保留",
+  "next_action": "ニュース確認UIで分類候補・一致語・曖昧保留を表示し、承認前にカテゴリや重要度を自動保存しない受け入れテストを追加する",
   "blocked_reason": null,
   "human_action_required": "コード仕様判断は不要。Codex Scheduled Task / runner が有効で、このrepoの EXECUTION_TASK.json と Issue #11 を実際に消費できる状態かのみ確認対象。runnerが有効なら人間確認を待たず通常実装を継続する。実機Desktop/Mobile表示と本番データでの朝画面確認は後続acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "f628ea0"
+  "last_git_sha": "2cae81c"
 }
