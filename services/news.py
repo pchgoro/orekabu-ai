@@ -24,6 +24,14 @@ logger = logging.getLogger(__name__)
 ARTICLE_COLUMNS = ["title", "url", "published_at", "source", "author", "summary", "importance", "category", "memo"]
 SOURCE_COLUMNS = ["name", "source_type", "url", "is_enabled", "memo"]
 KEYWORD_COLUMNS = ["ticker", "keyword", "is_enabled"]
+DEFAULT_CATEGORY_RULES = {
+    "決算": ("決算短信", "四半期決算", "決算発表", "決算"),
+    "業績": ("業績予想", "上方修正", "下方修正", "営業利益", "売上高"),
+    "適時開示": ("適時開示", "有価証券報告書", "自己株式", "株主総会"),
+    "製品・サービス": ("新製品", "製品", "サービス", "発売", "開発"),
+    "業界": ("業界", "競争", "シェア"),
+    "市況": ("日経平均", "為替", "金利", "原油", "市況"),
+}
 
 
 def canonicalize_url(url: str) -> str:
@@ -34,6 +42,50 @@ def canonicalize_url(url: str) -> str:
     parts = urlsplit(value)
     query = urlencode([(k, v) for k, v in parse_qsl(parts.query) if not k.lower().startswith("utm_")])
     return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path.rstrip("/"), query, ""))
+
+
+def classify_news_text(
+    title: str,
+    summary: str = "",
+    rules: dict[str, tuple[str, ...]] | None = None,
+) -> dict[str, Any]:
+    """Classify news by transparent keyword rules without changing stored data."""
+    text = f"{title or ''} {summary or ''}".casefold()
+    matched: dict[str, list[str]] = {}
+    for category, terms in (rules or DEFAULT_CATEGORY_RULES).items():
+        hits = sorted({term for term in terms if term and term.casefold() in text}, key=str.casefold)
+        if hits:
+            matched[category] = hits
+    ranked = sorted(
+        matched.items(),
+        key=lambda item: (-len(item[1]), -max(map(len, item[1])), item[0]),
+    )
+    if not ranked:
+        return {
+            "category": "その他",
+            "candidate_categories": [],
+            "matched_terms": [],
+            "confidence": "unclassified",
+            "review_status": "pending",
+        }
+    best_score = (-len(ranked[0][1]), -max(map(len, ranked[0][1])))
+    tied = [category for category, hits in ranked if (-len(hits), -max(map(len, hits))) == best_score]
+    if len(tied) > 1:
+        return {
+            "category": "その他",
+            "candidate_categories": tied,
+            "matched_terms": sorted({term for category in tied for term in matched[category]}, key=str.casefold),
+            "confidence": "ambiguous",
+            "review_status": "pending",
+        }
+    category = tied[0]
+    return {
+        "category": category,
+        "candidate_categories": [category],
+        "matched_terms": matched[category],
+        "confidence": "rule",
+        "review_status": "pending",
+    }
 
 
 def deduplication_key(item: NewsItem) -> str:

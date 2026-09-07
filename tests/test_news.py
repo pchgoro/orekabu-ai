@@ -8,7 +8,7 @@ from pathlib import Path
 from services.database import get_stock, init_db
 from services.news import (
     add_keyword, add_source, confirm_stock_match, export_csv, get_article_tags, import_csv,
-    build_stock_match_candidates, list_articles, list_stock_matches, make_news_prompt, parse_csv, save_article,
+    build_stock_match_candidates, classify_news_text, list_articles, list_stock_matches, make_news_prompt, parse_csv, save_article,
     set_article_tags, update_article,
 )
 from services.news_providers.base import NewsItem
@@ -47,6 +47,25 @@ def test_stock_match_candidates_do_not_return_missing_or_disabled_keywords() -> 
     assert build_stock_match_candidates(
         "光ファイバー", stocks, [{"stock_id": 1, "keyword": "光ファイバー", "is_enabled": 0}]
     ) == []
+
+
+def test_rule_based_news_classification_is_explainable_and_pending() -> None:
+    classified = classify_news_text("決算短信を発表")
+    assert classified["category"] == "決算"
+    assert classified["confidence"] == "rule"
+    assert classified["review_status"] == "pending"
+    assert "決算短信" in classified["matched_terms"]
+
+    ambiguous = classify_news_text(
+        "発表", rules={"業績": ("発表",), "製品・サービス": ("発表",)}
+    )
+    assert ambiguous["category"] == "その他"
+    assert ambiguous["confidence"] == "ambiguous"
+    assert ambiguous["candidate_categories"] == ["業績", "製品・サービス"]
+
+    unknown = classify_news_text("無関係な見出し")
+    assert unknown["confidence"] == "unclassified"
+    assert unknown["review_status"] == "pending"
 
 
 def test_dedup_matching_state_and_tags(tmp_path: Path) -> None:
