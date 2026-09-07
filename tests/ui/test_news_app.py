@@ -46,6 +46,7 @@ def test_stock_match_renders_company_profile_action(ui_db) -> None:
         str(ROOT / "pages" / "7_ニュース.py"), default_timeout=60
     ).run(timeout=60)
     assert any(button.label == "企業カルテ" for button in at.button)
+    assert any("信頼度: high" in item.value for item in at.caption)
     assert not at.exception
 
 

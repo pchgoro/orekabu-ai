@@ -14,7 +14,7 @@ from components.news_cards import render_news_cards
 from components.layout import apply_responsive_styles
 from services.database import get_stocks, init_db, load_settings
 from services.news import (
-    add_keyword, add_source, confirm_stock_match, delete_keyword, delete_source, export_csv,
+    add_keyword, add_source, build_stock_match_candidates, confirm_stock_match, delete_keyword, delete_source, export_csv,
     fetch_enabled_sources, get_article_tags, import_csv, list_articles, list_fetch_runs,
     list_keywords, list_sources, list_stock_matches, make_news_prompt, parse_csv, save_article,
     set_article_tags, update_article, update_source,
@@ -67,8 +67,15 @@ for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "�
                     except Exception: st.error("保存できませんでした。ログを確認してください。"); logger.exception("ニュース記事更新失敗 article_id=%s", selected["id"])
                 matches = list_stock_matches(article_id=int(selected["id"]))
                 if matches:
+                    candidate_rows = build_stock_match_candidates(
+                        f"{selected.get('title') or ''} {selected.get('summary') or ''}",
+                        stocks,
+                        list_keywords(),
+                    )
+                    candidate_by_stock = {int(row["stock_id"]): row for row in candidate_rows}
                     st.write("銘柄候補（ルール一致）")
                     for match in matches:
+                        candidate = candidate_by_stock.get(int(match["stock_id"]), {})
                         cols = st.columns([3, 4, 2])
                         with cols[0]:
                             st.write(f"{match['ticker']} {match['company_name']}")
@@ -78,6 +85,9 @@ for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "�
                                 key=f"news_match_profile_{article_key}_{match['ticker']}",
                             )
                         cols[1].write(match["match_reason"] or "一致理由なし")
+                        confidence = candidate.get("confidence") or "不明"
+                        ambiguity = " / 曖昧一致・要確認" if candidate.get("ambiguous") else ""
+                        cols[1].caption(f"信頼度: {confidence}{ambiguity} / 自動確定しません")
                         if cols[2].button("承認" if not match["confirmed"] else "未承認へ", key=f"match_{article_key}_{match['stock_id']}"):
                             confirm_stock_match(int(selected["id"]), int(match["stock_id"]), not bool(match["confirmed"])); st.rerun()
                 related_disclosures = links_for_news(int(selected["id"]))
