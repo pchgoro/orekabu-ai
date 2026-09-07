@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation",
-  "current_task": "#11 P1-D-3 分類候補の曖昧・未分類UI受け入れテスト",
+  "current_task": "#11 P1-D-4 分類候補の手動確認状態とタグ・重要度非上書き回帰",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T12:18:46.0764583+09:00",
-  "last_completed_task": "#11 P1-D-2 分類候補をニュース確認UIへ表示し手動カテゴリを非上書き",
-  "next_action": "曖昧・未分類の分類候補表示と手動確認導線のUI受け入れテストを追加し、既存の手動カテゴリ・タグ・重要度を自動上書きしないことを検証する",
+  "last_run_at": "2026-09-07T12:53:42.9230193+09:00",
+  "last_completed_task": "#11 P1-D-3 曖昧・未分類分類候補のUI受け入れテスト",
+  "next_action": "分類候補表示が既存の手動タグ・重要度・カテゴリを自動上書きしない回帰テストを追加し、確認UIの保存境界を固定する",
   "blocked_reason": null,
   "human_action_required": "なし。通常技術判断として自律継続。実機Desktop/Mobile表示と本番データでの朝画面確認のみ後続acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "7718149"
+  "last_git_sha": "e9c3fe7"
 }
