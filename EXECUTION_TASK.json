@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "Company Profile Automation",
-  "current_task": "#11 P1-E-1 企業カルテ自動充填の既存service棚卸し",
+  "current_task": "#11 P1-E-2 企業情報候補の取得元・時刻・確認状態表示",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T15:48:26.8460910+09:00",
-  "last_completed_task": "#11 Disclosure-4 startup dry-run・設定無効・キャッシュ内・部分失敗継続テスト",
-  "next_action": "既存のstock_profiles・企業カルテ・EDINET・決算・ニュース・適時開示serviceの入力/候補/承認境界を棚卸しし、再実装せず安全な集約view modelの最小単位を特定する",
+  "last_run_at": "2026-09-07T16:20:29.3407282+09:00",
+  "last_completed_task": "#11 P1-E-1 企業カルテの既存service境界を棚卸ししドキュメント化",
+  "next_action": "既存stock_profile_candidatesのprovider_name・retrieved_at・review_statusを再利用し、企業カルテで確認可能なview modelとAppTestを小さく追加する。候補の自動承認は行わない",
   "blocked_reason": null,
   "human_action_required": "なし。通常技術判断として自律継続。実機Desktop/Mobile・本番IRページ確認、有料サービス・外部認証・規約上グレーな取得方法のみ後続human acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "b5600cd"
+  "last_git_sha": "77c71a7"
 }
