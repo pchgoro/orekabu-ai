@@ -69,3 +69,23 @@ def group_material_records(records: list[dict[str, Any]]) -> list[dict[str, Any]
             "source_count": len({entry["source"] for entry in provenance}),
         })
     return result
+
+
+def build_event_display_groups(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Build display rows without discarding source-specific state."""
+    importance_rank = {"高": 3, "中": 2, "通常": 1}
+    result = []
+    for group in group_material_records(records):
+        items = group["records"]
+        importance = max(
+            (str(item.get("importance") or "通常") for item in items),
+            key=lambda value: importance_rank.get(value, 0),
+        )
+        result.append({
+            **group,
+            "record_count": len(items),
+            "importance": importance,
+            "is_read": all(bool(item.get("is_read")) for item in items),
+            "is_favorite": any(bool(item.get("is_favorite")) for item in items),
+        })
+    return result

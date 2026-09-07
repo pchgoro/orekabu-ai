@@ -1,4 +1,4 @@
-from services.event_grouping import group_material_records, material_group_key
+from services.event_grouping import build_event_display_groups, group_material_records, material_group_key
 
 
 def test_group_material_records_keeps_cross_source_provenance() -> None:
@@ -30,3 +30,15 @@ def test_ambiguous_or_retrieval_only_dates_are_not_auto_grouped() -> None:
     groups = group_material_records(records)
     assert len(groups) == 3
     assert all(len(group["records"]) == 1 for group in groups)
+
+
+def test_display_adapter_preserves_state_without_mutating_records() -> None:
+    records = [
+        {"id": 1, "ticker": "5801.T", "title": "決算", "event_date": "2026-09-07", "importance": "通常", "is_read": 1, "is_favorite": 0},
+        {"id": 2, "ticker": "5801.T", "title": "決算", "event_date": "2026-09-07", "importance": "高", "is_read": 0, "is_favorite": 1},
+    ]
+    rows = build_event_display_groups(records)
+    assert rows[0]["record_count"] == 2
+    assert rows[0]["importance"] == "高"
+    assert rows[0]["is_read"] is False and rows[0]["is_favorite"] is True
+    assert [item["id"] for item in rows[0]["records"]] == [1, 2]
