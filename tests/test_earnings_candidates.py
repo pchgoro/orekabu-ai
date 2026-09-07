@@ -10,6 +10,7 @@ import pytest
 
 from services.database import get_stock, init_db
 from services.earnings import add_earnings, list_earnings
+from services.earnings_view_models import build_post_earnings_state
 from services.earnings_candidates import add_fetch_result, approve_candidate, finish_fetch_run, list_candidates, list_fetch_runs, purge_reviewed_candidates, review_candidate, save_candidate, start_fetch_run
 from services.earnings_providers.base import EarningsFetchResult
 
@@ -35,6 +36,28 @@ def test_approve_new_creates_formal_event_only_after_approval(tmp_path: Path) ->
     event_id=approve_candidate(candidate_id,"new_event",db_path=db)
     assert event_id and list_earnings(db)[0]["earnings_date"]=="2099-01-10"
     assert list_candidates(db)[0]["review_status"]=="approved"
+
+
+def test_approved_future_candidate_transitions_post_earnings_state(tmp_path: Path) -> None:
+    db = tmp_path / "transition.db"
+    init_db(db)
+    stock = get_stock("5801.T", db)
+    add_earnings(
+        {"stock_id": stock["id"], "fiscal_year": 2026, "fiscal_quarter": "Q1", "earnings_date": "2026-09-01", "date_status": "確定"},
+        db,
+    )
+    _, candidate_id, _ = save_candidate(stock, result(date(2026, 9, 20)), date(2026, 9, 20), db_path=db)
+    before = build_post_earnings_state(
+        list_earnings(db), list_candidates(db), date(2026, 9, 7)
+    )
+    assert before["status"] == "candidate_pending"
+    approve_candidate(candidate_id, "new_event", db_path=db)
+    after = build_post_earnings_state(
+        list_earnings(db), list_candidates(db), date(2026, 9, 7)
+    )
+    assert after["status"] == "scheduled"
+    assert after["next_event"]["earnings_date"] == "2026-09-20"
+    assert after["past_events"][0]["earnings_date"] == "2026-09-01"
 
 
 def test_hold_and_reject(tmp_path: Path) -> None:
