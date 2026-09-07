@@ -49,3 +49,16 @@ def test_post_earnings_state_suppresses_past_warning_and_surfaces_next_candidate
     assert state["past_events"][0]["id"] == 1
     assert state["pending_candidates"][0]["id"] == 2
     assert state["suppress_past_warning"] is True
+
+
+def test_post_earnings_state_fails_closed_for_malformed_dates_and_uses_japan_date() -> None:
+    state = build_post_earnings_state(
+        [{"id": 1, "earnings_date": "not-a-date"}],
+        [
+            {"id": 2, "candidate_date": "also-not-a-date", "review_status": "pending"},
+            {"id": 3, "candidate_date": None, "review_status": "pending"},
+        ],
+    )
+    assert state["status"] == "date_unconfirmed"
+    assert state["next_event"] is None
+    assert state["pending_candidates"] == []

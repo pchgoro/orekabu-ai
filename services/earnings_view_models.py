@@ -6,7 +6,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from services.earnings import earnings_date_info, next_earnings_by_stock, parse_earnings_date
+from services.earnings import earnings_date_info, japan_today, next_earnings_by_stock, parse_earnings_date
 from services.relations import impact_candidates
 from utils.constants import DB_PATH
 
@@ -53,9 +53,17 @@ def build_post_earnings_state(
     today: date | None = None,
 ) -> dict[str, Any]:
     """Separate past events from the next event without mutating stored data."""
-    reference = today or date.today()
+    reference = today or japan_today()
+
+    def safe_date(value: Any) -> date | None:
+        """Treat malformed external dates as unconfirmed instead of failing open."""
+        try:
+            return parse_earnings_date(value)
+        except (TypeError, ValueError):
+            return None
+
     dated_events = [
-        (event, parse_earnings_date(event.get("earnings_date")))
+        (event, safe_date(event.get("earnings_date")))
         for event in events
     ]
     past_events = [event for event, event_date in dated_events if event_date and event_date < reference]
@@ -69,10 +77,7 @@ def build_post_earnings_state(
         candidate
         for candidate in candidates or []
         if candidate.get("review_status", "pending") == "pending"
-        and (
-            not candidate.get("candidate_date")
-            or parse_earnings_date(candidate.get("candidate_date")) >= reference
-        )
+        and _candidate_is_current(candidate.get("candidate_date"), reference, safe_date)
     ]
     if next_event:
         status = "scheduled"
@@ -91,6 +96,14 @@ def build_post_earnings_state(
         "pending_candidates": pending_candidates,
         "suppress_past_warning": bool(past_events),
     }
+
+
+def _candidate_is_current(value: Any, reference: date, safe_date: Any) -> bool:
+    """Only surface candidates with a valid, current date."""
+    if value is None or str(value).strip() == "":
+        return False
+    parsed = safe_date(value)
+    return parsed is not None and parsed >= reference
 
 
 def enrich_stock_rows(rows: list[dict[str, Any]], db_path: Path | str = DB_PATH, today: date | None = None, near_days: int = 7) -> list[dict[str, Any]]:
