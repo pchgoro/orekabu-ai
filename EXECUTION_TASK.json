@@ -2,14 +2,14 @@
   "project": "orekabu-ai",
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
-  "current_phase": "Company Profile Automation",
-  "current_task": "#11 P1-E-5 企業カルテ自動充填の受け入れ証跡整理",
+  "current_phase": "CSV Import Automation",
+  "current_task": "#11 P2-F-1 証券会社CSV adapterの既存取込境界調査",
   "task_source": "GitHub Issues + ROADMAP.md",
-  "last_run_at": "2026-09-07T18:09:29.9737447+09:00",
-  "last_completed_task": "#11 P1-E-4 企業情報候補の明示承認・保留・却下UI回帰",
-  "next_action": "P1-Eの自動テスト証跡とHuman Action（実データ、Desktop/Mobile実画面、候補値承認）を整理し、未確認事項をPASS扱いせず次の独立無料タスクを選ぶ",
+  "last_run_at": "2026-09-07T18:40:43.2586434+09:00",
+  "last_completed_task": "#11 P1-E-5 企業カルテ自動充填の自動テスト証跡とHuman Action境界の整理",
+  "next_action": "既存の保有株CSV/マーケットスピード取込を棚卸しし、証券会社別adapter・preview必須・不明形式fail-closed・既存保有データ非削除の最小設計をfixtureで固定する",
   "blocked_reason": null,
-  "human_action_required": "なし。通常技術判断として自律継続。実機Desktop/Mobile・本番IRページ確認、有料サービス・外部認証・規約上グレーな取得方法のみ後続human acceptance。",
+  "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認は人間確認。通常技術判断は自律継続。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "ae9d71e"
+  "last_git_sha": "3a0237c"
 }
