@@ -89,3 +89,20 @@ def build_event_display_groups(records: list[dict[str, Any]]) -> list[dict[str, 
             "is_favorite": any(bool(item.get("is_favorite")) for item in items),
         })
     return result
+
+
+def collapse_news_rows(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Collapse only display duplicates while keeping one editable source row."""
+    rows = []
+    for group in build_event_display_groups(records):
+        representative = dict(group["records"][0])
+        representative.update(
+            {
+                "event_group_key": group["group_key"],
+                "event_record_count": group["record_count"],
+                "event_provenance": group["provenance"],
+                "event_group_importance": group["importance"],
+            }
+        )
+        rows.append(representative)
+    return rows

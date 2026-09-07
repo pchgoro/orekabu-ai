@@ -26,7 +26,9 @@ def render_news_cards(rows: list[dict[str, Any]], key_prefix: str) -> None:
                 else "today" if not row.get("is_read") else "later"
             )
             st.markdown(f"**{row.get('title') or 'タイトルなし'}**")
-            st.caption(f"{state} / 重要度: {row.get('importance') or '通常'} / {row.get('source_name') or 'ソース不明'}")
+            group_count = int(row.get("event_record_count") or 1)
+            grouped_label = f" / 同一材料{group_count}件" if group_count > 1 else ""
+            st.caption(f"{state} / 重要度: {row.get('importance') or '通常'} / {row.get('source_name') or 'ソース不明'}{grouped_label}")
             stock_label = str(row.get("stock_labels") or "").split(",")[0].strip()
             if stock_label:
                 company_profile_button(

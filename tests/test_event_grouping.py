@@ -1,4 +1,4 @@
-from services.event_grouping import build_event_display_groups, group_material_records, material_group_key
+from services.event_grouping import build_event_display_groups, collapse_news_rows, group_material_records, material_group_key
 
 
 def test_group_material_records_keeps_cross_source_provenance() -> None:
@@ -42,3 +42,13 @@ def test_display_adapter_preserves_state_without_mutating_records() -> None:
     assert rows[0]["importance"] == "高"
     assert rows[0]["is_read"] is False and rows[0]["is_favorite"] is True
     assert [item["id"] for item in rows[0]["records"]] == [1, 2]
+
+
+def test_news_collapse_keeps_editable_representative_and_provenance() -> None:
+    rows = collapse_news_rows([
+        {"id": 1, "ticker": "5801.T", "title": "決算", "published_at": "2026-09-07", "url": "https://a.example"},
+        {"id": 2, "ticker": "5801.T", "title": "決算", "published_at": "2026-09-07", "url": "https://b.example"},
+    ])
+    assert rows[0]["id"] == 1
+    assert rows[0]["event_record_count"] == 2
+    assert [entry["record_id"] for entry in rows[0]["event_provenance"]] == [1, 2]
