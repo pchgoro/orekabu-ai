@@ -50,6 +50,26 @@ def test_stock_match_renders_company_profile_action(ui_db) -> None:
     assert not at.exception
 
 
+def test_ambiguous_stock_match_stays_unconfirmed_in_ui(ui_db) -> None:
+    from services.database import get_stock
+    from services.news import add_keyword, list_stock_matches, save_article
+    from services.news_providers.base import NewsItem
+
+    first = get_stock("5801.T")
+    second = get_stock("6976.T")
+    add_keyword(int(first["id"]), "電線")
+    add_keyword(int(second["id"]), "電線")
+    _, article_id = save_article(NewsItem(title="電線業界のニュース"))
+
+    matches = list_stock_matches(article_id=article_id)
+    assert len(matches) == 2
+    assert all(not match["confirmed"] for match in matches)
+
+    at = AppTest.from_file(str(ROOT / "pages" / "7_ニュース.py"), default_timeout=60).run(timeout=60)
+    assert sum("曖昧一致・要確認" in item.value for item in at.caption) >= 2
+    assert not at.exception
+
+
 def test_switching_article_refreshes_prompt_and_state(ui_db) -> None:
     from services.news import save_article
     from services.news_providers.base import NewsItem
