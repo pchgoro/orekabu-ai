@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import logging
 import threading
-from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
 from services.automation import list_runs
+from services.earnings import japan_today
 from utils.constants import DB_PATH
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ def start_daily_update_if_needed(
     if limit < 1:
         raise ValueError("limitは1以上で指定してください。")
     key = str(Path(db_path).resolve())
-    today = datetime.now().astimezone().date().isoformat()
+    today = japan_today().isoformat()
     with _STATE_LOCK:
         if key in _IN_FLIGHT:
             return False

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from threading import Event
 
@@ -35,5 +35,16 @@ def test_startup_update_does_not_repeat_after_today_started(tmp_path: Path, monk
         startup_automation,
         "list_runs",
         lambda limit, db_path: [{"started_at": datetime.now().astimezone().isoformat()}],
+    )
+    assert startup_automation.start_daily_update_if_needed(db, runner=lambda *args, **kwargs: 0) is False
+
+
+def test_startup_update_uses_japan_calendar_day(tmp_path: Path, monkeypatch) -> None:
+    db = tmp_path / "japan-day.db"
+    monkeypatch.setattr(startup_automation, "japan_today", lambda: date(2026, 9, 7))
+    monkeypatch.setattr(
+        startup_automation,
+        "list_runs",
+        lambda limit, db_path: [{"started_at": "2026-09-07T00:01:00+00:00"}],
     )
     assert startup_automation.start_daily_update_if_needed(db, runner=lambda *args, **kwargs: 0) is False
