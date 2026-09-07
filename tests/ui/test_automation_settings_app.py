@@ -7,7 +7,7 @@ from pathlib import Path
 from streamlit.testing.v1 import AppTest
 
 from services.database import get_stock
-from services.stock_profiles import run_profile_refresh
+from services.stock_profiles import list_profile_candidates, run_profile_refresh
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -56,6 +56,24 @@ def test_settings_page_can_approve_profile_candidate(ui_db: Path) -> None:
     stock = get_stock("5801.T", ui_db)
     assert stock["market"] == "候補市場"
     assert stock["industry"] == "候補業種"
+
+
+def test_settings_page_can_hold_profile_candidate_without_updating_stock(ui_db: Path) -> None:
+    run_profile_refresh(Provider(), ticker="5801.T", db_path=ui_db)
+    before = get_stock("5801.T", ui_db)
+    at = AppTest.from_file(str(ROOT / "pages" / "6_設定.py"), default_timeout=60).run(timeout=60)
+    at = next(item for item in at.button if item.label == "保留").click().run(timeout=60)
+    assert not at.exception
+    assert get_stock("5801.T", ui_db) == before
+    assert list_profile_candidates(review_status=None, db_path=ui_db)[0]["review_status"] == "held"
+
+
+def test_settings_page_can_reject_profile_candidate(ui_db: Path) -> None:
+    run_profile_refresh(Provider(), ticker="5801.T", db_path=ui_db)
+    at = AppTest.from_file(str(ROOT / "pages" / "6_設定.py"), default_timeout=60).run(timeout=60)
+    at = next(item for item in at.button if item.label == "却下").click().run(timeout=60)
+    assert not at.exception
+    assert list_profile_candidates(review_status=None, db_path=ui_db)[0]["review_status"] == "rejected"
 
 
 def test_settings_page_shows_marketspeed_preview(ui_db: Path) -> None:
