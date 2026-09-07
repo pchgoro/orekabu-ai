@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "Post-Earnings State Automation",
-  "current_task": "#11 P2-G-3 post-earnings候補承認後の遷移回帰",
+  "current_task": "#11 P2-H-1 通知機能の既存ルール・設定・安全境界棚卸し",
   "task_source": "GitHub Issue #11 + ROADMAP.md + Supervisor priority correction",
-  "last_run_at": "2026-09-07T20:23:41.8214597+09:00",
-  "last_completed_task": "#11 P2-G-2 post-earnings状態の企業カルテ表示と回帰テスト",
-  "next_action": "未来のpending候補を明示承認して正式イベント化した後、post-earnings stateがcandidate_pendingからscheduledへ遷移するfixtureを追加する。過去イベントは保持する",
+  "last_run_at": "2026-09-07T20:58:49.4147733+09:00",
+  "last_completed_task": "#11 P2-G-3 候補明示承認後のcandidate_pendingからscheduledへの遷移回帰",
+  "next_action": "既存の買い検討価格・決算接近・出来高/スコア情報を棚卸しし、Windows通知/Discord通知の無料設計、重複抑制、実送信なしの安全な通知候補view modelを定義する",
   "blocked_reason": null,
   "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認はHuman Acceptanceとして残す。P2-G/H/Iの通常技術判断は自律継続。P2-F実CSV確認は後続Human Action。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "425fce5"
+  "last_git_sha": "c47cd01"
 }
