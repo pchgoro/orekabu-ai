@@ -48,3 +48,15 @@ def test_startup_update_uses_japan_calendar_day(tmp_path: Path, monkeypatch) -> 
         lambda limit, db_path: [{"started_at": "2026-09-07T00:01:00+00:00"}],
     )
     assert startup_automation.start_daily_update_if_needed(db, runner=lambda *args, **kwargs: 0) is False
+
+
+def test_startup_update_does_not_trust_naive_timestamp(tmp_path: Path, monkeypatch) -> None:
+    db = tmp_path / "naive-timestamp.db"
+    monkeypatch.setattr(startup_automation, "japan_today", lambda: date(2026, 9, 7))
+    monkeypatch.setattr(
+        startup_automation,
+        "list_runs",
+        lambda limit, db_path: [{"started_at": "2026-09-07T00:01:00"}],
+    )
+    calls: list[list[str]] = []
+    assert startup_automation.start_daily_update_if_needed(db, runner=lambda args, **kwargs: calls.append(args) or 0) is True

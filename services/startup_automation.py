@@ -4,16 +4,30 @@ from __future__ import annotations
 
 import logging
 import threading
+from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
 from services.automation import list_runs
-from services.earnings import japan_today
+from services.earnings import JST, japan_today
 from utils.constants import DB_PATH
 
 logger = logging.getLogger(__name__)
 _STATE_LOCK = threading.Lock()
 _IN_FLIGHT: set[str] = set()
+
+
+def _started_on_japan_date(value: object, today: object) -> bool:
+    """Trust only aware timestamps that normalize safely to today's JST date."""
+    if not isinstance(value, str) or not value.strip():
+        return False
+    try:
+        started = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if started.tzinfo is None:
+        return False
+    return started.astimezone(JST).date() == today
 
 
 def is_daily_update_running(db_path: Path | str = DB_PATH) -> bool:
@@ -43,12 +57,12 @@ def start_daily_update_if_needed(
     if limit < 1:
         raise ValueError("limitは1以上で指定してください。")
     key = str(Path(db_path).resolve())
-    today = japan_today().isoformat()
+    today = japan_today()
     with _STATE_LOCK:
         if key in _IN_FLIGHT:
             return False
         latest = list_runs(1, db_path=db_path)
-        if latest and str(latest[0].get("started_at") or "").startswith(today):
+        if latest and _started_on_japan_date(latest[0].get("started_at"), today):
             return False
         _IN_FLIGHT.add(key)
 
