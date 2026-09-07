@@ -100,6 +100,34 @@ def test_rule_category_candidate_does_not_overwrite_manual_category(ui_db) -> No
     assert list_articles()[0]["category"] == "業界"
 
 
+def test_ambiguous_category_candidate_requires_manual_confirmation(ui_db) -> None:
+    from services.news import list_articles, save_article
+    from services.news_providers.base import NewsItem
+
+    save_article(
+        NewsItem(title="提携と人事を発表"),
+        metadata={"importance": "低", "category": "業界"},
+    )
+    at = AppTest.from_file(str(ROOT / "pages" / "7_ニュース.py"), default_timeout=60).run(timeout=60)
+    assert any("曖昧・手動確認" in item.value for item in at.warning)
+    assert next(item for item in at.selectbox if item.label == "カテゴリ").value == "業界"
+    assert list_articles()[0]["category"] == "業界"
+
+
+def test_unclassified_category_candidate_requires_manual_confirmation(ui_db) -> None:
+    from services.news import list_articles, save_article
+    from services.news_providers.base import NewsItem
+
+    save_article(
+        NewsItem(title="市場の話題"),
+        metadata={"importance": "低", "category": "業界"},
+    )
+    at = AppTest.from_file(str(ROOT / "pages" / "7_ニュース.py"), default_timeout=60).run(timeout=60)
+    assert any("その他 / 未分類・手動確認" in item.value for item in at.caption)
+    assert next(item for item in at.selectbox if item.label == "カテゴリ").value == "業界"
+    assert list_articles()[0]["category"] == "業界"
+
+
 def test_switching_source_refreshes_edit_fields(ui_db) -> None:
     from services.news import add_source
 
