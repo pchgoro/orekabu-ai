@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "Post-Earnings State Automation",
-  "current_task": "#11 P2-G-4 post-earnings日付安全性・回帰補強",
-  "task_source": "GitHub Issue #11 + ROADMAP.md + Supervisor correction",
-  "last_run_at": "2026-09-07T21:32:30+09:00",
-  "last_completed_task": "#11 P2-G-3 候補明示承認後のcandidate_pendingからscheduledへの遷移回帰",
-  "next_action": "build_post_earnings_stateのmalformed/空/過去candidate_dateをfail-closed化し、date.today()依存を既存JST基準へ統一する。再承認・重複で正式イベントを二重生成しないこと、Daily Briefing/企業カルテの古い決算接近抑制が承認前後で維持されることをfixture/AppTestで固定する。全体pytest、該当AppTest、compileall、git diff --check PASS後にのみP2-H重複イベント統合へ進む。P2-Hを通知機能として扱わない。",
+  "current_task": "#11 P2-H-2 通知候補の重複抑制とadapter境界テスト",
+  "task_source": "GitHub Issue #11 + ROADMAP.md + Supervisor priority correction",
+  "last_run_at": "2026-09-07T21:40:27.3901724+09:00",
+  "last_completed_task": "#11 P2-G-4 post-earnings日付安全性・回帰補強",
+  "next_action": "通知候補を同一ticker・同一kind単位で安定して重複抑制する純粋なview model/テストを追加する。Windows通知・Discord送信・webhook設定・実送信は人間承認まで実装境界に留める。",
   "blocked_reason": null,
   "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認はHuman Acceptanceとして残す。P2-G/H/Iの通常技術判断は自律継続。P2-F実CSV確認は後続Human Action。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "c47cd01"
+  "last_git_sha": "54357f3"
 }
