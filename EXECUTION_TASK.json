@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-H-2B event grouping表示接続の安全境界",
+  "current_task": "#11 P2-H-3 ニュース/開示表示への最小adapter接続",
   "task_source": "GitHub Issue #11 + ROADMAP.md + Supervisor correction",
-  "last_run_at": "2026-09-08T00:02:00.6279378+09:00",
-  "last_completed_task": "#11 P2-H-2A event grouping日付・曖昧性境界hardening (46d3991)",
-  "next_action": "event_groupingを既存のニュース/開示表示へ接続する前に、グループ化後も元レコード件数・provenance・既読/重要度を失わない表示adapterを純粋関数として追加する。曖昧グループは単独表示し、DB変更・自動確定・通知送信は行わない。",
+  "last_run_at": "2026-09-08T00:36:34.8864566+09:00",
+  "last_completed_task": "#11 P2-H-2B event grouping表示adapterの安全境界 (4e6082c)",
+  "next_action": "既存のlist_articles/list_disclosuresのUIへ一度に広げず、ニュース一覧の読み取り専用view modelへevent grouping adapterを最小接続する。元DB行・リンク・既読状態を保持し、曖昧レコードは単独表示するfixtureを追加する。",
   "blocked_reason": null,
   "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認はHuman Acceptanceとして残す。P2-H/Iの通常技術判断は自律継続。P2-F実CSV確認は後続Human Action。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "46d3991"
+  "last_git_sha": "4e6082c"
 }
