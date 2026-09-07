@@ -128,6 +128,24 @@ def test_unclassified_category_candidate_requires_manual_confirmation(ui_db) -> 
     assert list_articles()[0]["category"] == "業界"
 
 
+def test_category_candidate_does_not_overwrite_manual_tags_or_importance_on_save(ui_db) -> None:
+    from services.news import get_article_tags, list_articles, save_article, set_article_tags
+    from services.news_providers.base import NewsItem
+
+    _, article_id = save_article(
+        NewsItem(title="上方修正を発表"),
+        metadata={"importance": "低", "category": "業界"},
+    )
+    set_article_tags(article_id, ["手動確認", "保有株"])
+    at = AppTest.from_file(str(ROOT / "pages" / "7_ニュース.py"), default_timeout=60).run(timeout=60)
+    next(button for button in at.button if button.label == "記事情報を保存").click()
+    at.run(timeout=60)
+    article = list_articles()[0]
+    assert article["category"] == "業界"
+    assert article["importance"] == "低"
+    assert sorted(get_article_tags(article_id)) == ["保有株", "手動確認"]
+
+
 def test_switching_source_refreshes_edit_fields(ui_db) -> None:
     from services.news import add_source
 
