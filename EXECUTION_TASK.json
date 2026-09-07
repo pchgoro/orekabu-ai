@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "Post-Earnings State Automation",
-  "current_task": "#11 P2-G-1 決算後の状態自動整理の既存service/状態境界棚卸し",
+  "current_task": "#11 P2-G-2 post-earnings view modelの決算一覧/企業カルテ回帰",
   "task_source": "GitHub Issue #11 + ROADMAP.md + Supervisor priority correction",
-  "last_run_at": "2026-09-07T19:29:37+09:00",
-  "last_completed_task": "#11 P2-F-1 既存マーケットスピードCSV adapterの境界とHuman Action整理",
-  "next_action": "Issue #11の実装順に戻し、P2-F-2は一旦保留する。まず決算発表済みイベント・決算接近警告・次回決算候補の既存service/DB/view modelを棚卸しし、古い決算接近状態を安全に消し、次回候補へ遷移できる最小P2-G vertical sliceとfixtureを定義する。既存データを破壊せず、通常pytest/AppTest/compileall/diff checkを通してから実装を進める",
+  "last_run_at": "2026-09-07T19:49:05.5808887+09:00",
+  "last_completed_task": "#11 P2-G-1 post-earnings状態の既存service/DB/view model棚卸しと非破壊vertical slice",
+  "next_action": "決算一覧または企業カルテでpost-earnings stateを確認できる最小表示と回帰テストを追加し、過去イベントを次回予定として扱わないことを固定する。候補の正式化は明示承認のみ",
   "blocked_reason": null,
   "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認はHuman Acceptanceとして残す。P2-G/H/Iの通常技術判断は自律継続。P2-F実CSV確認は後続Human Action。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "342e51a"
+  "last_git_sha": "a08c1fa"
 }
