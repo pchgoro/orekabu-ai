@@ -6,7 +6,7 @@ from pathlib import Path
 
 from streamlit.testing.v1 import AppTest
 
-from services.database import get_stock
+from services.database import add_stock, connect, get_stock
 from services.earnings_ir_sources import list_ir_sources, save_ir_source
 from services.stock_profiles import list_profile_candidates, run_profile_refresh
 
@@ -118,3 +118,31 @@ def test_settings_page_shows_marketspeed_preview(ui_db: Path) -> None:
     )
     assert "285A.T" in frames
     assert "新規" in frames
+
+
+def test_settings_page_imports_marketspeed_preview_without_destroying_existing_state(ui_db: Path) -> None:
+    with connect(ui_db) as conn:
+        conn.execute(
+            """UPDATE stocks SET company_name='既存会社',is_holding=1,shares=50,
+               average_price=1000,buy_watch_price=900,memo='ユーザーメモ',
+               company_alias='既存略称',market='東証',industry='電機' WHERE ticker='5801.T'"""
+        )
+    add_stock({"ticker": "7203", "company_name": "CSV外保有", "category": "保有株", "is_holding": True, "shares": 10, "average_price": 2000, "memo": "維持"}, ui_db)
+    content = (
+        '"売り","コード","銘柄名","口座区分","保有数量(株/口)","平均取得価額(円)"\n'
+        '"売り","5801","更新会社","特定","100","1,500"\n'
+        '"売り","285A","新規ETF","NISA","10","2,000"\n'
+    ).encode("utf-8-sig")
+    at = AppTest.from_file(str(ROOT / "pages" / "6_設定.py"), default_timeout=60).run(timeout=60)
+    uploader = next(item for item in at.file_uploader if item.label == "マーケットスピードCSVファイル")
+    at = uploader.upload("market-import.csv", content, "text/csv").run(timeout=60)
+    assert not at.exception
+    import_button = next(item for item in at.button if item.label == "マーケットスピードCSVをインポート")
+    at = import_button.click().run(timeout=60)
+    assert not at.exception
+    updated = get_stock("5801.T", ui_db)
+    assert updated["shares"] == 100 and updated["average_price"] == 1500
+    assert updated["buy_watch_price"] == 900 and updated["memo"].startswith("ユーザーメモ")
+    assert updated["company_alias"] == "既存略称" and updated["market"] == "東証" and updated["industry"] == "電機"
+    assert get_stock("285A.T", ui_db)["is_holding"] == 1
+    assert get_stock("7203.T", ui_db)["is_holding"] == 1
