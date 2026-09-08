@@ -6,7 +6,7 @@ from pathlib import Path
 
 from streamlit.testing.v1 import AppTest
 
-from services.database import add_stock, connect, get_stock
+from services.database import add_stock, connect, get_stock, get_stocks
 from services.earnings_ir_sources import list_ir_sources, save_ir_source
 from services.stock_profiles import list_profile_candidates, run_profile_refresh
 
@@ -146,3 +146,15 @@ def test_settings_page_imports_marketspeed_preview_without_destroying_existing_s
     assert updated["company_alias"] == "既存略称" and updated["market"] == "東証" and updated["industry"] == "電機"
     assert get_stock("285A.T", ui_db)["is_holding"] == 1
     assert get_stock("7203.T", ui_db)["is_holding"] == 1
+
+
+def test_settings_page_rejects_unknown_marketspeed_csv_without_db_change(ui_db: Path) -> None:
+    before = get_stocks(ui_db)
+    invalid_content = b'"other_code","other_name"\n"5801","unknown"\n'
+    at = AppTest.from_file(str(ROOT / "pages" / "6_設定.py"), default_timeout=60).run(timeout=60)
+    uploader = next(item for item in at.file_uploader if item.label == "マーケットスピードCSVファイル")
+    at = uploader.upload("unknown-format.csv", invalid_content, "text/csv").run(timeout=60)
+    assert not at.exception
+    assert any("必要なCSV列が不足しています" in item.value for item in at.error)
+    assert not any(item.label == "マーケットスピードCSVをインポート" for item in at.button)
+    assert get_stocks(ui_db) == before
