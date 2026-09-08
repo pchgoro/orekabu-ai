@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-I-5 trusted source承認永続化の後方互換設計",
+  "current_task": "#11 P2-F-1 証券会社CSV adapterの既存境界監査",
   "task_source": "GitHub Issue #11 + Acceptance Remediation 2026-09-08",
-  "last_run_at": "2026-09-08T19:40:27.9127118+09:00",
-  "last_completed_task": "#11 ACCEPT-20260908-3 受け入れAppTest不足の補完 (c6bf052)",
-  "next_action": "Acceptance指摘を追加修正済み。ニュースticker列を表示用に保持し、group後filter、全source/document URL、ニュース実ページ・適時開示mixed-state filter・設定trusted previewのDB非変更AppTestを固定した。次はP2-I-5設計を続け、実migration・暗黙承認・自動学習・外部通信・通知送信は行わない。",
+  "last_run_at": "2026-09-08T19:55:00+09:00",
+  "last_completed_task": "#11 P2-I-5 trusted source承認永続化の後方互換設計 (c5f1e83)",
+  "next_action": "P2-Fの既存Marketspeed/SBI/Rakuten相当CSV adapter、preview、fail-closed、不明ticker、既存保有データ非削除境界を棚卸しする。実CSV未提供のため本番形式の確定や実データ反映は行わず、無料のparser契約テストだけを進める。",
   "blocked_reason": null,
-  "human_action_required": "なし。Desktop/390px実画面、本番企業情報候補、候補値最終承認、P2-F実CSVは後続Human Acceptanceとして分離する。",
+  "human_action_required": "trusted source実migration・承認ポリシーは正式導入前に人間確認。P2-F実CSV形式の確定と実データ反映もHuman Acceptance。Desktop/390px実画面、本番企業情報候補、候補値最終承認は後続。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "c6bf052"
+  "last_git_sha": "c5f1e83"
 }
