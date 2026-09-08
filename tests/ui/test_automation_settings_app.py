@@ -7,6 +7,7 @@ from pathlib import Path
 from streamlit.testing.v1 import AppTest
 
 from services.database import get_stock
+from services.earnings_ir_sources import list_ir_sources, save_ir_source
 from services.stock_profiles import list_profile_candidates, run_profile_refresh
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -42,6 +43,17 @@ def test_settings_page_shows_automation_status_without_network(ui_db: Path) -> N
     assert labels["月次確認日数"] == 30
     assert labels["初回バックフィル日数"] == 90
     assert labels["最大保存件数"] == 20
+
+
+def test_settings_page_shows_real_ir_source_as_unapproved_without_db_change(ui_db: Path) -> None:
+    stock = get_stock("5801.T", ui_db)
+    save_ir_source({"stock_id": stock["id"], "source_type": "official_ir_news", "source_url": "https://example.com/ir"}, ui_db)
+    before = list_ir_sources(ui_db)
+    at = AppTest.from_file(str(ROOT / "pages" / "6_設定.py"), default_timeout=60).run(timeout=60)
+    assert not at.exception
+    assert any("trusted source（確認用）" in item.value for item in at.subheader)
+    assert any("未承認" in item.value.to_string() for item in at.dataframe)
+    assert list_ir_sources(ui_db) == before
 
 
 def test_settings_page_can_approve_profile_candidate(ui_db: Path) -> None:
