@@ -52,7 +52,8 @@ def test_settings_page_shows_real_ir_source_as_unapproved_without_db_change(ui_d
     at = AppTest.from_file(str(ROOT / "pages" / "6_設定.py"), default_timeout=60).run(timeout=60)
     assert not at.exception
     assert any("trusted source（確認用）" in item.value for item in at.subheader)
-    assert any("未承認" in item.value.to_string() for item in at.dataframe)
+    rendered = "\n".join(item.value.to_string() for item in at.dataframe)
+    assert all(value in rendered for value in ("5801.T", "official_ir_news", "https://example.com/ir", "未承認", "明示承認"))
     assert list_ir_sources(ui_db) == before
 
 
