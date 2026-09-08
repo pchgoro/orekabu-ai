@@ -36,6 +36,20 @@ def test_grouped_disclosures_keep_all_source_links_and_do_not_change_db(ui_db) -
     assert len(list_disclosures()) == before == 2
 
 
+def test_grouped_disclosure_mixed_state_survives_unread_and_favorite_filters(ui_db) -> None:
+    payload = {
+        "ticker": "5801.T", "disclosure_type": "決算短信", "title": "混在状態の材料",
+        "disclosed_at": "2026-07-13T15:00", "importance": "高",
+        "source_url": "https://example.com/filter-a", "document_url": "https://example.com/filter-a.pdf",
+        "is_read": False, "is_favorite": False,
+    }
+    save_disclosure(payload)
+    save_disclosure({**payload, "source_url": "https://example.com/filter-b", "document_url": "https://example.com/filter-b.pdf", "is_read": True, "is_favorite": True})
+    at = AppTest.from_file(str(ROOT / "pages" / "8_適時開示.py"), default_timeout=60).run(timeout=60)
+    assert not at.exception
+    assert sum("同一材料として 2 件" in item.value for item in at.caption) >= 3
+
+
 def test_dashboard_shows_disclosure_metrics(ui_db, monkeypatch) -> None:
     import pandas as pd
 

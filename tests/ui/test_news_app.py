@@ -36,6 +36,27 @@ def test_article_detail_has_original_link(ui_db) -> None:
     assert any(link.label == "元記事を開く" and link.url == "https://example.com/news" for link in links)
 
 
+def test_grouped_news_page_keeps_all_sources_and_does_not_update_db(ui_db) -> None:
+    from services.news import list_articles, save_article
+    from services.news_providers.base import NewsItem
+
+    for suffix in ("a", "b"):
+        save_article(
+            NewsItem(
+                title="5801 古河電気工業 同一材料",
+                url=f"https://example.com/news-{suffix}",
+                published_at="2026-09-07T10:00:00+09:00",
+                external_id=f"source-{suffix}",
+            )
+        )
+    before = len(list_articles())
+    at = AppTest.from_file(str(ROOT / "pages" / "7_ニュース.py"), default_timeout=60).run(timeout=60)
+    assert not at.exception
+    urls = {link.url for link in at.get("link_button")}
+    assert {"https://example.com/news-a", "https://example.com/news-b"}.issubset(urls)
+    assert len(list_articles()) == before == 2
+
+
 def test_stock_match_renders_company_profile_action(ui_db) -> None:
     """A rule-matched stock must not break the article detail view."""
     from services.news import save_article

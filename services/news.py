@@ -182,6 +182,7 @@ def list_articles(db_path: Path | str = DB_PATH, filter_name: str = "最新") ->
     with connect(db_path) as conn:
         rows = conn.execute(f"""SELECT a.*,COALESCE(s.name,'手動') source_name,
             GROUP_CONCAT(DISTINCT st.ticker || ' ' || st.company_name) stock_labels,
+            MIN(st.ticker) ticker, MIN(st.company_name) company_name,
             MAX(CASE WHEN st.is_holding=1 THEN 1 ELSE 0 END) has_holding_match,
             MAX(CASE WHEN st.id IS NOT NULL AND st.is_holding=0 THEN 1 ELSE 0 END) has_watch_match
             FROM news_articles a LEFT JOIN news_sources s ON s.id=a.source_id
