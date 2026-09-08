@@ -1,6 +1,6 @@
 import pytest
 
-from services.trusted_sources import build_trusted_source_rows, normalize_trusted_source_approval
+from services.trusted_sources import build_trusted_source_review_rows, build_trusted_source_rows, normalize_trusted_source_approval
 
 
 def test_trusted_source_requires_explicit_matching_approval() -> None:
@@ -33,3 +33,13 @@ def test_trusted_source_approval_contract_is_reversible_and_explicit() -> None:
     assert revoked["approved"] is False
     with pytest.raises(ValueError):
         normalize_trusted_source_approval({"stock_id": 1, "source_type": "official_ir_news", "approved": True})
+
+
+def test_trusted_source_review_exposes_explicit_reversible_action() -> None:
+    rows = build_trusted_source_review_rows(
+        [{"stock_id": 1, "source_type": "official_ir_news", "source_url": "https://example.com/ir"}],
+        [{"stock_id": 1, "source_type": "official_ir_news", "source_url": "https://example.com/ir", "approved": True}],
+    )
+    assert rows[0]["review_action"] == "revoke"
+    assert rows[0]["review_action_label"] == "承認を解除"
+    assert rows[0]["human_confirmation_required"] is True

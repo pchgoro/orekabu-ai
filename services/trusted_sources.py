@@ -52,3 +52,19 @@ def build_trusted_source_rows(
             "trust_reason": "明示承認済み" if trusted else "明示承認なし",
         })
     return result
+
+
+def build_trusted_source_review_rows(
+    sources: Iterable[dict[str, Any]],
+    approvals: Iterable[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Add explicit UI action labels without performing persistence."""
+    return [
+        {
+            **row,
+            "review_action": "revoke" if row["trusted"] else "approve",
+            "review_action_label": "承認を解除" if row["trusted"] else "明示承認",
+            "human_confirmation_required": True,
+        }
+        for row in build_trusted_source_rows(sources, approvals)
+    ]
