@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-F-1B MarketSpeed不正CSV UI fail-closed受け入れAppTest補完",
+  "current_task": "#11 P2-F-2 実CSV形式のHuman Acceptance待ち",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-08",
-  "last_run_at": "2026-09-08T22:26:48+09:00",
-  "last_completed_task": "#11 P2-F-1A MarketSpeed設定画面import runtime正常系受け入れAppTest補完 (3d13e16)",
-  "next_action": "設定画面へ必須列欠損/別形式のMarketSpeed CSVをuploadする実ページAppTestを追加し、エラー表示・import書込経路fail-closed・既存stocksのshares/average_price/is_holding/buy_watch_price/memo/company metadata完全不変をassertする。正常import AppTest、parser/service tests、全体pytest、compileall、git diff --checkをPASSさせ、mainへpush後にSupervisor acceptanceを再実施する。green後だけP2-F-2実CSV Human Acceptance待ちへ戻る。",
+  "last_run_at": "2026-09-08T22:36:05+09:00",
+  "last_completed_task": "#11 P2-F-1A MarketSpeed設定画面import runtime + invalid CSV fail-closed AppTest (ee1fad2)",
+  "next_action": "P2-F-1Aの正常importと不明形式CSVのUI runtime fail-closedを検証済み。実CSVが提供されるまで証券会社別の列仕様を推測せず待機し、実CSV提供後にpreview確認・既存保有データ保全・実DB反映のHuman Acceptanceを行う。",
   "blocked_reason": null,
-  "human_action_required": "P2-F実CSV形式と実データ反映、trusted source実migration・正式承認ポリシー、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-F-1Bは自動実行可能。",
+  "human_action_required": "P2-F実CSV形式と実データ反映、trusted source実migration・正式承認ポリシー、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。実CSV提供までP2-F-2は待機。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "3d13e16"
+  "last_git_sha": "ee1fad2"
 }
