@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-I-4 trusted source設定画面のread-only preview",
+  "current_task": "#11 P2-I-5 trusted source承認永続化の後方互換設計",
   "task_source": "GitHub Issue #11 + Supervisor correction",
-  "last_run_at": "2026-09-08T14:06:27.3122186+09:00",
-  "last_completed_task": "#11 P2-I-3 trusted source承認・解除action境界 (004e2cb)",
-  "next_action": "設定画面へtrusted sourceのread-only previewを最小表示し、明示承認なしを明示するUI smokeを追加する。承認ボタンの実保存、DB migration、自動承認、外部通信、通知送信は行わない。",
+  "last_run_at": "2026-09-08T14:41:54.1966321+09:00",
+  "last_completed_task": "#11 P2-I-4 trusted source設定画面read-only preview (c12831d)",
+  "next_action": "既存stock_ir_sourcesとユーザーデータを変更しない別テーブル/方式の候補を比較し、後方互換・解除・監査時刻・承認者を含むmigration設計書と契約テストだけを追加する。実migration、暗黙承認、自動学習、外部通信、通知送信は人間確認まで行わない。",
   "blocked_reason": null,
   "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認はHuman Acceptanceとして残す。P2-H/Iの通常技術判断は自律継続。P2-F実CSV確認は後続Human Action。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "004e2cb"
+  "last_git_sha": "c12831d"
 }
