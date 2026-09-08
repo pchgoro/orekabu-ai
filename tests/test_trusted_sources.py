@@ -1,4 +1,6 @@
-from services.trusted_sources import build_trusted_source_rows
+import pytest
+
+from services.trusted_sources import build_trusted_source_rows, normalize_trusted_source_approval
 
 
 def test_trusted_source_requires_explicit_matching_approval() -> None:
@@ -18,3 +20,16 @@ def test_trusted_source_never_infers_from_existing_source_fields() -> None:
     ])
     assert rows[0]["trusted"] is False
     assert rows[0]["trust_reason"] == "明示承認なし"
+
+
+def test_trusted_source_approval_contract_is_reversible_and_explicit() -> None:
+    approval = normalize_trusted_source_approval({
+        "stock_id": "1", "source_type": "official_ir_news",
+        "source_url": "https://example.com/ir/?utm_campaign=test", "approved": True,
+        "approved_by": "human",
+    })
+    assert approval["approved"] is True
+    revoked = normalize_trusted_source_approval({**approval, "approved": False})
+    assert revoked["approved"] is False
+    with pytest.raises(ValueError):
+        normalize_trusted_source_approval({"stock_id": 1, "source_type": "official_ir_news", "approved": True})

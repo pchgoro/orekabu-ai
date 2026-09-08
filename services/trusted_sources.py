@@ -7,6 +7,22 @@ from typing import Any, Iterable
 from services.news import canonicalize_url
 
 
+def normalize_trusted_source_approval(payload: dict[str, Any]) -> dict[str, Any]:
+    """Validate an explicit approval payload without persisting or inferring it."""
+    stock_id = int(payload.get("stock_id") or 0)
+    source_type = str(payload.get("source_type") or "").strip()
+    source_url = canonicalize_url(str(payload.get("source_url") or ""))
+    if stock_id < 1 or not source_type or not source_url:
+        raise ValueError("trusted sourceの承認には銘柄・種別・URLが必要です。")
+    return {
+        "stock_id": stock_id,
+        "source_type": source_type,
+        "source_url": source_url,
+        "approved": bool(payload.get("approved")),
+        "approved_by": str(payload.get("approved_by") or "human").strip() or "human",
+    }
+
+
 def build_trusted_source_rows(
     sources: Iterable[dict[str, Any]],
     approvals: Iterable[dict[str, Any]] | None = None,
