@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-I-1 trusted sourceの明示境界棚卸し",
+  "current_task": "#11 P2-I-2 trusted source表示・承認情報の永続化設計監査",
   "task_source": "GitHub Issue #11 + Supervisor correction",
-  "last_run_at": "2026-09-08T12:19:50.1307634+09:00",
-  "last_completed_task": "#11 P2-H-4 開示表示へのgrouping adapter最小接続 (1dd073e)",
-  "next_action": "既存の公式IR URL・正式名称・取得元設定を棚卸しし、ユーザー承認済みのtrusted sourceを明示保存する場合の後方互換なread-only view modelとfixtureを定義する。暗黙の学習・自動承認・DB破壊的migration・通知送信は行わない。",
+  "last_run_at": "2026-09-08T12:55:20.0627958+09:00",
+  "last_completed_task": "#11 P2-I-1 trusted sourceの明示境界view model (5a0fd6c)",
+  "next_action": "trusted sourceの承認情報を永続化する場合の既存DB後方互換性・明示承認UI・解除可能性を監査し、まずmigrationなしの契約テストと表示境界を追加する。暗黙の学習・自動承認・DB破壊的migration・通知送信は行わない。",
   "blocked_reason": null,
   "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認はHuman Acceptanceとして残す。P2-H/Iの通常技術判断は自律継続。P2-F実CSV確認は後続Human Action。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "1dd073e"
+  "last_git_sha": "5a0fd6c"
 }
