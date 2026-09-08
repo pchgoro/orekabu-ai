@@ -92,6 +92,11 @@ def test_invalid_row_does_not_stop_other_rows() -> None:
     assert len(parsed["errors"]) == 1
 
 
+def test_missing_required_column_fails_closed_before_preview() -> None:
+    with pytest.raises(ValueError, match="必要なCSV列が不足"):
+        parse_marketspeed_csv(b'"code","name"\n"5801","missing"\n')
+
+
 def seed_existing(db: Path) -> None:
     with connect(db) as conn:
         conn.execute(
