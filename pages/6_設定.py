@@ -14,6 +14,7 @@ from scripts.run_daily_update import main as run_daily_update
 from services.automation import automation_summary, list_run_steps, list_runs
 from services.database import get_stocks, init_db, load_settings, save_settings
 from services.edinet import api_key_configured
+from services.earnings_ir_sources import list_ir_sources
 from services.marketspeed_import import (
     build_marketspeed_preview,
     import_marketspeed_preview,
@@ -22,6 +23,7 @@ from services.marketspeed_import import (
 from services.settings import default_settings
 from services.stock_profiles import list_profile_candidates, review_profile_candidate
 from services.startup_automation import is_daily_update_running
+from services.trusted_sources import build_trusted_source_review_rows
 from utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -361,6 +363,31 @@ try:
 except Exception:
     st.error("自動取得の状態を読み込めませんでした。logs/app.logを確認してください。")
     logger.exception("無料取得自動化UIエラー")
+
+st.subheader("trusted source（確認用）")
+st.caption("公式IR取得元のtrusted状態は明示承認だけで決まり、自動学習・自動承認は行いません。現在はread-only previewです。")
+try:
+    trusted_rows = build_trusted_source_review_rows(list_ir_sources())
+    if not trusted_rows:
+        st.info("公式IR取得元はまだ登録されていません。")
+    else:
+        st.dataframe(
+            pd.DataFrame([
+                {
+                    "銘柄": f"{row.get('ticker') or '不明'} {row.get('company_name') or ''}".strip(),
+                    "取得元": row.get("source_type") or "不明",
+                    "URL": row.get("normalized_source_url") or "不明",
+                    "状態": "trusted" if row["trusted"] else "未承認",
+                    "操作": row["review_action_label"],
+                }
+                for row in trusted_rows
+            ]),
+            use_container_width=True,
+            hide_index=True,
+        )
+except Exception:
+    st.error("trusted sourceの状態を表示できませんでした。logs/app.logを確認してください。")
+    logger.exception("trusted source preview UI error")
 
 st.subheader("CSVエクスポート")
 st.download_button(

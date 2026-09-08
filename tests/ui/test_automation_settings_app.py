@@ -35,6 +35,8 @@ def test_settings_page_shows_automation_status_without_network(ui_db: Path) -> N
     assert any("EDINET APIキー:" in item.value for item in at.markdown)
     assert not any("EDINET_API_KEY=" in item.value for item in at.markdown)
     assert any("企業情報候補の確認" in item.value for item in at.markdown)
+    assert any("trusted source（確認用）" in item.value for item in at.subheader)
+    assert any("read-only preview" in item.value for item in at.caption)
     labels = {item.label: item.value for item in at.number_input}
     assert labels["日次取得日数"] == 3
     assert labels["月次確認日数"] == 30
