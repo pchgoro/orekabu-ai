@@ -6,10 +6,10 @@
   "current_task": "#11 P2-F-2 実CSV形式と実データ反映のHuman Acceptance待ち",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
   "last_run_at": "2026-09-09T01:05:00+09:00",
-  "last_completed_task": "#11 P1-B-5 / P1-J-1 Dashboard Acceptance AppTest gap補完 (pending commit)",
+  "last_completed_task": "#11 P1-B-5 / P1-J-1 Dashboard Acceptance AppTest gap補完 (26391ae)",
   "next_action": "Dashboardの4件候補から上位3件表示、ticker欠損taskの通常page導線fallbackを実ページAppTestで確認済み。実CSVが提供されるまで列仕様を推測せず、P2-Fの実データpreview・反映確認をHuman Acceptance待ちとする。",
   "blocked_reason": "実CSV形式と実データ反映のHuman Acceptance待ち。列仕様を推測したparser拡張や本番DB反映は行わない。",
   "human_action_required": "P2-F実CSV形式と実データ反映、trusted source実migration・正式承認ポリシー、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "c1da32d"
+  "last_git_sha": "26391ae"
 }
