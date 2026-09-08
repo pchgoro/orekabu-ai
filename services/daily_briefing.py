@@ -294,7 +294,15 @@ def build_daily_focus(tasks: list[dict[str, Any]], limit: int = 10) -> list[dict
     for group in ordered[: max(0, min(int(limit), 10))]:
         group = dict(group)
         group.pop("_first_index")
-        group["reasons"] = list(group["reasons"])
+        group["reasons"] = sorted(
+            group["reasons"],
+            key=lambda reason: (
+                int(reason["priority"]),
+                str(reason["label"]),
+                str(reason["detail"]),
+                str(reason["page"]),
+            ),
+        )
         group["reason_count"] = len(group["reasons"])
         if group["ticker"]:
             group["page"] = "企業カルテ"

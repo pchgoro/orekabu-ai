@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-F-2 実CSV形式のHuman Acceptance待ち",
+  "current_task": "#11 P1-B-5 / P1-J-1 今日見る銘柄のDashboard受け入れ補完",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-08",
-  "last_run_at": "2026-09-08T22:36:05+09:00",
-  "last_completed_task": "#11 P2-F-1A MarketSpeed設定画面import runtime + invalid CSV fail-closed AppTest (ee1fad2)",
-  "next_action": "P2-F-1Aの正常importと不明形式CSVのUI runtime fail-closedを検証済み。実CSVが提供されるまで証券会社別の列仕様を推測せず待機し、実CSV提供後にpreview確認・既存保有データ保全・実DB反映のHuman Acceptanceを行う。",
+  "last_run_at": "2026-09-08T23:12:00+09:00",
+  "last_completed_task": "#11 P1-B-5 / P1-J-1 今日見る銘柄集約の決定性補強 (working tree)",
+  "next_action": "既存build_daily_focusのDashboard統合を確認し、朝トップの『今日見る銘柄』表示と企業カルテ1クリック導線をAppTestで固定する。候補0〜10件・複数理由・欠損データを維持し、UIテスト、全体pytest、compileall、diff-check後にmainへpushする。",
   "blocked_reason": null,
-  "human_action_required": "P2-F実CSV形式と実データ反映、trusted source実migration・正式承認ポリシー、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。実CSV提供までP2-F-2は待機。",
+  "human_action_required": "P2-F実CSV形式と実データ反映、trusted source実migration・正式承認ポリシー、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "ee1fad2"
+  "last_git_sha": "4677d40"
 }

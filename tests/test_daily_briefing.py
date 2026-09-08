@@ -67,6 +67,35 @@ def test_daily_focus_handles_empty_limit_and_deterministic_ties() -> None:
     assert len(build_daily_focus(tasks, limit=0)) == 0
 
 
+def test_daily_focus_caps_at_ten_and_keeps_missing_ticker_tasks_separate() -> None:
+    tasks = [
+        {"ticker": f"{index:04d}.T", "label": "確認", "detail": str(index), "page": "監視銘柄", "priority": 8}
+        for index in range(11)
+    ]
+    tasks.extend([
+        {"ticker": "", "label": "全体確認", "detail": "A", "page": "設定", "priority": 1},
+        {"ticker": "", "label": "全体確認", "detail": "B", "page": "設定", "priority": 1},
+    ])
+
+    focus = build_daily_focus(tasks, limit=99)
+
+    assert len(focus) == 10
+    assert [item["ticker"] for item in focus[:2]] == ["", ""]
+    assert len({item["detail"] for item in focus[:2]}) == 2
+
+
+def test_daily_focus_sorts_reasons_deterministically() -> None:
+    tasks = [
+        {"ticker": "5801.T", "label": "ニュース", "detail": "B", "page": "ニュース", "priority": 6},
+        {"ticker": "5801.T", "label": "ニュース", "detail": "A", "page": "ニュース", "priority": 6},
+        {"ticker": "5801.T", "label": "決算", "detail": "本日", "page": "決算", "priority": 1},
+    ]
+
+    focus = build_daily_focus(list(reversed(tasks)), limit=10)
+
+    assert [reason["detail"] for reason in focus[0]["reasons"]] == ["本日", "A", "B"]
+
+
 def test_daily_tasks_follow_documented_priority_and_limit() -> None:
     stocks, earnings, candidates, news, buy = fixtures()
     tasks = build_daily_tasks(stocks, earnings, candidates, news, buy, 1, limit=5)
