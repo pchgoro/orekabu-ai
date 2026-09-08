@@ -53,11 +53,22 @@ for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "�
             selected = labels[st.selectbox("管理する記事", list(labels), key=f"article_{filter_name}")]
             article_key = f"{filter_name}_{selected['id']}"
             with st.expander("記事の状態・銘柄候補・タグ・プロンプト", expanded=False):
+                grouped = int(selected.get("event_record_count") or 1) > 1
+                if grouped:
+                    st.warning("同一材料の集約表示です。状態変更は元レコード単位で確認してから行ってください。")
+                    for source_index, provenance in enumerate(selected.get("event_provenance") or []):
+                        for url_index, source_url in enumerate(provenance.get("urls") or [provenance.get("url")]):
+                            if source_url:
+                                st.link_button(
+                                    f"原典 {source_index + 1}-{url_index + 1}: {provenance.get('source') or 'source'}",
+                                    source_url,
+                                    key=f"{article_key}_provenance_{source_index}_{url_index}",
+                                )
                 if selected.get("url"):
                     st.link_button("元記事を開く", selected["url"])
-                read = st.checkbox("既読", value=bool(selected["is_read"]), key=f"read_{article_key}")
-                favorite = st.checkbox("お気に入り", value=bool(selected["is_favorite"]), key=f"fav_{article_key}")
-                importance = st.selectbox("重要度", NEWS_IMPORTANCE_LEVELS, index=NEWS_IMPORTANCE_LEVELS.index(selected["importance"]), key=f"importance_{article_key}")
+                read = st.checkbox("既読", value=bool(selected["is_read"]), disabled=grouped, key=f"read_{article_key}")
+                favorite = st.checkbox("お気に入り", value=bool(selected["is_favorite"]), disabled=grouped, key=f"fav_{article_key}")
+                importance = st.selectbox("重要度", NEWS_IMPORTANCE_LEVELS, index=NEWS_IMPORTANCE_LEVELS.index(selected["importance"]), disabled=grouped, key=f"importance_{article_key}")
                 category = st.selectbox("カテゴリ", NEWS_CATEGORIES, index=NEWS_CATEGORIES.index(selected["category"]), key=f"category_{article_key}")
                 memo = st.text_area("メモ", value=selected.get("memo") or "", key=f"memo_{article_key}")
                 tags = st.text_input("タグ（カンマ区切り）", value=", ".join(get_article_tags(int(selected["id"]))), key=f"tags_{article_key}")
@@ -74,7 +85,7 @@ for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "�
                         + " / 一致語: " + ", ".join(classification["matched_terms"])
                         + " / 保存は手動操作のみ"
                     )
-                if st.button("記事情報を保存", key=f"save_{article_key}"):
+                if st.button("記事情報を保存", disabled=grouped, key=f"save_{article_key}"):
                     try:
                         update_article(int(selected["id"]), {"is_read": read, "is_favorite": favorite, "importance": importance, "category": category, "memo": memo})
                         set_article_tags(int(selected["id"]), tags.split(",")); st.success("記事情報を保存しました。"); st.rerun()

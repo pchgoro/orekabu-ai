@@ -4,7 +4,7 @@ from pathlib import Path
 
 from streamlit.testing.v1 import AppTest
 
-from services.disclosures import save_disclosure
+from services.disclosures import list_disclosures, save_disclosure
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -17,6 +17,23 @@ def test_disclosure_page_loads_and_shows_registered_item(ui_db) -> None:
     at = AppTest.from_file(str(ROOT / "pages" / "8_適時開示.py"), default_timeout=60).run(timeout=60)
     assert any(item.value == "適時開示" for item in at.title)
     assert not at.exception
+
+
+def test_grouped_disclosures_keep_all_source_links_and_do_not_change_db(ui_db) -> None:
+    payload = {
+        "ticker": "5801.T", "disclosure_type": "決算短信", "title": "同一材料",
+        "disclosed_at": "2026-07-13T15:00", "importance": "高",
+        "source_url": "https://example.com/source-a", "document_url": "https://example.com/a.pdf",
+    }
+    save_disclosure(payload)
+    save_disclosure({**payload, "source_url": "https://example.com/source-b", "document_url": "https://example.com/b.pdf"})
+    before = len(list_disclosures())
+    at = AppTest.from_file(str(ROOT / "pages" / "8_適時開示.py"), default_timeout=60).run(timeout=60)
+    assert not at.exception
+    assert any("同一材料として 2 件" in item.value for item in at.caption)
+    urls = {link.url for link in at.get("link_button")}
+    assert {"https://example.com/source-a", "https://example.com/a.pdf", "https://example.com/source-b", "https://example.com/b.pdf"}.issubset(urls)
+    assert len(list_disclosures()) == before == 2
 
 
 def test_dashboard_shows_disclosure_metrics(ui_db, monkeypatch) -> None:

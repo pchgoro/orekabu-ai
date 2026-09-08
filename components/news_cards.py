@@ -19,6 +19,7 @@ def render_news_cards(rows: list[dict[str, Any]], key_prefix: str) -> None:
         return
     for row in rows:
         article_id = int(row["id"])
+        grouped = int(row.get("event_record_count") or 1) > 1
         state = "既読" if row.get("is_read") else "未読"
         with st.container(border=True):
             render_priority_badge(
@@ -37,19 +38,28 @@ def render_news_cards(rows: list[dict[str, Any]], key_prefix: str) -> None:
                     key=f"{key_prefix}_profile_{article_id}",
                 )
             cols = st.columns(2)
-            if cols[0].button("未読に戻す" if row.get("is_read") else "既読にする", key=f"{key_prefix}_read_{article_id}"):
+            if cols[0].button("未読に戻す" if row.get("is_read") else "既読にする", disabled=grouped, key=f"{key_prefix}_read_{article_id}"):
                 _save(row, is_read=not bool(row.get("is_read")))
                 st.rerun()
-            if cols[1].button("お気に入り解除" if row.get("is_favorite") else "お気に入り登録", key=f"{key_prefix}_fav_{article_id}"):
+            if cols[1].button("お気に入り解除" if row.get("is_favorite") else "お気に入り登録", disabled=grouped, key=f"{key_prefix}_fav_{article_id}"):
                 _save(row, is_favorite=not bool(row.get("is_favorite")))
                 st.rerun()
-            importance = st.selectbox("重要度", NEWS_IMPORTANCE_LEVELS, index=NEWS_IMPORTANCE_LEVELS.index(row.get("importance") or "通常"), key=f"{key_prefix}_importance_{article_id}")
+            importance = st.selectbox("重要度", NEWS_IMPORTANCE_LEVELS, index=NEWS_IMPORTANCE_LEVELS.index(row.get("importance") or "通常"), disabled=grouped, key=f"{key_prefix}_importance_{article_id}")
             if importance != row.get("importance"):
                 _save(row, importance=importance)
                 st.rerun()
             if row.get("url"):
                 st.link_button("元記事を開く", row["url"])
             with st.expander("詳細を表示"):
+                if grouped:
+                    for source_index, provenance in enumerate(row.get("event_provenance") or []):
+                        for url_index, source_url in enumerate(provenance.get("urls") or [provenance.get("url")]):
+                            if source_url:
+                                st.link_button(
+                                    f"原典 {source_index + 1}-{url_index + 1}: {provenance.get('source') or 'source'}",
+                                    source_url,
+                                    key=f"{key_prefix}_provenance_{article_id}_{source_index}_{url_index}",
+                                )
                 st.write(row.get("summary") or "要約なし")
                 st.write(f"関連銘柄: {row.get('stock_labels') or 'なし'}")
                 st.write(f"メモ: {row.get('memo') or 'なし'}")

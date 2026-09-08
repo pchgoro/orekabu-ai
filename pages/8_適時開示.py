@@ -53,8 +53,17 @@ for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "�
             continue
         for row in rows[:30]:
             with st.expander(f"{row['ticker']} {row['disclosure_type']} | {row['title']}"):
+                grouped = int(row.get("event_record_count") or 1) > 1
                 if int(row.get("event_record_count") or 1) > 1:
                     st.caption(f"同一材料として {row['event_record_count']} 件を表示統合（元データは保持）")
+                    for source_index, provenance in enumerate(row.get("event_provenance") or []):
+                        for url_index, source_url in enumerate(provenance.get("urls") or [provenance.get("url")]):
+                            if source_url:
+                                st.link_button(
+                                    f"原典 {source_index + 1}-{url_index + 1}: {provenance.get('source') or 'source'}",
+                                    source_url,
+                                    key=f"disclosure_{filter_name}_{row['id']}_provenance_{source_index}_{url_index}",
+                                )
                 render_priority_badge(
                     "urgent" if row["importance"] == "高" and not row["is_read"]
                     else "today" if not row["is_read"] else "later"
@@ -70,12 +79,12 @@ for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "�
                 if row.get("document_url"): st.link_button("PDF URLを開く", row["document_url"])
                 if row.get("local_file_path"): st.caption(f"ローカルPDF: {row['local_file_path']}")
                 key = f"disclosure_{filter_name}_{row['id']}"
-                read = st.checkbox("既読", bool(row["is_read"]), key=f"read_{key}")
-                favorite = st.checkbox("お気に入り", bool(row["is_favorite"]), key=f"fav_{key}")
-                importance = st.selectbox("重要度", DISCLOSURE_IMPORTANCE_LEVELS, index=DISCLOSURE_IMPORTANCE_LEVELS.index(row["importance"]), key=f"importance_{key}")
-                tags = st.text_input("タグ", row.get("tags") or "", key=f"tags_{key}")
-                memo = st.text_area("メモ", row.get("user_memo") or "", key=f"memo_{key}")
-                if st.button("開示情報を保存", key=f"save_{key}"):
+                read = st.checkbox("既読", bool(row["is_read"]), disabled=grouped, key=f"read_{key}")
+                favorite = st.checkbox("お気に入り", bool(row["is_favorite"]), disabled=grouped, key=f"fav_{key}")
+                importance = st.selectbox("重要度", DISCLOSURE_IMPORTANCE_LEVELS, index=DISCLOSURE_IMPORTANCE_LEVELS.index(row["importance"]), disabled=grouped, key=f"importance_{key}")
+                tags = st.text_input("タグ", row.get("tags") or "", disabled=grouped, key=f"tags_{key}")
+                memo = st.text_area("メモ", row.get("user_memo") or "", disabled=grouped, key=f"memo_{key}")
+                if st.button("開示情報を保存", disabled=grouped, key=f"save_{key}"):
                     try:
                         update_disclosure(int(row["id"]), {**row, "is_read": read, "is_favorite": favorite, "importance": importance, "user_memo": memo})
                         set_tags(int(row["id"]), tags.split(",")); st.success("保存しました。"); st.rerun()
@@ -98,7 +107,7 @@ for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "�
                         set_news_link(int(row["id"]), int(selected_news["id"]), True); st.rerun()
                 st.text_area("ChatGPT開示分析用プロンプト", make_prompt(row), height=420, key=f"prompt_{key}")
                 delete_confirm = st.checkbox("削除を確認しました", key=f"delete_confirm_{key}")
-                if st.button("開示を削除", disabled=not delete_confirm, key=f"delete_{key}"):
+                if st.button("開示を削除", disabled=grouped or not delete_confirm, key=f"delete_{key}"):
                     try: delete_disclosure(int(row["id"])); st.rerun()
                     except Exception as exc: st.error(str(exc)); logger.exception("開示削除失敗 disclosure_id=%s", row["id"])
 

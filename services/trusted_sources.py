@@ -12,14 +12,15 @@ def normalize_trusted_source_approval(payload: dict[str, Any]) -> dict[str, Any]
     stock_id = int(payload.get("stock_id") or 0)
     source_type = str(payload.get("source_type") or "").strip()
     source_url = canonicalize_url(str(payload.get("source_url") or ""))
-    if stock_id < 1 or not source_type or not source_url:
-        raise ValueError("trusted sourceの承認には銘柄・種別・URLが必要です。")
+    approved_by = str(payload.get("approved_by") or "").strip()
+    if stock_id < 1 or not source_type or not source_url or not approved_by:
+        raise ValueError("trusted sourceの承認には銘柄・種別・URL・承認者が必要です。")
     return {
         "stock_id": stock_id,
         "source_type": source_type,
         "source_url": source_url,
         "approved": bool(payload.get("approved")),
-        "approved_by": str(payload.get("approved_by") or "human").strip() or "human",
+        "approved_by": approved_by,
     }
 
 

@@ -55,6 +55,11 @@ def group_material_records(records: list[dict[str, Any]]) -> list[dict[str, Any]
             {
                 "source": item.get("source") or item.get("source_name") or "unknown",
                 "url": item.get("url") or item.get("source_url") or item.get("document_url") or "",
+                "urls": list(dict.fromkeys(
+                    str(value).strip()
+                    for value in (item.get("url"), item.get("source_url"), item.get("document_url"))
+                    if str(value or "").strip()
+                )),
                 "record_id": item.get("id"),
             }
             for item in items

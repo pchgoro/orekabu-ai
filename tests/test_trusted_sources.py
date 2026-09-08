@@ -33,6 +33,8 @@ def test_trusted_source_approval_contract_is_reversible_and_explicit() -> None:
     assert revoked["approved"] is False
     with pytest.raises(ValueError):
         normalize_trusted_source_approval({"stock_id": 1, "source_type": "official_ir_news", "approved": True})
+    with pytest.raises(ValueError):
+        normalize_trusted_source_approval({"stock_id": 1, "source_type": "official_ir_news", "source_url": "https://example.com/ir", "approved": True})
 
 
 def test_trusted_source_review_exposes_explicit_reversible_action() -> None:
