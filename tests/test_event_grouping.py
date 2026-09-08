@@ -1,4 +1,4 @@
-from services.event_grouping import build_event_display_groups, collapse_news_rows, group_material_records, material_group_key
+from services.event_grouping import build_event_display_groups, collapse_news_rows, filter_grouped_rows, group_material_records, material_group_key
 
 
 def test_group_material_records_keeps_cross_source_provenance() -> None:
@@ -54,6 +54,16 @@ def test_news_collapse_keeps_editable_representative_and_provenance() -> None:
     assert [entry["record_id"] for entry in rows[0]["event_provenance"]] == [1, 2]
     assert rows[0]["importance"] == "高"
     assert rows[0]["is_read"] is False and rows[0]["is_favorite"] is True
+
+
+def test_group_filters_run_after_grouping_and_keep_mixed_state_group() -> None:
+    rows = collapse_news_rows([
+        {"id": 1, "ticker": "5801.T", "title": "材料", "published_at": "2026-09-07", "url": "https://a.example", "is_read": 1, "is_favorite": 0},
+        {"id": 2, "ticker": "5801.T", "title": "材料", "published_at": "2026-09-07", "url": "https://b.example", "is_read": 0, "is_favorite": 1},
+    ])
+    assert len(filter_grouped_rows(rows, "未読")) == 1
+    assert len(filter_grouped_rows(rows, "お気に入り")) == 1
+    assert filter_grouped_rows(rows, "未読")[0]["event_record_count"] == 2
 
 
 def test_disclosure_rows_group_by_semantic_date_and_keep_document_provenance() -> None:

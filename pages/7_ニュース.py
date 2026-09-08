@@ -22,7 +22,7 @@ from services.news import (
 from services.news_providers.manual_provider import ManualNewsProvider
 from services.news_providers.rss_provider import RssNewsProvider
 from services.disclosures import links_for_news
-from services.event_grouping import collapse_news_rows
+from services.event_grouping import collapse_news_rows, filter_grouped_rows
 from utils.constants import NEWS_CATEGORIES, NEWS_IMPORTANCE_LEVELS, NEWS_SOURCE_TYPES
 from utils.logging_config import setup_logging
 
@@ -43,7 +43,7 @@ tabs = st.tabs(["最新", "保有株", "監視銘柄", "未読", "お気に入�
 
 for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "未読", "お気に入り"]):
     with tab:
-        rows = collapse_news_rows(list_articles(filter_name=filter_name))
+        rows = filter_grouped_rows(collapse_news_rows(list_articles(filter_name="最新")), filter_name)
         if rows:
             if card_mode:
                 render_news_cards(rows[:20], f"direct_{filter_name}")

@@ -102,6 +102,7 @@ def collapse_news_rows(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "event_record_count": group["record_count"],
                 "event_provenance": group["provenance"],
                 "event_group_importance": group["importance"],
+                "event_records": list(group["records"]),
                 "importance": group["importance"],
                 "is_read": group["is_read"],
                 "is_favorite": group["is_favorite"],
@@ -109,3 +110,23 @@ def collapse_news_rows(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         )
         rows.append(representative)
     return rows
+
+
+def filter_grouped_rows(rows: list[dict[str, Any]], filter_name: str) -> list[dict[str, Any]]:
+    """Apply UI filters after grouping so mixed-source groups are not lost."""
+    if filter_name == "最新":
+        return rows
+
+    def matches(row: dict[str, Any]) -> bool:
+        records = row.get("event_records") or [row]
+        if filter_name == "未読":
+            return any(not bool(item.get("is_read")) for item in records)
+        if filter_name == "お気に入り":
+            return any(bool(item.get("is_favorite")) for item in records)
+        if filter_name == "保有株":
+            return any(bool(item.get("has_holding_match") or item.get("is_holding")) for item in records)
+        if filter_name == "監視銘柄":
+            return any(bool(item.get("has_watch_match")) or item.get("is_holding") is False for item in records)
+        return True
+
+    return [row for row in rows if matches(row)]

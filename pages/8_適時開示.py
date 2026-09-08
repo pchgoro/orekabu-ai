@@ -28,7 +28,7 @@ from services.disclosures import (
     set_tags,
     update_disclosure,
 )
-from services.event_grouping import collapse_news_rows
+from services.event_grouping import collapse_news_rows, filter_grouped_rows
 from services.news import list_articles
 from utils.constants import DISCLOSURE_IMPORTANCE_LEVELS, DISCLOSURE_MAX_FILE_SIZE, DISCLOSURE_TYPES
 from utils.logging_config import setup_logging
@@ -47,7 +47,7 @@ tabs = st.tabs(["最新", "保有株", "監視銘柄", "未読", "お気に入�
 
 for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "未読", "お気に入り"]):
     with tab:
-        rows = collapse_news_rows(list_disclosures(filter_name=filter_name))
+        rows = filter_grouped_rows(collapse_news_rows(list_disclosures(filter_name="最新")), filter_name)
         if not rows:
             st.info("該当する開示はありません。")
             continue
