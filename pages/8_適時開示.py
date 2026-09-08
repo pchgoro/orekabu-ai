@@ -28,6 +28,7 @@ from services.disclosures import (
     set_tags,
     update_disclosure,
 )
+from services.event_grouping import collapse_news_rows
 from services.news import list_articles
 from utils.constants import DISCLOSURE_IMPORTANCE_LEVELS, DISCLOSURE_MAX_FILE_SIZE, DISCLOSURE_TYPES
 from utils.logging_config import setup_logging
@@ -46,12 +47,14 @@ tabs = st.tabs(["最新", "保有株", "監視銘柄", "未読", "お気に入�
 
 for tab, filter_name in zip(tabs[:5], ["最新", "保有株", "監視銘柄", "未読", "お気に入り"]):
     with tab:
-        rows = list_disclosures(filter_name=filter_name)
+        rows = collapse_news_rows(list_disclosures(filter_name=filter_name))
         if not rows:
             st.info("該当する開示はありません。")
             continue
         for row in rows[:30]:
             with st.expander(f"{row['ticker']} {row['disclosure_type']} | {row['title']}"):
+                if int(row.get("event_record_count") or 1) > 1:
+                    st.caption(f"同一材料として {row['event_record_count']} 件を表示統合（元データは保持）")
                 render_priority_badge(
                     "urgent" if row["importance"] == "高" and not row["is_read"]
                     else "today" if not row["is_read"] else "later"

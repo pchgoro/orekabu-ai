@@ -54,3 +54,13 @@ def test_news_collapse_keeps_editable_representative_and_provenance() -> None:
     assert [entry["record_id"] for entry in rows[0]["event_provenance"]] == [1, 2]
     assert rows[0]["importance"] == "高"
     assert rows[0]["is_read"] is False and rows[0]["is_favorite"] is True
+
+
+def test_disclosure_rows_group_by_semantic_date_and_keep_document_provenance() -> None:
+    rows = collapse_news_rows([
+        {"id": 10, "ticker": "5801.T", "title": "業績予想修正", "disclosed_at": "2026-09-07T10:00:00", "document_url": "https://a.example"},
+        {"id": 11, "ticker": "5801.T", "title": "業績予想修正", "disclosed_at": "2026-09-07T15:00:00", "document_url": "https://b.example"},
+    ])
+    assert len(rows) == 1
+    assert rows[0]["event_record_count"] == 2
+    assert [item["record_id"] for item in rows[0]["event_provenance"]] == [10, 11]
