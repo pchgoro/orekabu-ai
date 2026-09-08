@@ -2,14 +2,14 @@
   "project": "orekabu-ai",
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
-  "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-I-5 trusted source承認永続化の後方互換設計",
-  "task_source": "GitHub Issue #11 + Supervisor correction",
-  "last_run_at": "2026-09-08T14:41:54.1966321+09:00",
-  "last_completed_task": "#11 P2-I-4 trusted source設定画面read-only preview (c12831d)",
-  "next_action": "既存stock_ir_sourcesとユーザーデータを変更しない別テーブル/方式の候補を比較し、後方互換・解除・監査時刻・承認者を含むmigration設計書と契約テストだけを追加する。実migration、暗黙承認、自動学習、外部通信、通知送信は人間確認まで行わない。",
+  "current_phase": "UX Automation / Zero-touch Daily Workflow / Acceptance Remediation",
+  "current_task": "#11 ACCEPT-20260908-1 P2-H受け入れ不合格の修正",
+  "task_source": "GitHub Issue #11 + 2026-09-08 Acceptance Audit",
+  "last_run_at": "2026-09-08T17:15:00+09:00",
+  "last_completed_task": "#11 P2-I-4 implementation present but acceptance incomplete; P2-H-3/P2-H-4 acceptance failed",
+  "next_action": "P2-I-5への先行を止め、ニュース/適時開示をfilter前grouping→group状態filterへ修正する。grouped UIから全provenance/source/document URLへ到達可能にし、group_count>1のaggregate stateは暗黙bulk updateせずsource別明示編集またはread-onlyにする。ニュース/適時開示の実ページAppTestでmixed-state・全source保持・曖昧別件・表示DB非変更を固定する。その後P2-I-4設定AppTestを実source fixture/DB非変更まで強化し、approved_by暗黙human補完を除去。focused tests + relevant AppTests + full pytest + compileall + git diff --checkがgreenになりmainへpushされるまで完了扱いにしない。",
   "blocked_reason": null,
-  "human_action_required": "P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認はHuman Acceptanceとして残す。P2-H/Iの通常技術判断は自律継続。P2-F実CSV確認は後続Human Action。",
+  "human_action_required": "なし。今回のAcceptance FAILは通常技術判断で自律修正する。P1-Eの実データ企業情報妥当性、Desktop/390px実画面、候補値の最終承認は後続Human Acceptance。P2-F実CSV確認も後続Human Action。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "c12831d"
+  "last_git_sha": "0cd33dd"
 }
