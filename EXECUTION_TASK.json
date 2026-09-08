@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P1-B-5 / P1-J-1 Dashboard実ページAcceptance AppTest補完",
+  "current_task": "#11 P2-F-2 実CSV形式と実データ反映のHuman Acceptance待ち",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-08",
-  "last_run_at": "2026-09-09T00:05:00+09:00",
+  "last_run_at": "2026-09-09T00:22:00+09:00",
   "last_completed_task": "#11 P1-B-5 / P1-J-1 Dashboard実ページAppTest補完 (5f7a992)",
-  "next_action": "Dashboardの実ページAppTestで、ticker付きfocusの複数理由・企業カルテCTA・欠損tickerの通常page導線・上位3件表示を確認済み。次回はIssue #11の残タスクから最小の実行可能項目を選ぶ。",
-  "blocked_reason": null,
+  "next_action": "P1-A〜P1-Jの自動実行可能な主要工程は既存実装・テスト済み。実CSVが提供されるまで列仕様を推測せず、P2-Fの実データpreview・反映確認をHuman Acceptance待ちとする。",
+  "blocked_reason": "実CSV形式と実データ反映のHuman Acceptance待ち。列仕様を推測したparser拡張や本番DB反映は行わない。",
   "human_action_required": "P2-F実CSV形式と実データ反映、trusted source実migration・正式承認ポリシー、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。",
-  "consecutive_idle_checks": 0,
-  "last_git_sha": "5f7a992"
+  "consecutive_idle_checks": 1,
+  "last_git_sha": "f2d970a"
 }
