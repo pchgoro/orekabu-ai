@@ -2,9 +2,11 @@
 
 from pathlib import Path
 
+import pytest
 from streamlit.testing.v1 import AppTest
 
-from services.database import load_settings, save_settings
+from services.automation import JobResult, finish_run, start_run
+from services.database import add_stock, get_stock, load_settings, save_settings
 from services.earnings import add_earnings, japan_today
 from services.news import save_article
 from services.news_providers.base import NewsItem
@@ -110,3 +112,68 @@ def test_dashboard_renders_grouped_focus_reasons_and_profile_cta(ui_db, monkeypa
     captions = [item.value for item in at.caption]
     assert any("確認理由:" in value and "重要ニュースを確認" in value for value in captions)
     assert any(button.label == "確認する" for button in at.button)
+
+
+def test_dashboard_focus_shows_only_top_three_of_four_runtime_candidates(ui_db, monkeypatch) -> None:
+    """The dashboard's morning block must keep its three-item display boundary."""
+    import pandas as pd
+
+    index = pd.date_range("2026-01-01", periods=100, freq="B")
+    values = pd.Series(range(100), index=index, dtype=float) + 1000
+    frame = pd.DataFrame(
+        {"Open": values, "High": values + 10, "Low": values - 10, "Close": values, "Volume": 1000},
+        index=index,
+    )
+    monkeypatch.setattr("services.stock_data.fetch_stock_history", lambda *args, **kwargs: frame)
+
+    for ticker, company_name in (("5801.T", "古河電気工業"), ("6976.T", "太陽誘電"), ("4062.T", "イビデン")):
+        stock = get_stock(ticker, ui_db)
+        assert stock is not None
+        add_earnings(
+            {
+                "stock_id": stock["id"],
+                "fiscal_year": 2026,
+                "fiscal_quarter": "Q1",
+                "earnings_date": japan_today().isoformat(),
+                "date_status": "予定",
+            },
+            ui_db,
+        )
+    extra_id = add_stock(
+        {"ticker": "9999.T", "company_name": "追加テスト社", "category": "監視銘柄"},
+        ui_db,
+    )
+    add_earnings(
+        {
+            "stock_id": extra_id,
+            "fiscal_year": 2026,
+            "fiscal_quarter": "Q1",
+            "earnings_date": japan_today().isoformat(),
+            "date_status": "予定",
+        },
+        ui_db,
+    )
+
+    at = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run(timeout=60)
+
+    assert not at.exception
+    assert sum(button.label == "確認する" for button in at.button) == 3
+
+
+def test_dashboard_missing_ticker_task_keeps_normal_page_link(ui_db) -> None:
+    """A global task must not be misrouted to the company-profile button."""
+    import streamlit as st
+
+    page_links: list[tuple[str, str]] = []
+    monkeypatch = pytest.MonkeyPatch()
+    monkeypatch.setattr(st, "page_link", lambda page, label, **kwargs: page_links.append((page, label)))
+    run_id = start_run("test-failed-run", False, 1, ui_db)
+    finish_run(run_id, [JobResult(processed=1, failed=1, message="fixture failure")], ui_db)
+
+    try:
+        at = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run(timeout=60)
+        assert not at.exception
+        assert ("pages/6_設定.py", "確認する") in page_links
+        assert not any(button.label == "確認する" for button in at.button)
+    finally:
+        monkeypatch.undo()
