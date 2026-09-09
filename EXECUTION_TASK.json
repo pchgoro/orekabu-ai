@@ -5,11 +5,11 @@
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
   "current_task": "#11 P2-I-6A trusted source persisted-state acceptance fix",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
-  "last_run_at": "2026-09-09T09:55:00+09:00",
+  "last_run_at": "2026-09-09T10:25:00+09:00",
   "last_completed_task": "#11 P2-I-6A trusted source persisted-state acceptance fix (2dad552)",
   "next_action": "DB round-tripのapproved=1/0正規化、Settings approve/revokeのreload表示、append-only 3イベント、URL非継承、migration非破壊性を確認済み。Supervisor再監査を受ける。Acceptance PASSまで次Phaseへ進まない。",
   "blocked_reason": null,
   "human_action_required": "P2-F実CSV形式と実データ反映、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-I-6Aは通常技術判断で自律実行する。",
-  "consecutive_idle_checks": 0,
-  "last_git_sha": "2dad552"
+  "consecutive_idle_checks": 1,
+  "last_git_sha": "3454e58"
 }
