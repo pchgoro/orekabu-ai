@@ -6,10 +6,10 @@
   "current_task": "#11 P2-I-6 trusted source persistence vertical slice",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
   "last_run_at": "2026-09-09T09:20:00+09:00",
-  "last_completed_task": "#11 P2-I-6 trusted source persistence vertical slice (pending commit)",
+  "last_completed_task": "#11 P2-I-6 trusted source persistence vertical slice (f0d94c0)",
   "next_action": "additive approval audit table/repository、Settings明示approve/revoke、migration非破壊性、再読込永続化を実装・検証済み。Supervisor acceptance再監査を受ける。",
   "blocked_reason": null,
   "human_action_required": "P2-F実CSV形式と実データ反映、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-I-6は通常技術判断で自律実行する。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "pending"
+  "last_git_sha": "f0d94c0"
 }
