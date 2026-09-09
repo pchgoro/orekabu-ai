@@ -6,10 +6,10 @@
   "current_task": "#11 P2-F-1 brokerage CSV adapter contract",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
   "last_run_at": "2026-09-09T15:25:00+09:00",
-  "last_completed_task": "#11 P2-F-1 brokerage CSV adapter contract (pending commit)",
+  "last_completed_task": "#11 P2-F-1 brokerage CSV adapter contract (6f71f74)",
   "next_action": "provider dispatch入口でMarketSpeedを既存parserへ委譲し、未提供SBI等はfail-closedするcontract/fixtureを確認済み。実CSV形式・実データ反映はHuman Acceptanceとして残し、Supervisor再監査を受ける。",
   "blocked_reason": null,
   "human_action_required": "P2-F実CSV形式と実データ反映、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-F-1のcontract/parser/fixtureは通常技術判断で自律実行する。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "pending"
+  "last_git_sha": "6f71f7422898b368e5d750fa0189ce6653fb994e"
 }
