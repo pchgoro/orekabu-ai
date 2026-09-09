@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-I-7 trusted source runtime consumer wiring",
+  "current_task": "#11 P2-I-7A trusted runtime acceptance closure",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
-  "last_run_at": "2026-09-09T12:50:00+09:00",
-  "last_completed_task": "#11 P2-I-7 trusted source runtime consumer wiring (2918f71)",
-  "next_action": "公式IRニュース自動取得jobを明示trusted sourceだけに限定し、未承認→確認待ち、approve→runtime自動取得、revoke→確認待ち、provenance/trust理由保持をfixtureで確認済み。docsを現状へ同期し、Supervisor再監査を受ける。P2-Fへ進まない。",
+  "last_run_at": "2026-09-09T13:28:00+09:00",
+  "last_completed_task": "#11 P2-I-7 trusted source runtime consumer wiring (2918f71) — Acceptance FAIL on runtime exact-key/provenance coverage",
+  "next_action": "P2-I-7Aを実装する。run_official_ir_news_job()の実runtime fixtureでexact keyのみfetch、URL変更・別ticker・別source_typeへのtrust非継承、revoke後停止を直接assertする。保存disclosureを読み戻してticker/stock紐付けとsource/provenance/source URLまたはdocument URL到達性を確認し、untrusted/mismatch評価がapproval events・stock_ir_sources・既存disclosureを変更しないbefore/after fixtureを追加する。focused/relevant regression/full pytest/compileall/diff-check後にSupervisor再監査を受ける。Acceptance PASSまでP2-Fへ進まない。",
   "blocked_reason": null,
-  "human_action_required": "P2-F実CSV形式と実データ反映、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-I-7は通常技術判断で自律実行する。",
-  "consecutive_idle_checks": 1,
-  "last_git_sha": "f5f5241"
+  "human_action_required": "P2-F実CSV形式と実データ反映、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-I-7Aは通常技術判断で自律実行する。",
+  "consecutive_idle_checks": 0,
+  "last_git_sha": "28f38d0"
 }
