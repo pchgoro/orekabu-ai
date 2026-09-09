@@ -5,11 +5,11 @@
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
   "current_task": "#11 P2-F-1A brokerage CSV runtime/UI acceptance fix",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
-  "last_run_at": "2026-09-09T14:26:39+09:00",
-  "last_completed_task": "#11 P2-F-1 brokerage CSV adapter contract (6f71f74) — Supervisor Acceptance FAIL: provider dispatcher is helper-only / Settings runtime not wired",
-  "next_action": "P2-F-1Aを実行する。pages/6_設定.py の証券CSVアップロードを services.securities_csv.parse_securities_csv() 経由へ配線し、MarketSpeedは既存parserへ委譲、未対応providerはfail-closedとする。Settings実ページAppTestで upload→preview(DB不変)→明示apply→DB反映、missing holding/非対象列保持、unsupported provider DB不変を直接検証する。focused/AppTest/full pytest/compileall後にSupervisor Acceptanceを受ける。",
+  "last_run_at": "2026-09-09T15:29:00+09:00",
+  "last_completed_task": "#11 P2-F-1A brokerage CSV runtime/UI acceptance fix (50ac0e0)",
+  "next_action": "Supervisor Acceptanceを受ける。SettingsのMarketSpeed CSV upload→provider dispatch→preview→明示apply経路を確認済み。実CSV形式・実データ反映、Desktop/390px実画面はHuman Acceptanceとして残す。",
   "blocked_reason": null,
   "human_action_required": "P2-F実CSV形式と実データ反映、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-F-1Aのruntime/UI配線とfixture/AppTestは通常技術判断で自律実行する。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "d042620b4e3668ebcf253281e1b8d2fbf1e79eb9"
+  "last_git_sha": "50ac0e05bccd69ea156f31d3ff10172e4ef6078e"
 }
