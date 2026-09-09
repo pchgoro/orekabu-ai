@@ -16,6 +16,7 @@ from services.marketspeed_import import (
     parse_market_number,
     parse_marketspeed_csv,
 )
+from services.securities_csv import parse_securities_csv
 
 HEADER = (
     '"売り","コード","銘柄名","口座区分","保有数量(株/口)",'
@@ -95,6 +96,17 @@ def test_invalid_row_does_not_stop_other_rows() -> None:
 def test_missing_required_column_fails_closed_before_preview() -> None:
     with pytest.raises(ValueError, match="必要なCSV列が不足"):
         parse_marketspeed_csv(b'"code","name"\n"5801","missing"\n')
+
+
+def test_provider_dispatch_reuses_marketspeed_and_rejects_unprovided_formats() -> None:
+    content = (
+        '"コード","銘柄名","口座区分","保有数量(株/口)","平均取得価額(円)"\n'
+        '"5801","古河電気工業","特定","10","1000"\n'
+    ).encode("utf-8-sig")
+    parsed = parse_securities_csv("MarketSpeed", content, filename="fixture.csv")
+    assert parsed["records"][0]["ticker"] == "5801.T"
+    with pytest.raises(ValueError, match="未対応の証券会社CSV形式"):
+        parse_securities_csv("SBI", content, filename="fixture.csv")
 
 
 def seed_existing(db: Path) -> None:
