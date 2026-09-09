@@ -6,7 +6,7 @@ from services.automation_jobs import run_official_ir_news_job
 from services.database import get_stock, init_db
 from services.disclosures import list_disclosures
 from services.earnings_ir_sources import list_ir_sources, record_ir_source_result, save_ir_source
-from services.trusted_sources import set_trusted_source_approval
+from services.trusted_sources import list_trusted_source_approvals, set_trusted_source_approval
 
 
 class Provider:
@@ -143,3 +143,48 @@ def test_official_ir_news_job_requires_current_explicit_trust(tmp_path: Path) ->
     revoked = run_official_ir_news_job(Provider, force=True, db_path=db)
     assert revoked.processed == 0 and revoked.details["skipped_untrusted"] == 1
     assert next(row for row in list_ir_sources(db) if row["id"] == source_id)["source_url"] == source_url
+
+
+def test_official_ir_news_runtime_enforces_exact_key_and_preserves_provenance(tmp_path: Path) -> None:
+    db = tmp_path / "exact-trust-runtime.db"
+    init_db(db)
+    first = get_stock("5801.T", db)
+    second = get_stock("6976.T", db)
+    exact_url = "https://example.com/exact/rss"
+    changed_url = "https://example.com/changed/rss"
+    first_id = save_ir_source({"stock_id": first["id"], "source_type": "official_ir_news", "source_url": exact_url}, db)
+    second_id = save_ir_source({"stock_id": second["id"], "source_type": "official_ir_news", "source_url": exact_url}, db)
+    calendar_id = save_ir_source({"stock_id": first["id"], "source_type": "official_ir_calendar", "source_url": exact_url}, db)
+    set_trusted_source_approval(
+        {"stock_id": first["id"], "source_type": "official_ir_news", "source_url": exact_url, "approved": True, "approved_by": "fixture"},
+        db_path=db,
+    )
+
+    first_run = run_official_ir_news_job(Provider, force=True, db_path=db)
+    assert first_run.processed == 1 and first_run.inserted == 1
+    saved = list_disclosures(db)
+    assert saved[0]["ticker"] == "5801.T"
+    assert saved[0]["source_url"] == exact_url
+    assert saved[0]["document_url"] == f"{exact_url}/1"
+
+    events_before = list_trusted_source_approvals(db)
+    disclosures_before = list_disclosures(db)
+    save_ir_source({"stock_id": first["id"], "source_type": "official_ir_news", "source_url": changed_url}, db)
+    mismatch = run_official_ir_news_job(Provider, force=True, db_path=db)
+    assert mismatch.processed == 0 and mismatch.details["skipped_untrusted"] == 2
+    assert list_trusted_source_approvals(db) == events_before
+    assert list_disclosures(db) == disclosures_before
+    assert next(row for row in list_ir_sources(db) if row["id"] == first_id)["source_url"] == changed_url
+    assert next(row for row in list_ir_sources(db) if row["id"] == second_id)["source_url"] == exact_url
+    assert next(row for row in list_ir_sources(db) if row["id"] == calendar_id)["source_type"] == "official_ir_calendar"
+
+    save_ir_source({"stock_id": first["id"], "source_type": "official_ir_news", "source_url": exact_url}, db)
+    set_trusted_source_approval(
+        {"stock_id": first["id"], "source_type": "official_ir_news", "source_url": exact_url, "approved": False, "approved_by": "fixture"},
+        db_path=db,
+    )
+    sources_before_revoke = list_ir_sources(db)
+    revoked = run_official_ir_news_job(Provider, force=True, db_path=db)
+    assert revoked.processed == 0
+    assert list_disclosures(db) == disclosures_before
+    assert list_ir_sources(db) == sources_before_revoke
