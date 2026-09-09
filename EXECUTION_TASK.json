@@ -6,10 +6,10 @@
   "current_task": "#11 P2-I-6B trusted source acceptance hardening",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
   "last_run_at": "2026-09-09T11:00:00+09:00",
-  "last_completed_task": "#11 P2-I-6B trusted source acceptance hardening (pending commit)",
+  "last_completed_task": "#11 P2-I-6B trusted source acceptance hardening (ee7529f)",
   "next_action": "承認入力fail-closed、別ticker/別source_type非継承、page open/source登録のイベント非増加、append-only 3イベントを確認済み。Supervisor再監査を受ける。Acceptance PASSまで次Phaseへ進まない。",
   "blocked_reason": null,
   "human_action_required": "P2-F実CSV形式と実データ反映、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-I-6Bは通常技術判断で自律実行する。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "pending"
+  "last_git_sha": "ee7529f"
 }
