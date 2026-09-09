@@ -10,6 +10,11 @@ from services.news import canonicalize_url
 from utils.constants import DB_PATH
 
 
+def _is_explicitly_approved(value: Any) -> bool:
+    """Accept only the persisted boolean forms, never arbitrary truthy strings."""
+    return value is True or (isinstance(value, int) and not isinstance(value, bool) and value == 1)
+
+
 def normalize_trusted_source_approval(payload: dict[str, Any]) -> dict[str, Any]:
     """Validate an explicit approval payload without persisting or inferring it."""
     stock_id = int(payload.get("stock_id") or 0)
@@ -39,7 +44,7 @@ def build_trusted_source_rows(
             canonicalize_url(str(row.get("source_url") or "")),
         )
         for row in approvals or []
-        if row.get("approved") is True
+        if _is_explicitly_approved(row.get("approved"))
     }
     result = []
     for source in sources:

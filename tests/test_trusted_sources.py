@@ -1,6 +1,6 @@
 import pytest
 
-from services.database import get_stock, init_db
+from services.database import connect, get_stock, init_db
 from services.earnings_ir_sources import list_ir_sources, save_ir_source
 from services.trusted_sources import (
     build_trusted_source_review_rows,
@@ -74,11 +74,23 @@ def test_trusted_source_approval_is_append_only_idempotent_and_reversible(tmp_pa
         {"stock_id": stock["id"], "source_type": "official_ir_news", "source_url": "https://example.com/ir", "approved": False, "approved_by": "tester"},
         db_path=db,
     )
+    reapproved = set_trusted_source_approval(
+        {"stock_id": stock["id"], "source_type": "official_ir_news", "source_url": "https://example.com/ir", "approved": True, "approved_by": "tester"},
+        db_path=db,
+    )
 
     assert approved["changed"] is True and repeated["changed"] is False
-    assert revoked["changed"] is True
+    assert revoked["changed"] is True and reapproved["changed"] is True
     assert len(list_trusted_source_approvals(db)) == 1
-    assert list_trusted_source_approvals(db)[0]["approved"] == 0
+    assert list_trusted_source_approvals(db)[0]["approved"] == 1
+    with connect(db) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM trusted_source_approval_events").fetchone()[0] == 3
+    rows = build_trusted_source_review_rows(list_ir_sources(db), list_trusted_source_approvals(db))
+    assert rows[0]["trusted"] is True and rows[0]["review_action"] == "revoke"
+    assert build_trusted_source_rows(
+        [{"stock_id": stock["id"], "source_type": "official_ir_news", "source_url": "https://example.com/other"}],
+        list_trusted_source_approvals(db),
+    )[0]["trusted"] is False
     assert list_ir_sources(db) == before_sources
 
 

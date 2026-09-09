@@ -69,13 +69,21 @@ def test_settings_page_persists_explicit_trusted_source_approval_and_revoke(ui_d
     at = next(item for item in at.button if item.label == "trusted sourceを明示承認").click().run(timeout=60)
     assert not at.exception
     assert list_trusted_source_approvals(ui_db)[0]["approved"] == 1
+    rendered = "\n".join(item.value.to_string() for item in at.dataframe)
+    assert "trusted" in rendered and "承認を解除" in rendered
 
-    actor = next(item for item in at.text_input if item.label == "承認者（必須）")
+    reloaded = AppTest.from_file(str(ROOT / "pages" / "6_設定.py"), default_timeout=60).run(timeout=60)
+    rendered = "\n".join(item.value.to_string() for item in reloaded.dataframe)
+    assert "trusted" in rendered and "承認を解除" in rendered
+
+    actor = next(item for item in reloaded.text_input if item.label == "承認者（必須）")
     actor.set_value("tester")
-    next(item for item in at.checkbox if item.label == "このtrusted sourceの状態変更を確認しました").set_value(True)
-    at = next(item for item in at.button if item.label == "trusted sourceの承認を解除").click().run(timeout=60)
+    next(item for item in reloaded.checkbox if item.label == "このtrusted sourceの状態変更を確認しました").set_value(True)
+    at = next(item for item in reloaded.button if item.label == "trusted sourceの承認を解除").click().run(timeout=60)
     assert not at.exception
     assert list_trusted_source_approvals(ui_db)[0]["approved"] == 0
+    rendered = "\n".join(item.value.to_string() for item in at.dataframe)
+    assert "未承認" in rendered and "明示承認" in rendered
 
 
 def test_settings_page_can_approve_profile_candidate(ui_db: Path) -> None:
