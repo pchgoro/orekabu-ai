@@ -5,11 +5,11 @@
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
   "current_task": "#11 P2-I-7 trusted source runtime consumer wiring",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
-  "last_run_at": "2026-09-09T11:28:00+09:00",
-  "last_completed_task": "#11 P2-I-6B trusted source acceptance hardening (ee7529f) — Acceptance PASS",
-  "next_action": "P2-Iのphase gateを閉じる。明示trusted sourceを、次回以降の確認を実際に減らす既存runtime pathへ exact-key/fail-closed で配線する。未承認/revoke/URL変更/別ticker/別source_typeは自動適用しない。実runtime callerを通すfixture/AppTestで未承認→確認待ち、approve後のみ不要確認を省略、revokeで確認待ちへ復帰、provenance/source URL保持、read-only評価のDB非変更を直接検証する。docs/TRUSTED_SOURCES.md と docs/TRUSTED_SOURCE_PERSISTENCE.md の未適用記述も現状へ更新する。Supervisor Acceptance PASSまでP2-Fへ進まない。",
+  "last_run_at": "2026-09-09T12:20:00+09:00",
+  "last_completed_task": "#11 P2-I-7 trusted source runtime consumer wiring (pending commit)",
+  "next_action": "公式IRニュース自動取得jobを明示trusted sourceだけに限定し、未承認→確認待ち、approve→runtime自動取得、revoke→確認待ち、provenance/trust理由保持をfixtureで確認済み。docsを現状へ同期し、Supervisor再監査を受ける。P2-Fへ進まない。",
   "blocked_reason": null,
   "human_action_required": "P2-F実CSV形式と実データ反映、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-I-7は通常技術判断で自律実行する。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "15ee582"
+  "last_git_sha": "pending"
 }

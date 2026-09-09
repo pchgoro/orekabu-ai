@@ -14,8 +14,9 @@ from services.disclosures import save_disclosure
 from services.earnings_candidates import purge_reviewed_candidates, run_candidate_fetch
 from services.earnings_ir_sources import list_ir_sources, record_ir_source_result, source_is_due
 from services.earnings_providers.base import EarningsProvider
-from services.news import fetch_enabled_sources, list_sources
+from services.news import canonicalize_url, fetch_enabled_sources, list_sources
 from services.news_providers.base import NewsProvider
+from services.trusted_sources import build_trusted_source_rows, list_trusted_source_approvals
 from utils.constants import DB_PATH
 
 
@@ -94,12 +95,21 @@ def run_official_ir_news_job(
     db_path: Path | str = DB_PATH,
 ) -> JobResult:
     """Fetch due official IR news sources and save only deduplicated candidates."""
-    sources = [
+    configured_sources = [
         source
         for source in list_ir_sources(db_path)
         if source["enabled"]
         and source["source_type"] == "official_ir_news"
         and (ticker is None or source["ticker"] == ticker)
+    ]
+    trusted_keys = {
+        (row["stock_id"], row["source_type"], row["normalized_source_url"])
+        for row in build_trusted_source_rows(configured_sources, list_trusted_source_approvals(db_path))
+        if row["trusted"]
+    }
+    sources = [
+        source for source in configured_sources
+        if (source["stock_id"], source["source_type"], canonicalize_url(source.get("source_url", ""))) in trusted_keys
     ][: max(1, int(limit))]
     processed = inserted = duplicates = failed = 0
     errors: list[str] = []
@@ -128,7 +138,13 @@ def run_official_ir_news_job(
         duplicates=duplicates,
         failed=failed,
         message=" / ".join(errors),
-        details={"source_count": len(sources), "skipped_cached": len(sources) - processed},
+        details={
+            "source_count": len(sources),
+            "trusted_source_count": len(sources),
+            "trust_reason": "explicit trusted source approval",
+            "skipped_cached": len(sources) - processed,
+            "skipped_untrusted": len(configured_sources) - len(sources),
+        },
     )
 
 

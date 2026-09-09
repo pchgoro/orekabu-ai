@@ -1,4 +1,4 @@
-# Trusted source承認の永続化設計（未適用）
+# Trusted source承認の永続化とruntime利用
 
 ## 方針
 
@@ -14,6 +14,6 @@
 
 ## 実装境界
 
-現時点ではmigration・書き込み・自動承認を行わない。`normalize_trusted_source_approval` と `build_trusted_source_review_rows` の契約で、必須キー・明示承認・解除可能性・承認者必須を検証する。
+schema v14で `trusted_source_approval_events` を追加した。既存の `stock_ir_sources` は変更せず、`stock_id + source_type + normalized_source_url` ごとのappend-onlyイベントから最新状態を読む。承認者は必須で、approve/revokeはSettingsのactor入力と確認チェックを通した明示操作だけが行う。同一状態の再操作はidempotent、解除は物理削除しない。
 
-将来の実装では、既存DBをバックアップ可能な通常migrationとして承認テーブルを追加し、設定画面で人間が承認/解除したときだけ保存する。既存のIR取得設定、候補、ニュース、開示、ユーザーデータは変更しない。
+公式IRニュース自動取得jobは、現在の明示trusted状態とsourceの正規化URLが一致する場合だけ自動取得する。未承認・revoke・URL変更・別ticker・別source_typeは自動取得せず、Settingsでの確認待ちとして残す。既存のIR取得設定、候補、ニュース、開示、ユーザーデータは変更しない。
