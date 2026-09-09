@@ -18,8 +18,8 @@ from services.earnings_ir_sources import list_ir_sources
 from services.marketspeed_import import (
     build_marketspeed_preview,
     import_marketspeed_preview,
-    parse_marketspeed_csv,
 )
+from services.securities_csv import parse_securities_csv
 from services.settings import default_settings
 from services.stock_profiles import list_profile_candidates, review_profile_candidate
 from services.startup_automation import is_daily_update_running
@@ -488,9 +488,10 @@ marketspeed_policy = st.radio(
 )
 if marketspeed_upload is not None:
     try:
-        parsed_market = parse_marketspeed_csv(
+        parsed_market = parse_securities_csv(
+            "marketspeed",
             marketspeed_upload.getvalue(),
-            marketspeed_upload.name,
+            filename=marketspeed_upload.name,
         )
         market_preview = build_marketspeed_preview(parsed_market, marketspeed_policy)
         st.caption(f"文字コード: {market_preview['encoding']}")
