@@ -6,10 +6,10 @@
   "current_task": "#11 P2-I-7 trusted source runtime consumer wiring",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
   "last_run_at": "2026-09-09T12:20:00+09:00",
-  "last_completed_task": "#11 P2-I-7 trusted source runtime consumer wiring (pending commit)",
+  "last_completed_task": "#11 P2-I-7 trusted source runtime consumer wiring (2918f71)",
   "next_action": "公式IRニュース自動取得jobを明示trusted sourceだけに限定し、未承認→確認待ち、approve→runtime自動取得、revoke→確認待ち、provenance/trust理由保持をfixtureで確認済み。docsを現状へ同期し、Supervisor再監査を受ける。P2-Fへ進まない。",
   "blocked_reason": null,
   "human_action_required": "P2-F実CSV形式と実データ反映、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-I-7は通常技術判断で自律実行する。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "pending"
+  "last_git_sha": "2918f71"
 }
