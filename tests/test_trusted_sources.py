@@ -43,6 +43,9 @@ def test_trusted_source_approval_contract_is_reversible_and_explicit() -> None:
         normalize_trusted_source_approval({"stock_id": 1, "source_type": "official_ir_news", "approved": True})
     with pytest.raises(ValueError):
         normalize_trusted_source_approval({"stock_id": 1, "source_type": "official_ir_news", "source_url": "https://example.com/ir", "approved": True})
+    for value in ("false", "0", "yes", object()):
+        with pytest.raises(ValueError):
+            normalize_trusted_source_approval({"stock_id": 1, "source_type": "official_ir_news", "source_url": "https://example.com/ir", "approved": value, "approved_by": "tester"})
 
 
 def test_trusted_source_review_exposes_explicit_reversible_action() -> None:
@@ -89,6 +92,14 @@ def test_trusted_source_approval_is_append_only_idempotent_and_reversible(tmp_pa
     assert rows[0]["trusted"] is True and rows[0]["review_action"] == "revoke"
     assert build_trusted_source_rows(
         [{"stock_id": stock["id"], "source_type": "official_ir_news", "source_url": "https://example.com/other"}],
+        list_trusted_source_approvals(db),
+    )[0]["trusted"] is False
+    assert build_trusted_source_rows(
+        [{"stock_id": stock["id"] + 1, "source_type": "official_ir_news", "source_url": "https://example.com/ir"}],
+        list_trusted_source_approvals(db),
+    )[0]["trusted"] is False
+    assert build_trusted_source_rows(
+        [{"stock_id": stock["id"], "source_type": "official_ir_calendar", "source_url": "https://example.com/ir"}],
         list_trusted_source_approvals(db),
     )[0]["trusted"] is False
     assert list_ir_sources(db) == before_sources

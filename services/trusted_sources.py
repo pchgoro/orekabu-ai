@@ -23,11 +23,18 @@ def normalize_trusted_source_approval(payload: dict[str, Any]) -> dict[str, Any]
     approved_by = str(payload.get("approved_by") or "").strip()
     if stock_id < 1 or not source_type or not source_url or not approved_by:
         raise ValueError("trusted sourceの承認には銘柄・種別・URL・承認者が必要です。")
+    raw_approved = payload.get("approved")
+    if isinstance(raw_approved, bool):
+        approved = raw_approved
+    elif isinstance(raw_approved, int) and not isinstance(raw_approved, bool) and raw_approved in (0, 1):
+        approved = bool(raw_approved)
+    else:
+        raise ValueError("trusted sourceの承認状態はtrue/falseで指定してください。")
     return {
         "stock_id": stock_id,
         "source_type": source_type,
         "source_url": source_url,
-        "approved": bool(payload.get("approved")),
+        "approved": approved,
         "approved_by": approved_by,
     }
 

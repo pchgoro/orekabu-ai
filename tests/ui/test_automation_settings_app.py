@@ -49,6 +49,8 @@ def test_settings_page_shows_automation_status_without_network(ui_db: Path) -> N
 def test_settings_page_shows_real_ir_source_as_unapproved_without_db_change(ui_db: Path) -> None:
     stock = get_stock("5801.T", ui_db)
     save_ir_source({"stock_id": stock["id"], "source_type": "official_ir_news", "source_url": "https://example.com/ir"}, ui_db)
+    with connect(ui_db) as conn:
+        before_events = conn.execute("SELECT COUNT(*) FROM trusted_source_approval_events").fetchone()[0]
     before = list_ir_sources(ui_db)
     at = AppTest.from_file(str(ROOT / "pages" / "6_設定.py"), default_timeout=60).run(timeout=60)
     assert not at.exception
@@ -56,6 +58,8 @@ def test_settings_page_shows_real_ir_source_as_unapproved_without_db_change(ui_d
     rendered = "\n".join(item.value.to_string() for item in at.dataframe)
     assert all(value in rendered for value in ("5801.T", "official_ir_news", "https://example.com/ir", "未承認", "明示承認"))
     assert list_ir_sources(ui_db) == before
+    with connect(ui_db) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM trusted_source_approval_events").fetchone()[0] == before_events == 0
 
 
 def test_settings_page_persists_explicit_trusted_source_approval_and_revoke(ui_db: Path) -> None:
