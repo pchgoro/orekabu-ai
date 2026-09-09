@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Iterable
 
+from services.database import _now, connect
 from services.news import canonicalize_url
+from utils.constants import DB_PATH
 
 
 def normalize_trusted_source_approval(payload: dict[str, Any]) -> dict[str, Any]:
@@ -69,3 +72,46 @@ def build_trusted_source_review_rows(
         }
         for row in build_trusted_source_rows(sources, approvals)
     ]
+
+
+def list_trusted_source_approvals(db_path: Path | str = DB_PATH) -> list[dict[str, Any]]:
+    """Return the latest explicit approval state for each logical source key."""
+    with connect(db_path) as conn:
+        rows = conn.execute(
+            """SELECT e.* FROM trusted_source_approval_events e
+            JOIN (
+                SELECT stock_id, source_type, source_url, MAX(id) AS latest_id
+                FROM trusted_source_approval_events
+                GROUP BY stock_id, source_type, source_url
+            ) latest ON latest.latest_id=e.id
+            ORDER BY e.stock_id, e.source_type, e.source_url"""
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def set_trusted_source_approval(
+    payload: dict[str, Any],
+    *,
+    db_path: Path | str = DB_PATH,
+) -> dict[str, Any]:
+    """Append an explicit approval/revoke event; identical current state is idempotent."""
+    item = normalize_trusted_source_approval(payload)
+    with connect(db_path) as conn:
+        stock = conn.execute("SELECT id FROM stocks WHERE id=?", (item["stock_id"],)).fetchone()
+        if stock is None:
+            raise ValueError("登録済みの銘柄を指定してください。")
+        previous = conn.execute(
+            """SELECT approved, approved_by, approved_at FROM trusted_source_approval_events
+            WHERE stock_id=? AND source_type=? AND source_url=? ORDER BY id DESC LIMIT 1""",
+            (item["stock_id"], item["source_type"], item["source_url"]),
+        ).fetchone()
+        if previous is not None and bool(previous["approved"]) == item["approved"]:
+            return {"changed": False, **item, "approved_at": previous["approved_at"]}
+        approved_at = _now()
+        conn.execute(
+            """INSERT INTO trusted_source_approval_events
+            (stock_id,source_type,source_url,approved,approved_by,approved_at)
+            VALUES(?,?,?,?,?,?)""",
+            (item["stock_id"], item["source_type"], item["source_url"], int(item["approved"]), item["approved_by"], approved_at),
+        )
+    return {"changed": True, **item, "approved_at": approved_at}

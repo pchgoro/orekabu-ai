@@ -6,7 +6,7 @@ import logging
 import sqlite3
 
 logger = logging.getLogger(__name__)
-LATEST_SCHEMA_VERSION = 13
+LATEST_SCHEMA_VERSION = 14
 
 
 def migrate(conn: sqlite3.Connection) -> None:
@@ -85,6 +85,11 @@ def migrate(conn: sqlite3.Connection) -> None:
             conn.execute("UPDATE schema_version SET version = 13")
             version = 13
 
+        if version < 14:
+            _migrate_to_v14(conn)
+            conn.execute("UPDATE schema_version SET version = 14")
+            version = 14
+
         # CREATE IF NOT EXISTS also repairs a partially created v2 migration.
         _migrate_to_v2(conn)
         _migrate_to_v3(conn)
@@ -98,6 +103,7 @@ def migrate(conn: sqlite3.Connection) -> None:
         _migrate_to_v11(conn)
         _migrate_to_v12(conn)
         _migrate_to_v13(conn)
+        _migrate_to_v14(conn)
     except Exception:
         logger.exception("DBマイグレーション失敗 target_version=%s", LATEST_SCHEMA_VERSION)
         raise
@@ -793,5 +799,25 @@ def _migrate_to_v13(conn: sqlite3.Connection) -> None:
             ON score_history(stock_id, recorded_at DESC);
         CREATE INDEX IF NOT EXISTS idx_stock_scores_score
             ON stock_scores(score DESC, updated_at DESC);
+        """
+    )
+
+
+def _migrate_to_v14(conn: sqlite3.Connection) -> None:
+    """Add append-only explicit trusted-source approval audit events."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS trusted_source_approval_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            stock_id INTEGER NOT NULL,
+            source_type TEXT NOT NULL,
+            source_url TEXT NOT NULL,
+            approved INTEGER NOT NULL CHECK(approved IN (0, 1)),
+            approved_by TEXT NOT NULL,
+            approved_at TEXT NOT NULL,
+            FOREIGN KEY(stock_id) REFERENCES stocks(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_trusted_source_approval_key
+            ON trusted_source_approval_events(stock_id, source_type, source_url, id DESC);
         """
     )

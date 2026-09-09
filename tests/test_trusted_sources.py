@@ -1,6 +1,14 @@
 import pytest
 
-from services.trusted_sources import build_trusted_source_review_rows, build_trusted_source_rows, normalize_trusted_source_approval
+from services.database import get_stock, init_db
+from services.earnings_ir_sources import list_ir_sources, save_ir_source
+from services.trusted_sources import (
+    build_trusted_source_review_rows,
+    build_trusted_source_rows,
+    list_trusted_source_approvals,
+    normalize_trusted_source_approval,
+    set_trusted_source_approval,
+)
 
 
 def test_trusted_source_requires_explicit_matching_approval() -> None:
@@ -45,3 +53,41 @@ def test_trusted_source_review_exposes_explicit_reversible_action() -> None:
     assert rows[0]["review_action"] == "revoke"
     assert rows[0]["review_action_label"] == "承認を解除"
     assert rows[0]["human_confirmation_required"] is True
+
+
+def test_trusted_source_approval_is_append_only_idempotent_and_reversible(tmp_path) -> None:
+    db = tmp_path / "trusted.db"
+    init_db(db)
+    stock = get_stock("5801.T", db)
+    save_ir_source({"stock_id": stock["id"], "source_type": "official_ir_news", "source_url": "https://example.com/ir"}, db)
+    before_sources = list_ir_sources(db)
+
+    approved = set_trusted_source_approval(
+        {"stock_id": stock["id"], "source_type": "official_ir_news", "source_url": "https://example.com/ir/?utm_source=test", "approved": True, "approved_by": "tester"},
+        db_path=db,
+    )
+    repeated = set_trusted_source_approval(
+        {"stock_id": stock["id"], "source_type": "official_ir_news", "source_url": "https://example.com/ir", "approved": True, "approved_by": "other"},
+        db_path=db,
+    )
+    revoked = set_trusted_source_approval(
+        {"stock_id": stock["id"], "source_type": "official_ir_news", "source_url": "https://example.com/ir", "approved": False, "approved_by": "tester"},
+        db_path=db,
+    )
+
+    assert approved["changed"] is True and repeated["changed"] is False
+    assert revoked["changed"] is True
+    assert len(list_trusted_source_approvals(db)) == 1
+    assert list_trusted_source_approvals(db)[0]["approved"] == 0
+    assert list_ir_sources(db) == before_sources
+
+
+def test_trusted_source_migration_is_non_destructive(tmp_path) -> None:
+    db = tmp_path / "migration.db"
+    init_db(db)
+    stock_before = get_stock("5801.T", db)
+    save_ir_source({"stock_id": stock_before["id"], "source_type": "official_ir_news", "source_url": "https://example.com/ir"}, db)
+    sources_before = list_ir_sources(db)
+    init_db(db)
+    assert get_stock("5801.T", db) == stock_before
+    assert list_ir_sources(db) == sources_before

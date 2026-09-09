@@ -9,6 +9,7 @@ from streamlit.testing.v1 import AppTest
 from services.database import add_stock, connect, get_stock, get_stocks
 from services.earnings_ir_sources import list_ir_sources, save_ir_source
 from services.stock_profiles import list_profile_candidates, run_profile_refresh
+from services.trusted_sources import list_trusted_source_approvals
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -37,7 +38,7 @@ def test_settings_page_shows_automation_status_without_network(ui_db: Path) -> N
     assert not any("EDINET_API_KEY=" in item.value for item in at.markdown)
     assert any("企業情報候補の確認" in item.value for item in at.markdown)
     assert any("trusted source（確認用）" in item.value for item in at.subheader)
-    assert any("read-only preview" in item.value for item in at.caption)
+    assert any("actor" in item.value or "承認" in item.value for item in at.caption)
     labels = {item.label: item.value for item in at.number_input}
     assert labels["日次取得日数"] == 3
     assert labels["月次確認日数"] == 30
@@ -55,6 +56,26 @@ def test_settings_page_shows_real_ir_source_as_unapproved_without_db_change(ui_d
     rendered = "\n".join(item.value.to_string() for item in at.dataframe)
     assert all(value in rendered for value in ("5801.T", "official_ir_news", "https://example.com/ir", "未承認", "明示承認"))
     assert list_ir_sources(ui_db) == before
+
+
+def test_settings_page_persists_explicit_trusted_source_approval_and_revoke(ui_db: Path) -> None:
+    stock = get_stock("5801.T", ui_db)
+    save_ir_source({"stock_id": stock["id"], "source_type": "official_ir_news", "source_url": "https://example.com/ir"}, ui_db)
+    at = AppTest.from_file(str(ROOT / "pages" / "6_設定.py"), default_timeout=60).run(timeout=60)
+    assert not at.exception
+    actor = next(item for item in at.text_input if item.label == "承認者（必須）")
+    actor.set_value("tester")
+    next(item for item in at.checkbox if item.label == "このtrusted sourceの状態変更を確認しました").set_value(True)
+    at = next(item for item in at.button if item.label == "trusted sourceを明示承認").click().run(timeout=60)
+    assert not at.exception
+    assert list_trusted_source_approvals(ui_db)[0]["approved"] == 1
+
+    actor = next(item for item in at.text_input if item.label == "承認者（必須）")
+    actor.set_value("tester")
+    next(item for item in at.checkbox if item.label == "このtrusted sourceの状態変更を確認しました").set_value(True)
+    at = next(item for item in at.button if item.label == "trusted sourceの承認を解除").click().run(timeout=60)
+    assert not at.exception
+    assert list_trusted_source_approvals(ui_db)[0]["approved"] == 0
 
 
 def test_settings_page_can_approve_profile_candidate(ui_db: Path) -> None:

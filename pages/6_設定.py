@@ -23,7 +23,11 @@ from services.marketspeed_import import (
 from services.settings import default_settings
 from services.stock_profiles import list_profile_candidates, review_profile_candidate
 from services.startup_automation import is_daily_update_running
-from services.trusted_sources import build_trusted_source_review_rows
+from services.trusted_sources import (
+    build_trusted_source_review_rows,
+    list_trusted_source_approvals,
+    set_trusted_source_approval,
+)
 from utils.logging_config import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -365,9 +369,13 @@ except Exception:
     logger.exception("無料取得自動化UIエラー")
 
 st.subheader("trusted source（確認用）")
-st.caption("公式IR取得元のtrusted状態は明示承認だけで決まり、自動学習・自動承認は行いません。現在はread-only previewです。")
+st.caption("公式IR取得元のtrusted状態は明示承認だけで決まり、自動学習・自動承認は行いません。承認・解除はactorと確認が必要です。")
 try:
-    trusted_rows = build_trusted_source_review_rows(list_ir_sources())
+    trusted_sources = list_ir_sources()
+    trusted_rows = build_trusted_source_review_rows(
+        trusted_sources,
+        list_trusted_source_approvals(),
+    )
     if not trusted_rows:
         st.info("公式IR取得元はまだ登録されていません。")
     else:
@@ -385,6 +393,47 @@ try:
             use_container_width=True,
             hide_index=True,
         )
+        source_options = {
+            f"{row.get('ticker') or '不明'} / {row.get('source_type') or '不明'} / {row.get('normalized_source_url') or '不明'}": row
+            for row in trusted_rows
+        }
+        selected_label = st.selectbox("承認状態を操作する取得元", list(source_options), key="trusted_source_selected")
+        selected_source = source_options[selected_label]
+        actor = st.text_input("承認者（必須）", key="trusted_source_actor")
+        confirmed = st.checkbox("このtrusted sourceの状態変更を確認しました", key="trusted_source_confirm")
+        action_cols = st.columns(2)
+        with action_cols[0]:
+            if st.button("trusted sourceを明示承認", key="trusted_source_approve"):
+                if not actor.strip() or not confirmed:
+                    st.error("承認者と確認チェックが必要です。")
+                else:
+                    set_trusted_source_approval(
+                        {
+                            "stock_id": selected_source["stock_id"],
+                            "source_type": selected_source["source_type"],
+                            "source_url": selected_source["source_url"],
+                            "approved": True,
+                            "approved_by": actor,
+                        }
+                    )
+                    st.success("trusted sourceを承認しました。")
+                    st.rerun()
+        with action_cols[1]:
+            if st.button("trusted sourceの承認を解除", key="trusted_source_revoke"):
+                if not actor.strip() or not confirmed:
+                    st.error("承認者と確認チェックが必要です。")
+                else:
+                    set_trusted_source_approval(
+                        {
+                            "stock_id": selected_source["stock_id"],
+                            "source_type": selected_source["source_type"],
+                            "source_url": selected_source["source_url"],
+                            "approved": False,
+                            "approved_by": actor,
+                        }
+                    )
+                    st.success("trusted sourceの承認を解除しました。")
+                    st.rerun()
 except Exception:
     st.error("trusted sourceの状態を表示できませんでした。logs/app.logを確認してください。")
     logger.exception("trusted source preview UI error")

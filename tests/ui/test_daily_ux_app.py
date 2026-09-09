@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-import pytest
 from streamlit.testing.v1 import AppTest
 
 from services.automation import JobResult, finish_run, start_run
@@ -160,20 +159,21 @@ def test_dashboard_focus_shows_only_top_three_of_four_runtime_candidates(ui_db, 
     assert sum(button.label == "確認する" for button in at.button) == 3
 
 
-def test_dashboard_missing_ticker_task_keeps_normal_page_link(ui_db) -> None:
+def test_dashboard_missing_ticker_task_keeps_normal_page_link(ui_db, monkeypatch) -> None:
     """A global task must not be misrouted to the company-profile button."""
     import streamlit as st
 
     page_links: list[tuple[str, str]] = []
-    monkeypatch = pytest.MonkeyPatch()
     monkeypatch.setattr(st, "page_link", lambda page, label, **kwargs: page_links.append((page, label)))
+    profile_calls: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        "components.daily.company_profile_button",
+        lambda ticker, label, key: profile_calls.append((str(ticker), label)),
+    )
     run_id = start_run("test-failed-run", False, 1, ui_db)
     finish_run(run_id, [JobResult(processed=1, failed=1, message="fixture failure")], ui_db)
 
-    try:
-        at = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run(timeout=60)
-        assert not at.exception
-        assert ("pages/6_設定.py", "確認する") in page_links
-        assert not any(button.label == "確認する" for button in at.button)
-    finally:
-        monkeypatch.undo()
+    at = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run(timeout=60)
+    assert not at.exception
+    assert ("pages/6_設定.py", "確認する") in page_links
+    assert all(ticker for ticker, _label in profile_calls)

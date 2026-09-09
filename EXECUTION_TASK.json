@@ -5,11 +5,11 @@
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
   "current_task": "#11 P2-I-6 trusted source persistence vertical slice",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
-  "last_run_at": "2026-09-09T06:25:32+09:00",
-  "last_completed_task": "#11 P1-B-5 / P1-J-1 Dashboard Acceptance AppTest gap補完 (26391ae, acceptance PASS)",
-  "next_action": "P2-I-6を現在mainから実装する。既存stock_ir_sourcesを変更・削除せずadditiveなtrusted approval監査テーブル/repositoryを追加し、stock_id+source_type+canonicalized_source_urlを論理キーに明示approve/revokeのみ永続化する。URL変更/別ticker/別source_typeへtrusted非継承、revoke物理DELETE禁止、actor明示、再承認監査保持、同一状態操作idempotentを固定する。Settings実ページに明示確認付きapprove/revokeを配線し、操作後・再読込後の永続化、page open/fetch/source登録のみではapproval rowが増えないこと、既存主要DB行不変、source/provenance到達性をmigration/repository/AppTestで証明する。focused tests、grouped news/disclosure regression、full pytest、compileall、git diff --check後に機能commitをmainへpushしてSupervisor再監査を受ける。実装不能ならblocked_reasonへ再現可能な具体エラーとコマンドを記録する。",
+  "last_run_at": "2026-09-09T09:20:00+09:00",
+  "last_completed_task": "#11 P2-I-6 trusted source persistence vertical slice (pending commit)",
+  "next_action": "additive approval audit table/repository、Settings明示approve/revoke、migration非破壊性、再読込永続化を実装・検証済み。Supervisor acceptance再監査を受ける。",
   "blocked_reason": null,
   "human_action_required": "P2-F実CSV形式と実データ反映、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-I-6は通常技術判断で自律実行する。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "c69ad3e"
+  "last_git_sha": "pending"
 }
