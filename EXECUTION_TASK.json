@@ -6,10 +6,10 @@
   "current_task": "#11 P2-I-7A trusted runtime acceptance closure",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
   "last_run_at": "2026-09-09T14:15:00+09:00",
-  "last_completed_task": "#11 P2-I-7A trusted runtime acceptance closure (pending commit)",
+  "last_completed_task": "#11 P2-I-7A trusted runtime acceptance closure (bd56da3)",
   "next_action": "exact keyのみfetch、URL変更/別ticker/別source_type非継承、revoke後停止、保存disclosureのticker/source/document URL追跡、mismatch時のDB非変更を実runtime fixtureで確認済み。Supervisor再監査を受ける。Acceptance PASSまでP2-Fへ進まない。",
   "blocked_reason": null,
   "human_action_required": "P2-F実CSV形式と実データ反映、Desktop/390px実画面、本番企業情報候補・候補値最終承認はHuman Acceptance。P2-I-7Aは通常技術判断で自律実行する。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "pending"
+  "last_git_sha": "bd56da3"
 }
