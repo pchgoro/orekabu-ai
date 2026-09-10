@@ -5,11 +5,11 @@
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
   "current_task": "#11 P2-F-2A real MarketSpeed CSV compatibility regression",
   "task_source": "GitHub Issue #11 + Supervisor Real CSV Acceptance 2026-09-09",
-  "last_run_at": "2026-09-10T16:26:53+09:00",
+  "last_run_at": "2026-09-10T17:27:30+09:00",
   "last_completed_task": "#11 P2-F-1A brokerage CSV runtime/UI acceptance PASS (50ac0e0 + 3d13e16 + ee1fad2 verified on main); real CSV parser-contract compatibility confirmed 2026-09-09",
-  "next_action": "実保有データをcommitせず、実CSVの列構成を模したsanitized fixtureを追加し、4桁/3桁+英字ticker、特定+NISA重複、カンマ付き数値、追加列、欠損記号をparse_marketspeed_csv実callerとSettings AppTestで回帰固定する。focused/full pytest、compileall、git diff --check後にIssue #11へ証跡を残す。helper-only/parser unitのみで完了扱いにせず、Acceptance gate通過前に次Phaseへ進まない。",
-  "blocked_reason": "Codex implementation stalled: executable P2-F-2A work remains; not Human-blocked. Supervisor rechecked 2026-09-10 16:26 JST; main head 382c321 is only a supervisor-state refresh after 8a6991f, open PR=0, and no P2-F-2A implementation commit is present.",
+  "next_action": "実保有データをcommitせず、実CSVの列構成を模したsanitized fixtureを追加し、4桁/3桁+英字ticker、特定+NISA重複、カンマ付き数値、追加列、欠損記号をparse_marketspeed_csv実callerとSettings実ページAppTestで回帰固定する。代表row/group整合、加重平均、明示apply、unknown-format fail-closed、apply前/parse失敗時DB非破壊性、source/provenance到達性をassertする。focused/full pytest、compileall、git diff --check後にIssue #11へ変更ファイルとassert証跡を残す。helper-only/parser unitのみで完了扱いにせず、Acceptance gate通過前に次Phaseへ進まない。",
+  "blocked_reason": "Codex implementation stalled: executable P2-F-2A work remains; not Human-blocked. Supervisor rechecked 2026-09-10 17:27 JST; main head ea1cbe3 only refreshes EXECUTION_TASK.json, open PR=0, and no P2-F-2A implementation commit is present. Issue #11 supervisor instruction refreshed; Acceptance gate remains closed.",
   "human_action_required": "実CSVのユーザー実環境Settings preview→明示apply→実DB反映、Desktop/390px実画面、本番企業情報候補・候補値の最終確認。実CSV形式互換性のparser-contract確認は完了。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "382c321b26cba16224b961741ce501bd05396e8e"
+  "last_git_sha": "ea1cbe36b40d2ad5e92d0ee1041c93980b5c6edc"
 }
