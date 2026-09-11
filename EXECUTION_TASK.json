@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-F-2A real MarketSpeed CSV compatibility regression",
-  "task_source": "GitHub Issue #11 + Supervisor Real CSV Acceptance 2026-09-09",
-  "last_run_at": "2026-09-10T19:31:13+09:00",
-  "last_completed_task": "CI regression recovery remains PASS: GitHub Actions run #203 SUCCESS on main 61550825b6d12281818298aa34b2bff0690fef4d. Prior #11 P2-F-1A brokerage CSV runtime/UI acceptance remains PASS.",
-  "next_action": "実保有データをcommitせず、実CSVの列構成を模したsanitized fixtureを追加し、4桁/3桁+英字ticker、特定+NISA重複、カンマ付き数値、追加列、欠損記号をparse_marketspeed_csv実callerとSettings実ページAppTestで回帰固定する。代表row/group整合、加重平均、明示apply、unknown-format fail-closed、apply前/parse失敗時DB非破壊性、source/provenance到達性をassertする。focused/full pytest、compileall、git diff --check後にIssue #11へ変更ファイルとassert証跡を残す。helper-only/parser unitのみで完了扱いにせず、Acceptance gate通過前に次Phaseへ進まない。",
-  "blocked_reason": "CI is healthy on main (Actions #203 SUCCESS), but P2-F-2A remains stalled and executable: no sanitized MarketSpeed fixture/runtime caller/Settings AppTest implementation commit is present after the prior supervisor update. This is not a Human blocker. Acceptance gate remains closed.",
-  "human_action_required": "実CSVのユーザー実環境Settings preview→明示apply→実DB反映、Desktop/390px実画面、本番企業情報候補・候補値の最終確認。実CSV形式互換性のparser-contract確認は完了。",
+  "current_task": "#11 P2-F-2A Acceptance correction: real-shaped MarketSpeed fixture + grouped Settings AppTest + durable provenance",
+  "task_source": "GitHub Issue #11 + Supervisor code-level Acceptance audit 2026-09-12",
+  "last_run_at": "2026-09-12T00:25:56+09:00",
+  "last_completed_task": "Prior P2-F-1A brokerage CSV runtime/UI acceptance remains PASS. P2-F-2A remains Acceptance FAIL after direct code/test audit; existing lower-layer grouping and DB-protection tests are insufficient for the real-shaped Settings/provenance acceptance contract.",
+  "next_action": "実保有値をcommitせず tests/fixtures 等へ実MarketSpeed列構成だけを模したsanitized fixtureを追加する。4桁ticker、3桁+英字ticker、同一tickerの特定+NISA、カンマ数値、追加列、-/空欄を含め、parse_marketspeed_csv/parse_securities_csv実callerでparse error 0・ticker正規化・追加列許容・group集約・加重平均をassertする。同じfixtureを実Settings AppTestのupload→preview→explicit applyへ通し、重複tickerがpreviewで代表1rowとなり、口座内訳・aggregate shares・weighted averageとapply後DBが一致することをassertする。apply前およびmalformed/unknown-format時のDB非破壊性もassertする。import_marketspeed_previewは現状stock fields/memoのみ永続化し、filename/encoding/source rowsは一時値/ログ止まりに見えるため、既存shared import-history/provenance storeがあるなら実callerを配線して取得可能性をテストし、無いなら最小の非破壊provenance永続化を追加する。focused parser + Settings AppTest + full pytest + compileall + git diff --checkを実行し、Issue #11へ変更ファイルとexact assertionsを記録する。Acceptance gate通過前に次Phaseへ進まない。",
+  "blocked_reason": "P2-F-2A is executable but Acceptance FAIL: no sanitized real-shaped fixture; Settings AppTest does not cover same-ticker taxable/NISA representative/group consistency; durable MarketSpeed source/provenance reachability is not demonstrated and appears absent from the apply path. This is not a Human blocker.",
+  "human_action_required": "実CSVのユーザー実環境Settings preview→明示apply→実DB反映、Desktop/390px実画面、本番企業情報候補・候補値の最終確認。これらはHuman Acceptanceとして分離し、未確認をPASSにしない。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "61550825b6d12281818298aa34b2bff0690fef4d"
+  "last_git_sha": "3e3656c3baf42ed989ca2722805e58118072eea5"
 }
