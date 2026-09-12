@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": false,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-F-2 brokerage CSV Human Acceptance wait",
+  "current_task": "#6 P1 Free Automation failure-handling exit-code coverage",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
-  "last_run_at": "2026-09-09T17:10:00+09:00",
+  "last_run_at": "2026-09-11T16:00:00+09:00",
   "last_completed_task": "#11 P2-F-1A brokerage CSV runtime/UI acceptance PASS (50ac0e0 + 3d13e16 + ee1fad2 verified on main)",
-  "next_action": "自動開発を停止。再開条件は、実証券CSVの提供またはGitHub上の新しい実行可能Issue/PR/review修正。",
-  "blocked_reason": "5回連続idleで停止: Human Acceptance待ちで実行可能な通常タスクなし。",
-  "human_action_required": "実証券CSVの提供、実データ反映、Desktop/390px実画面の確認、またはGitHubに新しい実行可能タスクを追加してenabled=trueへ戻す。",
-  "consecutive_idle_checks": 5,
-  "last_git_sha": "3494bcf6ef8069767cf280e3bf847e3dde469f5f"
+  "next_action": "Python/pytest実行環境を復旧後、追加した終了コードテストと全体pytestを実行し、Issue #6へ結果を記録する。",
+  "blocked_reason": "既存.venvのPython実体がなく、代替Pythonにはpytest依存がない。ネットワーク制限で依存取得できず、pytest未実行。",
+  "human_action_required": "なし（ローカルPython/pytest環境復旧後に継続可能）。",
+  "consecutive_idle_checks": 0,
+  "last_git_sha": "pending"
 }

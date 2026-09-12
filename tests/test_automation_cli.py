@@ -13,7 +13,7 @@ from scripts.fetch_edinet import (
     resolve_fetch_options,
     resolve_target_dates,
 )
-from scripts.common import build_parser, run_main
+from scripts.common import build_parser, exit_code, run_main
 from scripts.run_daily_update import build_daily_update_steps, resolve_daily_edinet_options
 from scripts.run_edinet_backfill import resolve_backfill_options
 
@@ -34,6 +34,20 @@ def test_configuration_error_exit_code() -> None:
         raise ValueError("bad config")
 
     assert run_main(raises, []) == 2
+
+
+def test_task_scheduler_exit_codes_distinguish_success_and_partial_failure() -> None:
+    assert exit_code({"failed": 0}) == 0
+    assert exit_code({"failed": 1}) == 1
+    assert exit_code({"failed": 3, "status": "partial"}) == 1
+
+
+def test_unexpected_cli_failure_returns_failure_exit_code(capsys: pytest.CaptureFixture[str]) -> None:
+    def raises(_argv=None):
+        raise RuntimeError("collector failed")
+
+    assert run_main(raises, []) == 1
+    assert "実行エラー: collector failed" in capsys.readouterr().err
 
 
 def test_edinet_date_and_lookback_options() -> None:
