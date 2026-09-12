@@ -6,10 +6,10 @@
   "current_task": "#6 P1 Free Automation failure-handling exit-code coverage",
   "task_source": "GitHub Issue #11 + Supervisor Acceptance Audit 2026-09-09",
   "last_run_at": "2026-09-11T16:00:00+09:00",
-  "last_completed_task": "#11 P2-F-1A brokerage CSV runtime/UI acceptance PASS (50ac0e0 + 3d13e16 + ee1fad2 verified on main)",
-  "next_action": "Python/pytest実行環境を復旧後、追加した終了コードテストと全体pytestを実行し、Issue #6へ結果を記録する。",
+  "last_completed_task": "#6 P1 Free Automation failure-handling exit-code coverage implemented (ccf9b5b); pytest pending",
+  "next_action": "GitHub pushとpytest実行環境復旧後、テスト結果をIssue #6へ記録する。",
   "blocked_reason": "既存.venvのPython実体がなく、代替Pythonにはpytest依存がない。ネットワーク制限で依存取得できず、pytest未実行。",
   "human_action_required": "なし（ローカルPython/pytest環境復旧後に継続可能）。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "pending"
+  "last_git_sha": "ccf9b5bdcd2f76c8ffdb09143133d0eb4110b9bf"
 }
