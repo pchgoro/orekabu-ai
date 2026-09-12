@@ -4,12 +4,12 @@
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
   "current_task": "#11 P2-F-2A Acceptance correction: real-shaped MarketSpeed fixture + grouped Settings AppTest + durable provenance",
-  "task_source": "GitHub Issue #11 + Supervisor Acceptance audit 2026-09-12 15:30 JST",
-  "last_run_at": "2026-09-12T15:30:20+09:00",
-  "last_completed_task": "Codex environment recovery and Issue #6 exit-code test push were verified; P2-F-2A still has no implementation commit on main.",
-  "next_action": "P2-F-2Aを実装する。実保有値をcommitせずsanitized real-shaped MarketSpeed fixtureを追加し、4桁ticker、3桁+英字ticker、同一tickerの特定+NISA、カンマ数値、追加列、-/空欄を実parser/provider callerで検証する。同じfixtureを実Settings AppTestのupload→preview→explicit applyへ通し、代表1row、口座内訳、aggregate shares、weighted average、apply後DB一致、apply前およびmalformed/unknown-format時DB非破壊をassertする。filename/provider/encoding/source-row count等のdurable provenanceをapply後にruntime read-backできることを証明する。focused parser/provider + Settings AppTest + full pytest + compileall + git diff --check後、commit/pushしてIssue #11へ変更ファイル・runtime caller・exact assertionsを記録する。Acceptance gate通過前に次Phaseへ進まない。",
-  "blocked_reason": "Environment blocker is resolved, but P2-F-2A remains Acceptance FAIL. main latest ed451fd is supervisor-state-only; no sanitized real-shaped fixture, end-to-end Settings AppTest, representative/group DB equality evidence, or durable provenance read-back has landed. This is not a Human blocker.",
-  "human_action_required": "実CSVをユーザー実環境Settingsでpreview→明示apply→実DB反映、Desktop/390px実画面、本番企業情報候補・候補値の最終確認。これらはHuman Acceptanceとして分離し、未確認をPASSにしない。",
+  "task_source": "GitHub Issue #11 + Supervisor Acceptance audit 2026-09-12 16:26 JST",
+  "last_run_at": "2026-09-12T16:26:48+09:00",
+  "last_completed_task": "No new Codex implementation commit landed after the prior supervisor refresh; P2-F-2A remains executable and Acceptance FAIL.",
+  "next_action": "P2-F-2Aを実装する。実保有値をcommitせずsanitized real-shaped MarketSpeed fixtureを追加し、4桁ticker、3桁+英字ticker、同一tickerの特定+NISA、カンマ数値、追加列、-/空欄を実parser/provider callerで検証する。同じfixtureを実Settings AppTestのupload→preview→explicit applyへ通し、代表1row、口座内訳、aggregate shares、weighted average、apply後DB一致、apply前およびmalformed/unknown-format時DB非破壊をassertする。filename/provider/encoding/source-row count等のdurable provenanceをapply後にruntime read-backできることを証明する。focused parser/provider + Settings AppTest + full pytest + compileall + git diff --check後、commit/pushしてIssue #11へ変更ファイル・runtime caller/UI配線・exact assertions・DB/provenance read-back結果を記録する。Acceptance gate通過前に次Phaseへ進まない。",
+  "blocked_reason": "P2-F-2A is stalled but not Human-blocked. main latest before this refresh was 7ba3cc4 and there is still no implementation commit or open PR containing the required sanitized fixture, end-to-end Settings AppTest, representative/group DB equality evidence, and durable provenance read-back. Executable technical work remains, so idle must not increment.",
+  "human_action_required": "現時点なし。実CSVをユーザー実環境Settingsでpreview→明示apply→実DB反映、Desktop/390px実画面、本番企業情報候補・候補値の最終確認は後続Human Acceptanceとして分離し、未確認をPASSにしない。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "ed451fd7343a0f632122b6f009b3dec98f1b51ce"
+  "last_git_sha": "7ba3cc4c73ed9bef09e808cb4c061e13c3db078b"
 }
