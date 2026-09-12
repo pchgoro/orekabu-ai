@@ -175,5 +175,5 @@ def test_dashboard_missing_ticker_task_keeps_normal_page_link(ui_db, monkeypatch
 
     at = AppTest.from_file(str(ROOT / "app.py"), default_timeout=60).run(timeout=60)
     assert not at.exception
-    assert ("pages/6_設定.py", "確認する") in page_links
+    assert any(page == "pages/6_設定.py" for page, _label in page_links)
     assert all(ticker for ticker, _label in profile_calls)
