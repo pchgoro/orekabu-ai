@@ -323,6 +323,29 @@ def import_marketspeed_preview(
             result["failed"] += 1
             result["errors"].append(f"{row['ticker']}: {exc}")
             logger.exception("MarketSpeed CSV import failed ticker=%s", row["ticker"])
+    with connect(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO marketspeed_import_runs
+            (provider, filename, encoding, source_row_count, source_stock_count,
+             inserted_count, updated_count, unchanged_count, skipped_count,
+             failed_count, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "marketspeed",
+                str(preview_result.get("filename") or ""),
+                str(preview_result.get("encoding") or ""),
+                int(preview_result.get("row_count") or 0),
+                len(preview_result.get("records") or []),
+                result["inserted"],
+                result["updated"],
+                result["unchanged"],
+                result["skipped"],
+                result["failed"],
+                _now(),
+            ),
+        )
     logger.info(
         "MarketSpeed CSV imported file=%s rows=%s inserted=%s updated=%s skipped=%s failed=%s",
         preview_result.get("filename") or "",
@@ -333,3 +356,14 @@ def import_marketspeed_preview(
         result["failed"],
     )
     return result
+
+
+def list_marketspeed_import_runs(
+    db_path: Path | str = DB_PATH,
+) -> list[dict[str, Any]]:
+    """Return durable source provenance for MarketSpeed import attempts."""
+    with connect(db_path) as conn:
+        rows = conn.execute(
+            "SELECT * FROM marketspeed_import_runs ORDER BY created_at DESC, id DESC"
+        ).fetchall()
+    return [dict(row) for row in rows]

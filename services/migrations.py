@@ -6,7 +6,7 @@ import logging
 import sqlite3
 
 logger = logging.getLogger(__name__)
-LATEST_SCHEMA_VERSION = 14
+LATEST_SCHEMA_VERSION = 15
 
 
 def migrate(conn: sqlite3.Connection) -> None:
@@ -90,6 +90,11 @@ def migrate(conn: sqlite3.Connection) -> None:
             conn.execute("UPDATE schema_version SET version = 14")
             version = 14
 
+        if version < 15:
+            _migrate_to_v15(conn)
+            conn.execute("UPDATE schema_version SET version = 15")
+            version = 15
+
         # CREATE IF NOT EXISTS also repairs a partially created v2 migration.
         _migrate_to_v2(conn)
         _migrate_to_v3(conn)
@@ -104,6 +109,7 @@ def migrate(conn: sqlite3.Connection) -> None:
         _migrate_to_v12(conn)
         _migrate_to_v13(conn)
         _migrate_to_v14(conn)
+        _migrate_to_v15(conn)
     except Exception:
         logger.exception("DBマイグレーション失敗 target_version=%s", LATEST_SCHEMA_VERSION)
         raise
@@ -819,5 +825,29 @@ def _migrate_to_v14(conn: sqlite3.Connection) -> None:
         );
         CREATE INDEX IF NOT EXISTS idx_trusted_source_approval_key
             ON trusted_source_approval_events(stock_id, source_type, source_url, id DESC);
+        """
+    )
+
+
+def _migrate_to_v15(conn: sqlite3.Connection) -> None:
+    """Persist durable provenance for successful MarketSpeed imports."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS marketspeed_import_runs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            provider TEXT NOT NULL,
+            filename TEXT NOT NULL DEFAULT '',
+            encoding TEXT NOT NULL DEFAULT '',
+            source_row_count INTEGER NOT NULL DEFAULT 0,
+            source_stock_count INTEGER NOT NULL DEFAULT 0,
+            inserted_count INTEGER NOT NULL DEFAULT 0,
+            updated_count INTEGER NOT NULL DEFAULT 0,
+            unchanged_count INTEGER NOT NULL DEFAULT 0,
+            skipped_count INTEGER NOT NULL DEFAULT 0,
+            failed_count INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_marketspeed_import_runs_created
+            ON marketspeed_import_runs(created_at DESC, id DESC);
         """
     )

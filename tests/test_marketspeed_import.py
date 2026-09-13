@@ -13,6 +13,7 @@ from services.marketspeed_import import (
     build_marketspeed_preview,
     detect_csv_encoding,
     import_marketspeed_preview,
+    list_marketspeed_import_runs,
     parse_market_number,
     parse_marketspeed_csv,
 )
@@ -168,6 +169,15 @@ def test_update_preserves_watch_memo_metadata_keywords_and_missing_holdings(
     assert stock["market"] == "東証"
     assert stock["industry"] == "電機"
     assert get_stock("7203.T", db)["is_holding"] == 1
+    provenance = list_marketspeed_import_runs(db)
+    assert len(provenance) == 1
+    assert provenance[0]["provider"] == "marketspeed"
+    assert provenance[0]["filename"] == "portfolio.csv"
+    assert provenance[0]["encoding"] == "UTF-8 BOM"
+    assert provenance[0]["source_row_count"] == 2
+    assert provenance[0]["source_stock_count"] == 1
+    assert provenance[0]["updated_count"] == 1
+    assert provenance[0]["failed_count"] == 0
     with sqlite3.connect(db) as conn:
         assert conn.execute(
             "SELECT keyword FROM stock_news_keywords"
