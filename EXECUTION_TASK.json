@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 P2-F-2B Acceptance correction: prove grouped account breakdown in actual Settings preview using shared real-shaped MarketSpeed fixture",
-  "task_source": "GitHub Issue #11 + Supervisor code-level Acceptance audit 2026-09-13 18:27 JST",
-  "last_run_at": "2026-09-13T18:27:00+09:00",
-  "last_completed_task": "81f763f added one sanitized real-shaped MarketSpeed fixture shared by parser caller and actual Settings AppTest. Upload→preview→explicit apply→DB and provenance read-back are wired; duplicate 5801 aggregates to 200 shares at weighted average 1600; unknown-format DB protection remains covered. Acceptance remains narrowly FAIL because the actual Settings preview test only asserts tickers and does not assert one representative row, account breakdown, aggregate shares, and weighted average in the UI preview.",
-  "next_action": "P2-F-2Bを最小修正する。test_settings_page_applies_shared_real_shaped_fixture_and_persists_provenanceを拡張し、shared real-shaped fixtureのimport click前actual dataframeで5801.Tが代表1rowだけであること、Taxable/NISA両口座のaccount breakdown、aggregate shares=200、weighted average price=1600をassertする。同じshared fixtureのparser caller testでもaccount_memoに両口座・各100株・1500/1700が到達することをassertし、fixture→parser→actual Settings preview→apply DB→provenanceの意味を固定する。既存metadata preservation、unknown-format DB non-destruction、v15 provenanceを壊さず、focused MarketSpeed + Settings AppTest、full pytest、compileall、git diff --checkを実行し、exact test names/assertions/runtime callerをIssue #11へ記録する。Supervisor Acceptance gate通過前に次Phaseへ進まない。",
-  "blocked_reason": "P2-F-2B is executable and not idle. Shared fixture and actual upload/apply wiring are now present, but the shared-fixture actual Settings preview does not yet prove representative-row cardinality or account breakdown/aggregate values. Parser-only account_memo coverage uses a different synthetic fixture, so the requested end-to-end preview acceptance is not satisfied. This is not a Human blocker.",
-  "human_action_required": "現時点なし。実CSVをユーザー実環境Settingsでpreview→明示apply→実DB反映、Desktop/390px実画面、本番企業情報候補・候補値の最終確認は後続Human Acceptanceとして分離し、未確認をPASSにしない。",
+  "current_task": "#11 Final integration Acceptance sweep across P1-A/B/J/C/D/E, free disclosure provider, and P2-G/H/I/F",
+  "task_source": "GitHub Issue #11 + Supervisor code-level Acceptance audit 2026-09-13 19:28 JST",
+  "last_run_at": "2026-09-13T19:28:00+09:00",
+  "last_completed_task": "9e2b050 closed P2-F-2B code-level acceptance. Shared real-shaped MarketSpeed fixture now proves parser account grouping and actual Settings preview representative-row cardinality, Taxable/NISA breakdown, aggregate shares=200, weighted average=1600 before explicit apply; apply DB/provenance read-back and unknown-format DB protection remain covered. Supervisor Acceptance PASS. Codex evidence: focused 2 passed, full pytest 314 passed, compileall and git diff --check PASS.",
+  "next_action": "Issue #11全体のfinal integration Acceptance sweepを実行する。P1-A/B/J/C/D/E、無料ソース中心の適時開示、P2-G/H/I/Fについて、actual runtime caller/UI wiring、受入条件、fixture/AppTest、DB non-destruction、dedupe/group state、source/provenance read-backを実コードとテスト内容で横断監査する。helper-only、未配線、実ページAppTest不足、表示だけで操作不能、代表row/group不整合、fixtureが実callerを通らない箇所があればAcceptance FAILとしてIssue #11へ具体的に記録し、その修正だけを次タスクにする。問題がなければfocused tests + full pytest + compileall + git diff --checkとDB migration既存データ保持を確認し、code-level Issue #11 gateをPASSへ進める。Human-only項目はPASSに含めない。",
+  "blocked_reason": "Final integration acceptance is executable and not idle. P2-F-2B code-level gate passed; Issue #11 overall code-level acceptance still requires one cross-phase integration sweep before closure or Human Acceptance handoff.",
+  "human_action_required": "現時点の技術作業にHuman Actionは不要。実ユーザーCSVでの実Settings反映、Desktop/390px実画面、本番企業情報候補・候補値、EDINET実キー通信等、この環境から直接確認できない項目は後続Human Acceptanceとして明示分離し、未確認をPASSにしない。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "c9e8993fecee0e762314e62b931c294326ce3a0b"
+  "last_git_sha": "9e2b05009549267334f800b97d1cbb205ff96bd9"
 }
