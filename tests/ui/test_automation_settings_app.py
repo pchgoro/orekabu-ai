@@ -8,10 +8,12 @@ from streamlit.testing.v1 import AppTest
 
 from services.database import add_stock, connect, get_stock, get_stocks
 from services.earnings_ir_sources import list_ir_sources, save_ir_source
+from services.marketspeed_import import list_marketspeed_import_runs
 from services.stock_profiles import list_profile_candidates, run_profile_refresh
 from services.trusted_sources import list_trusted_source_approvals
 
 ROOT = Path(__file__).resolve().parents[2]
+REAL_SHAPED_FIXTURE = ROOT / "tests" / "fixtures" / "marketspeed_real_shaped.csv"
 
 
 class Provider:
@@ -179,6 +181,27 @@ def test_settings_page_imports_marketspeed_preview_without_destroying_existing_s
     assert updated["company_alias"] == "既存略称" and updated["market"] == "東証" and updated["industry"] == "電機"
     assert get_stock("285A.T", ui_db)["is_holding"] == 1
     assert get_stock("7203.T", ui_db)["is_holding"] == 1
+
+
+def test_settings_page_applies_shared_real_shaped_fixture_and_persists_provenance(ui_db: Path) -> None:
+    at = AppTest.from_file(str(ROOT / "pages" / "6_設定.py"), default_timeout=60).run(timeout=60)
+    uploader = at.file_uploader[-1]
+    at = uploader.upload("market-import.csv", REAL_SHAPED_FIXTURE.read_bytes(), "text/csv").run(timeout=60)
+    assert not at.exception
+    frames = " ".join(frame.value.fillna("").to_string() for frame in at.dataframe)
+    assert "5801.T" in frames and "285A.T" in frames
+    import_button = next(item for item in at.button if item.label == "マーケットスピードCSVをインポート")
+    at = import_button.click().run(timeout=60)
+    assert not at.exception
+    assert get_stock("5801.T", ui_db)["shares"] == 200
+    assert get_stock("5801.T", ui_db)["average_price"] == 1600
+    assert get_stock("285A.T", ui_db)["shares"] == 10
+    provenance = list_marketspeed_import_runs(ui_db)
+    assert provenance[0]["filename"] == "market-import.csv"
+    assert provenance[0]["source_row_count"] == 3
+    assert provenance[0]["source_stock_count"] == 2
+    assert provenance[0]["updated_count"] == 1
+    assert provenance[0]["inserted_count"] == 1
 
 
 def test_settings_page_rejects_unknown_marketspeed_csv_without_db_change(ui_db: Path) -> None:

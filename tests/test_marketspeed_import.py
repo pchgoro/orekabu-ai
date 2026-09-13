@@ -48,6 +48,23 @@ def csv_bytes(*rows: str, encoding: str = "utf-8-sig") -> bytes:
     return ("\n".join((HEADER, *rows)) + "\n").encode(encoding)
 
 
+REAL_SHAPED_FIXTURE = Path(__file__).parent / "fixtures" / "marketspeed_real_shaped.csv"
+
+
+def test_real_shaped_fixture_reaches_provider_parser_with_grouped_rows() -> None:
+    parsed = parse_securities_csv(
+        "marketspeed", REAL_SHAPED_FIXTURE.read_bytes(), filename="real-shaped.csv"
+    )
+    assert parsed["errors"] == []
+    assert parsed["encoding"] == "UTF-8"
+    assert parsed["row_count"] == 3
+    assert parsed["duplicate_groups"] == 1
+    assert {row["ticker"] for row in parsed["records"]} == {"5801.T", "285A.T"}
+    grouped = next(row for row in parsed["records"] if row["ticker"] == "5801.T")
+    assert grouped["shares"] == 200
+    assert grouped["average_price"] == 1600
+
+
 def test_encoding_detection_utf8_bom_and_cp932() -> None:
     assert detect_csv_encoding(csv_bytes(row("3687", "フィックスターズ", "特定", "100", "1,500")))[1] == "UTF-8 BOM"
     cp932 = csv_bytes(
