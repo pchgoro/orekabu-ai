@@ -3,13 +3,13 @@
   "repository": "pchgoro/orekabu-ai",
   "enabled": true,
   "current_phase": "UX Automation / Zero-touch Daily Workflow",
-  "current_task": "#11 Final integration Acceptance sweep across P1-A/B/J/C/D/E, free disclosure provider, and P2-G/H/I/F",
-  "task_source": "GitHub Issue #11 + Supervisor code-level Acceptance audit 2026-09-13 19:28 JST",
-  "last_run_at": "2026-09-13T19:28:00+09:00",
-  "last_completed_task": "9e2b050 closed P2-F-2B code-level acceptance. Shared real-shaped MarketSpeed fixture now proves parser account grouping and actual Settings preview representative-row cardinality, Taxable/NISA breakdown, aggregate shares=200, weighted average=1600 before explicit apply; apply DB/provenance read-back and unknown-format DB protection remain covered. Supervisor Acceptance PASS. Codex evidence: focused 2 passed, full pytest 314 passed, compileall and git diff --check PASS.",
-  "next_action": "Issue #11全体のfinal integration Acceptance sweepを実行する。P1-A/B/J/C/D/E、無料ソース中心の適時開示、P2-G/H/I/Fについて、actual runtime caller/UI wiring、受入条件、fixture/AppTest、DB non-destruction、dedupe/group state、source/provenance read-backを実コードとテスト内容で横断監査する。helper-only、未配線、実ページAppTest不足、表示だけで操作不能、代表row/group不整合、fixtureが実callerを通らない箇所があればAcceptance FAILとしてIssue #11へ具体的に記録し、その修正だけを次タスクにする。問題がなければfocused tests + full pytest + compileall + git diff --checkとDB migration既存データ保持を確認し、code-level Issue #11 gateをPASSへ進める。Human-only項目はPASSに含めない。",
-  "blocked_reason": "Final integration acceptance is executable and not idle. P2-F-2B code-level gate passed; Issue #11 overall code-level acceptance still requires one cross-phase integration sweep before closure or Human Acceptance handoff.",
-  "human_action_required": "現時点の技術作業にHuman Actionは不要。実ユーザーCSVでの実Settings反映、Desktop/390px実画面、本番企業情報候補・候補値、EDINET実キー通信等、この環境から直接確認できない項目は後続Human Acceptanceとして明示分離し、未確認をPASSにしない。",
-  "consecutive_idle_checks": 0,
-  "last_git_sha": "9e2b05009549267334f800b97d1cbb205ff96bd9"
+  "current_task": "#11 Human Acceptance hold after final code-level integration gate",
+  "task_source": "GitHub Issue #11 + Supervisor final integration Acceptance audit 2026-09-13 20:27 JST",
+  "last_run_at": "2026-09-13T20:27:00+09:00",
+  "last_completed_task": "Final integration code-level Acceptance PASS. Supervisor independently rechecked actual startup caller/non-blocking dedupe/status wiring, actual daily focus path with limit=10 and dashboard render, trusted official-IR disclosure automation caller through save_disclosure/dedupe, and prior P2-F shared-fixture Settings preview/apply/DB/provenance acceptance. Codex evidence remains full pytest 314 passed, cross-phase 160 passed, compileall and git diff --check PASS. No new code-level blocker found.",
+  "next_action": "追加の技術修正タスクは現時点なし。Issue #11はHuman Acceptance待ちとして保持する。実ユーザーMarketSpeed CSVの実Settings preview→explicit apply→実DB確認、Desktop/390px実画面、本番企業情報候補・候補値、EDINET実APIキーlive通信、必要に応じた実公式IR取得結果を人間確認する。未確認項目を自動PASSにしない。新しいcode-level不具合・main変更・失敗テストが出た場合のみ修正タスクへ戻す。実行可能タスクがない間だけidleを増やし、5回連続idleで既存ルールどおり停止する。",
+  "blocked_reason": "Code-level Issue #11 acceptance gate passed. Remaining items require real user data, real display/device inspection, or external credentials/live provider verification and are explicitly Human Acceptance. No executable code task is currently available.",
+  "human_action_required": "実ユーザーMarketSpeed CSVでの実Settings反映確認、Desktop/390px実画面、本番企業情報候補・候補値、EDINET実APIキー通信、必要に応じて実公式IRソース取得結果の確認。これらは未確認のためPASS扱いしない。",
+  "consecutive_idle_checks": 1,
+  "last_git_sha": "3a1fd300de7e8a10356db6910f1e4d264b6aba0a"
 }
