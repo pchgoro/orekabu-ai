@@ -63,6 +63,10 @@ def test_real_shaped_fixture_reaches_provider_parser_with_grouped_rows() -> None
     grouped = next(row for row in parsed["records"] if row["ticker"] == "5801.T")
     assert grouped["shares"] == 200
     assert grouped["average_price"] == 1600
+    assert "Taxable 100" in grouped["account_memo"]
+    assert "NISA 100" in grouped["account_memo"]
+    assert "1,500" in grouped["account_memo"]
+    assert "1,700" in grouped["account_memo"]
 
 
 def test_encoding_detection_utf8_bom_and_cp932() -> None:

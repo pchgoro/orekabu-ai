@@ -190,6 +190,19 @@ def test_settings_page_applies_shared_real_shaped_fixture_and_persists_provenanc
     assert not at.exception
     frames = " ".join(frame.value.fillna("").to_string() for frame in at.dataframe)
     assert "5801.T" in frames and "285A.T" in frames
+    preview = next(
+        frame.value
+        for frame in at.dataframe
+        if {"ticker", "shares", "average_price"}.issubset(frame.value.columns)
+    )
+    grouped = preview.loc[preview["ticker"] == "5801.T"]
+    assert len(grouped) == 1
+    grouped_row = grouped.iloc[0]
+    account_column = next(column for column in preview.columns if "口座" in column)
+    assert grouped_row["shares"] == 200
+    assert grouped_row["average_price"] == 1600
+    assert "Taxable 100" in str(grouped_row[account_column])
+    assert "NISA 100" in str(grouped_row[account_column])
     import_button = next(item for item in at.button if item.label == "マーケットスピードCSVをインポート")
     at = import_button.click().run(timeout=60)
     assert not at.exception
