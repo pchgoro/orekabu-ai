@@ -5,11 +5,11 @@
   "current_phase": "UX Automation / Human Acceptance deferred + P1-D importance automation",
   "current_task": "#11 P1-D importance auto-classification: deterministic rules + runtime/UI wiring + manual-value protection",
   "task_source": "GitHub Issue #11 + ROADMAP Phase 3C + Supervisor resume decision 2026-09-14",
-  "last_run_at": "2026-09-14T19:26:25+09:00",
-  "last_completed_task": "No new Codex implementation commit was present at this supervisor check. Current main was 553395b; comparison from 48362ec showed only EXECUTION_TASK.json changed, with no importance-classification implementation/runtime/UI/test code and no open PR. The task remains executable and unaccepted, so this is stagnation rather than idle.",
+  "last_run_at": "2026-09-14T20:25:47+09:00",
+  "last_completed_task": "No new Codex implementation commit was present at this supervisor check. Latest main is 3a0d272; the only change since 553395b is EXECUTION_TASK.json. There is still no importance-classification implementation/runtime/UI/test commit and no open PR. The task remains executable and unaccepted, so this is stagnation rather than idle.",
   "next_action": "Implement the already-assigned Phase 3C importance auto-classification now. Reuse existing category-classification/data-model infrastructure; connect deterministic importance classification to canonical news/disclosure ingestion/update runtime; never overwrite manual importance; leave ambiguous/no-match unchanged; preserve existing DB rows and source/provenance. Add fixture plus real caller/UI/AppTest or equivalent proving eligible auto-apply, manual preservation, ambiguous/no-match unchanged, runtime wiring, DB non-destructiveness, and provenance retention. Run focused tests, full pytest, compileall, and git diff --check. Commit/push and post changed files, caller path, exact assertions, test counts and SHA to Issue #11. Do not advance phase before supervisor Acceptance PASS.",
   "blocked_reason": "なし。Human Acceptanceはdeferredでありcode-level blockerではない。実行可能タスクが存在するためidleを増やさない。Codex実装pickup待ち。",
   "human_action_required": "延期中: 実ユーザーMarketSpeed CSVでの実Settings反映、Desktop/390px実画面、本番企業情報候補・候補値、EDINET実APIキー通信、必要に応じた実公式IR取得結果。これらは未確認のためPASS扱いしない。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "553395b2ad8afc1d35e39d0d879903b4dc283f6e"
+  "last_git_sha": "3a0d2720a3e09cd4b8c945cb5e05e0e6a95e30ab"
 }
