@@ -1,16 +1,16 @@
 {
   "project": "orekabu-ai",
   "repository": "pchgoro/orekabu-ai",
-  "enabled": true,
-  "status": "ready",
+  "enabled": false,
+  "status": "blocked",
   "current_phase": "UX Automation / Human Acceptance deferred + P1-D importance automation",
   "current_task": "#11 P1-D importance auto-classification: deterministic rules + runtime/UI wiring + manual-value protection",
   "task_source": "GitHub Issue #11 + ROADMAP Phase 3C + Supervisor resume decision 2026-09-14",
-  "last_run_at": "2026-09-15T03:28:14+09:00",
-  "last_completed_task": "Supervisor re-check after status=ready found no Codex implementation commit. Current main remained cebd49b719a935dcf64e5ee34ccbec1e0320ee1e, open PR remained 0, and no implementation/runtime/UI/test diff existed for P1-D importance automation. Acceptance remains NOT VERIFIED. Repository automation inspection confirmed AUTONOMOUS_DEVELOPMENT.md defines the worker contract, while .github/workflows contains only tests.yml and no repository workflow consumes EXECUTION_TASK.json; therefore the currently visible blocker is external Codex worker pickup/execution, not task ambiguity or code-level decision. This remains stagnation, not idle.",
-  "next_action": "External Codex worker should pick up this already-ready task and implement Phase 3C importance auto-classification from current main: deterministic importance rules on canonical news/disclosure ingestion/update runtime; never overwrite manual importance; leave ambiguous/no-match unchanged; preserve DB rows and source/provenance; add fixture plus real caller/UI/AppTest or equivalent proving eligible auto-apply, manual preservation, ambiguous/no-match unchanged, runtime wiring, DB non-destructiveness and provenance retention; run focused tests, full pytest, compileall and git diff --check; commit/push and post changed files, runtime caller path, exact assertions, test counts and SHA to Issue #11. Do not advance phase before supervisor Acceptance PASS.",
-  "blocked_reason": "Codex worker pickup/execution is not currently visible. The task is executable and explicitly status=ready, but the repository itself has no workflow that consumes EXECUTION_TASK.json; prior implementation depended on an external Codex scheduled worker. This is not an idle state and not a Human Acceptance blocker.",
-  "human_action_required": "延期中のHuman Acceptanceは従来どおり後回し。追加確認事項: 外部Codex scheduled workerが停止・無効化されていないか確認が必要。実ユーザーMarketSpeed CSV、Desktop/390px実画面、本番企業情報候補・候補値、EDINET実APIキー通信、必要に応じた実公式IR取得結果は引き続き未確認のためPASS扱いしない。",
+  "last_run_at": "2026-09-15T04:26:59+09:00",
+  "last_completed_task": "Supervisor re-check found no Codex implementation commit after the task was explicitly marked ready. Current main before this control-file update was 065d19174f8ec7d702e9d95b0c83681ff94f8cf3; open PR remained 0; no implementation/runtime/UI/test diff exists for P1-D importance automation. Acceptance remains NOT VERIFIED. The executable task is clear, but repository automation does not consume EXECUTION_TASK.json; progress depends on the external Codex scheduled worker, whose pickup/execution remains invisible. This is a fully blocking operational condition for supervised development, not Human Acceptance and not idle.",
+  "next_action": "After the external Codex worker is re-enabled/confirmed running, resume this exact P1-D task: deterministic importance rules on canonical news/disclosure ingestion/update runtime; never overwrite manual importance; leave ambiguous/no-match unchanged; preserve DB rows and source/provenance; add fixture plus real caller/UI/AppTest or equivalent proving eligible auto-apply, manual preservation, ambiguous/no-match unchanged, runtime wiring, DB non-destructiveness and provenance retention; run focused tests, full pytest, compileall and git diff --check; commit/push and post changed files, runtime caller path, exact assertions, test counts and SHA to Issue #11. Do not advance phase before supervisor Acceptance PASS.",
+  "blocked_reason": "External Codex scheduled worker pickup/execution is not visible and no repository workflow consumes EXECUTION_TASK.json. The task itself is executable and unambiguous, but there is currently no active worker path carrying it out.",
+  "human_action_required": "外部Codex scheduled workerが停止・無効化されていないか確認し、再開する。延期中のHuman Acceptance（実ユーザーMarketSpeed CSV、Desktop/390px実画面、本番企業情報候補・候補値、EDINET実APIキー通信、必要に応じた実公式IR取得結果）は引き続き後回しでよく、未確認をPASS扱いしない。",
   "consecutive_idle_checks": 0,
-  "last_git_sha": "cebd49b719a935dcf64e5ee34ccbec1e0320ee1e"
+  "last_git_sha": "065d19174f8ec7d702e9d95b0c83681ff94f8cf3"
 }
